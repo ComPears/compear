@@ -13,43 +13,43 @@ export const supermarkets: Supermarket[] = [
   { 
     id: 'jumbo', 
     name: 'Jumbo', 
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/9/9a/Logo_Jumbo_Supermarkten.svg', 
+    logo: 'https://commons.wikimedia.org/wiki/File:Logo_of_Jumbo_Supermarkten_(2010).svg', 
     hasAPI: true 
   },
   { 
     id: 'lidl', 
     name: 'Lidl', 
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/9/91/Lidl-Logo.svg', 
+    logo: 'https://commons.wikimedia.org/wiki/File:Lidl-Logo.svg', 
     hasAPI: false 
   },
   { 
     id: 'aldi', 
     name: 'Aldi', 
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/4/4d/ALDI_Nord_201x_logo.svg', 
+    logo: 'https://commons.wikimedia.org/wiki/File:AldiWorldwideLogo.svg', 
     hasAPI: false 
   },
   { 
     id: 'plus', 
     name: 'Plus', 
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/e/e9/PLUS_Logo.svg', 
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/9/92/PLUS_supermarket_logo.svg', 
     hasAPI: true 
   },
   { 
     id: 'coop', 
     name: 'Coop', 
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/6/60/Coop_%28Netherlands%29_logo.svg', 
+    logo: 'https://commons.wikimedia.org/wiki/File:Coop_Logo.svg', 
     hasAPI: false 
   },
   { 
     id: 'dirk', 
     name: 'Dirk', 
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Dirk_Logo.svg/1200px-Dirk_Logo.svg.png', 
+    logo: 'https://commons.wikimedia.org/wiki/File:Logo_of_Dirk.svg', 
     hasAPI: false 
   },
   { 
     id: 'dekamarkt', 
     name: 'Dekamarkt', 
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/7/7d/Dekamarkt_logo.svg', 
+    logo: 'https://commons.wikimedia.org/wiki/File:Logo_of_Dekamarkt.svg', 
     hasAPI: false 
   },
   { 
@@ -61,7 +61,7 @@ export const supermarkets: Supermarket[] = [
   { 
     id: 'janlinders', 
     name: 'Jan Linders', 
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/a/ae/Jan_Linders_Logo.svg', 
+    logo: 'https://commons.wikimedia.org/wiki/File:Logo_Jan_Linders.svg', 
     hasAPI: false 
   },
   { 
@@ -73,7 +73,7 @@ export const supermarkets: Supermarket[] = [
   { 
     id: 'spar', 
     name: 'Spar', 
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/e/ee/SPAR_logo.svg', 
+    logo: 'https://commons.wikimedia.org/wiki/File:SPAR_Logo.svg', 
     hasAPI: false 
   },
   { 
