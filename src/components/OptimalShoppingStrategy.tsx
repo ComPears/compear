@@ -196,8 +196,6 @@ const OptimalShoppingStrategy: React.FC<OptimalShoppingStrategyProps> = ({ groce
     });
     
     shareText += `Total: ${formatCurrency(optimalStrategy.totalPrice)}\n`;
-    shareText += `Total savings: ${formatCurrency(optimalStrategy.totalSavings)}\n`;
-    shareText += `Saved vs. shopping at ${optimalStrategy.cheapestSingleStoreName}: ${formatCurrency(optimalStrategy.savings)}\n\n`;
     shareText += "Made with ComPear - Compare grocery prices across Dutch supermarkets!";
     
     // Share using the Web Share API if available
@@ -251,7 +249,7 @@ const OptimalShoppingStrategy: React.FC<OptimalShoppingStrategyProps> = ({ groce
         </Box>
         
         <Typography variant="body2" color="text.secondary" gutterBottom>
-          Shopping at multiple stores could save you {formatCurrency(optimalStrategy.savings)} compared to shopping at {optimalStrategy.cheapestSingleStoreName}.
+          The optimal shopping strategy for buying items across multiple stores
         </Typography>
         
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2, mb: 3 }}>
@@ -323,12 +321,6 @@ const OptimalShoppingStrategy: React.FC<OptimalShoppingStrategyProps> = ({ groce
         <Box sx={{ mt: 3, p: 2, bgcolor: 'success.light', borderRadius: 2 }}>
           <Typography variant="subtitle1">
             Total Cost: {formatCurrency(optimalStrategy.totalPrice)}
-          </Typography>
-          <Typography variant="body2">
-            Total Savings from Sales: {formatCurrency(optimalStrategy.totalSavings)}
-          </Typography>
-          <Typography variant="body2">
-            Savings vs. Single Store: {formatCurrency(optimalStrategy.savings)}
           </Typography>
         </Box>
       </CardContent>

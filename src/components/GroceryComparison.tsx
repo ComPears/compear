@@ -293,7 +293,6 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                       <TableCell align="right" sx={{ fontWeight: 'bold' }}>Items Found</TableCell>
                       <TableCell align="right" sx={{ fontWeight: 'bold' }}>API/Estimated</TableCell>
                       <TableCell align="right" sx={{ fontWeight: 'bold' }}>On Sale</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>Total Savings</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -340,9 +339,6 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                               color="secondary" 
                             />
                           ) : "None"}
-                        </TableCell>
-                        <TableCell align="right">
-                          {summary.totalSavings > 0 ? formatCurrency(summary.totalSavings) : "-"}
                         </TableCell>
                       </TableRow>
                     ))}
