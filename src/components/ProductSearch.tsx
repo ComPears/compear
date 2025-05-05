@@ -24,7 +24,7 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import { ProductVariant, Grocery } from '../types';
 import { searchProducts } from '../services/productService';
-import { findProductInSupermarkets } from '../services/realPriceService';
+import { findProductInSupermarkets } from '../services/rawProductData';
 
 interface ProductSearchProps {
   onAddGrocery: (grocery: Grocery) => void;
@@ -58,47 +58,37 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
         // Reset previous errors
         setError(null);
         
-        // Search in local product database - this should be fast and synchronous
-        const localResults = searchProducts(searchTerm);
-        setSearchResults(localResults);
-        
         // Search in supermarkets.json data - keep the UI responsive during this async search
         setLoading(true);
-        try {
-          console.log(`Searching for: ${searchTerm}`);
+        console.log(`Searching for: ${searchTerm}`);
+        
+        const results = await findProductInSupermarkets(searchTerm);
+        console.log('Search results:', results);
+        
+        const flatResults: SupermarketProduct[] = [];
+        
+        // Convert the results to a flat array with supermarket names
+        Object.entries(results).forEach(([supermarketCode, products]) => {
+          console.log(`Processing ${products.length} products from ${supermarketCode}`);
           
-          const results = await findProductInSupermarkets(searchTerm);
-          console.log('Search results:', results);
-          
-          const flatResults: SupermarketProduct[] = [];
-          
-          // Convert the results to a flat array with supermarket names
-          Object.entries(results).forEach(([supermarketCode, products]) => {
-            console.log(`Processing ${products.length} products from ${supermarketCode}`);
-            
-            const supermarket = supermarketCode.toUpperCase();
-            products.forEach(product => {
-              flatResults.push({
-                ...product,
-                supermarketName: supermarket
-              });
+          const supermarket = supermarketCode.toUpperCase();
+          products.forEach(product => {
+            flatResults.push({
+              ...product,
+              supermarketName: supermarket
             });
           });
+        });
           
-          console.log(`Total flattened results: ${flatResults.length}`);
-          setSupermarketResults(flatResults);
-          
-          // Check if no results were found in either search
-          // @ts-ignore - Suppressing type error as this is checking if both searches returned empty
-          if (flatResults.length === 0 && localResults.length === 0) {
-            setError(`No products found for "${searchTerm}". Check if supermarkets.json is loaded correctly.`);
-          }
-        } catch (error) {
-          console.error('Error searching supermarkets:', error);
-          setError(`Error searching supermarkets: ${error instanceof Error ? error.message : String(error)}`);
-        } finally {
-          setLoading(false);
+        console.log(`Total flattened results: ${flatResults.length}`);
+        setSupermarketResults(flatResults);
+        
+        // Check if no results were found in either search
+        // @ts-ignore - Suppressing type error as this is checking if both searches returned empty
+        if (flatResults.length === 0) {
+          setError(`No products found for "${searchTerm}". Check if supermarkets.json is loaded correctly.`);
         }
+        setLoading(false);
       } else if (searchTerm.trim().length === 0) {
         // Clear results only when search is empty
         setSearchResults([]);
