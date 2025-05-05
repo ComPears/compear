@@ -111,7 +111,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
     };
     
     fetchPrices();
-  }, [groceries, groceriesWithPrices]);
+  }, [groceries]);
 
   // Find the logo URL for a supermarket by name
   const getSupermarketLogo = (name: string): string | undefined => {
