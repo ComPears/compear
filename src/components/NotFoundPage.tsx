@@ -11,10 +11,27 @@ import {
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import Footer from './Footer';
 
+/**
+ * 404 Page Component displayed for invalid country codes
+ */
 const NotFoundPage: React.FC = () => {
-  const navigateToHome = () => {
-    window.location.href = '/nl';
+  // Get the current invalid country code from URL
+  const getCurrentPath = (): string => {
+    try {
+      const pathSegments = window.location.pathname.split('/').filter(Boolean);
+      return pathSegments[0] || '';
+    } catch (error) {
+      return '';
+    }
   };
+  
+  // Navigate to a valid country code
+  const navigateToCountry = (countryCode: string) => {
+    window.location.href = `/${countryCode}`;
+  };
+  
+  // Display the current invalid country code
+  const invalidCode = getCurrentPath();
   
   return (
     <Box sx={{ 
@@ -36,6 +53,9 @@ const NotFoundPage: React.FC = () => {
           <Typography variant="h4" gutterBottom>
             404 - Country Not Found
           </Typography>
+          <Typography variant="body1" paragraph>
+            "{invalidCode}" is not a supported country code.
+          </Typography>
           <Typography variant="body1" paragraph sx={{ mb: 4 }}>
             We currently only support the Netherlands, United Kingdom, and Germany.
           </Typography>
@@ -43,21 +63,19 @@ const NotFoundPage: React.FC = () => {
             <Button 
               variant="contained" 
               color="primary" 
-              onClick={navigateToHome}
+              onClick={() => navigateToCountry('nl')}
             >
               Go to Netherlands
             </Button>
             <Button 
               variant="outlined"
-              component="a"
-              href="/uk"
+              onClick={() => navigateToCountry('uk')}
             >
               United Kingdom
             </Button>
             <Button 
               variant="outlined"
-              component="a"
-              href="/de"
+              onClick={() => navigateToCountry('de')}
             >
               Germany
             </Button>

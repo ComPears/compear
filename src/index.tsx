@@ -3,10 +3,9 @@ import ReactDOM from 'react-dom/client';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import './index.css';
-import App from './App';
 import reportWebVitals from './reportWebVitals';
 import theme from './theme';
-import { CountryProvider } from './context/CountryContext';
+import AppRouter from './components/AppRouter';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -15,9 +14,7 @@ root.render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <CountryProvider>
-        <App />
-      </CountryProvider>
+      <AppRouter />
     </ThemeProvider>
   </React.StrictMode>
 );
