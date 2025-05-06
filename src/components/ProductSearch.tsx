@@ -52,7 +52,6 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
 
   // Handle search input changes
   useEffect(() => {
-    console.log("Handle search")
     const performSearch = async () => {
       if (searchTerm.trim().length > 2) {
         // Reset previous errors
