@@ -2,10 +2,11 @@ name: Deploy webapp
 
 on:
   push:
-  pull_request:
+  # pull_request:
 
-# permissions:
-#   pull-requests: write
+permissions:
+  contents: read
+  pull-requests: write
 
 env:
   BRANCH_NAME: ${{ github.ref_name }}
