@@ -23,7 +23,6 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { ProductVariant, Grocery } from '../types';
-import { searchProducts } from '../services/productService';
 import { findProductInSupermarkets } from '../services/rawProductData';
 
 interface ProductSearchProps {
@@ -74,18 +73,58 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
           
           const supermarket = supermarketCode.toUpperCase();
           products.forEach(product => {
+            // Parse the price to ensure it's a number
+            let price: number;
+            try {
+              const priceStr = typeof product.p === 'string' 
+                ? product.p.replace('€', '').replace(',', '.').trim()
+                : product.p.toString();
+              price = parseFloat(priceStr);
+              
+              if (isNaN(price)) {
+                console.warn(`Invalid price for ${product.n}: ${product.p}`);
+                return; // Skip this product
+              }
+            } catch (error) {
+              console.warn(`Error parsing price for ${product.n}:`, error);
+              return; // Skip this product
+            }
+            
             flatResults.push({
               ...product,
+              p: price, // Store as number
               supermarketName: supermarket
             });
           });
         });
           
         console.log(`Total flattened results: ${flatResults.length}`);
-        setSupermarketResults(flatResults);
+        
+        // Sort the results to prioritize store-specific searches
+        const sortedResults = [...flatResults].sort((a, b) => {
+          // First check if the search term includes a supermarket name
+          const searchLower = searchTerm.toLowerCase();
+          const aMatchesStore = a.supermarketName.toLowerCase().includes(searchLower) || 
+                               searchLower.includes(a.supermarketName.toLowerCase());
+          const bMatchesStore = b.supermarketName.toLowerCase().includes(searchLower) || 
+                               searchLower.includes(b.supermarketName.toLowerCase());
+          
+          if (aMatchesStore && !bMatchesStore) return -1;
+          if (!aMatchesStore && bMatchesStore) return 1;
+          
+          // Then prioritize by how much of the product name matches the search
+          const aNameMatch = a.n.toLowerCase().includes(searchLower) ? 1 : 0;
+          const bNameMatch = b.n.toLowerCase().includes(searchLower) ? 1 : 0;
+          
+          if (aNameMatch !== bNameMatch) return bNameMatch - aNameMatch;
+          
+          // Finally sort by price
+          return a.p - b.p;
+        });
+        
+        setSupermarketResults(sortedResults);
         
         // Check if no results were found in either search
-        // @ts-ignore - Suppressing type error as this is checking if both searches returned empty
         if (flatResults.length === 0) {
           setError(`No products found for "${searchTerm}". Check if supermarkets.json is loaded correctly.`);
         }
@@ -145,26 +184,35 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
       setSearchResults([]);
       setSupermarketResults([]);
     } else if (selectedSupermarketProduct) {
-      // Parse size information to determine unit
+      // Parse size information to determine unit and quantity
       let unit: 'kg' | 'gram' | 'liter' | 'ml' | 'piece' = 'piece';
+      let defaultQuantity = 1;
       
-      const sizeStr = selectedSupermarketProduct.s.toLowerCase();
-      if (sizeStr.includes('kg')) {
-        unit = 'kg';
-      } else if (sizeStr.includes('g')) {
-        unit = 'gram';
-      } else if (sizeStr.includes('l') && !sizeStr.includes('ml')) {
-        unit = 'liter';
-      } else if (sizeStr.includes('ml')) {
-        unit = 'ml';
+      if (selectedSupermarketProduct.s) {
+        const sizeStr = selectedSupermarketProduct.s.toLowerCase();
+        
+        // Extract unit
+        if (sizeStr.includes('kg')) {
+          unit = 'kg';
+        } else if (sizeStr.includes('g') && !sizeStr.includes('kg')) {
+          unit = 'gram';
+        } else if (sizeStr.includes('l') && !sizeStr.includes('ml')) {
+          unit = 'liter';
+        } else if (sizeStr.includes('ml')) {
+          unit = 'ml';
+        }
+        
+        // Try to extract numeric quantity
+        const quantityMatch = sizeStr.match(/(\d+[.,]?\d*)/);
+        if (quantityMatch) {
+          defaultQuantity = parseFloat(quantityMatch[1].replace(',', '.'));
+          if (isNaN(defaultQuantity) || defaultQuantity <= 0) {
+            defaultQuantity = 1;
+          }
+        }
       }
       
-      // Try to extract numeric quantity
-      const match = sizeStr.match(/(\d+(?:\.\d+)?)/);
-      if (match) {
-        // Use the extracted quantity as the default
-        setQuantity(parseFloat(match[1]));
-      }
+      setQuantity(defaultQuantity);
       
       const grocery: Grocery = {
         id: `supermarket-${Date.now()}`,
@@ -350,6 +398,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
           <Typography variant="h6" sx={{ mb: 2 }}>
             Supermarket Products {loading && <Typography component="span" variant="caption" color="text.secondary">(updating...)</Typography>}
           </Typography>
+          
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
             {supermarketResults.map((product, index) => (
               <Box key={`${product.supermarketName}-${index}`} sx={{ width: { xs: '100%', sm: '47%', md: '31%' } }}>

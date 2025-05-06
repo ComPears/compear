@@ -432,6 +432,12 @@ export const supermarkets: Supermarket[] = [
         "p": "8.71",
         "s": "online10% pakketkorting"
       },
+      {
+        "n": "Whole Wheat (Volkoren)",
+        "o": null,
+        "p": "0.70",
+        "s": "500 g"
+      }
     ]
   }, {
     "n": "Dirk",
@@ -557,6 +563,12 @@ export const supermarkets: Supermarket[] = [
         "o": null,
         "p": "1.39",
         "s": "1 L"
+      },
+      {
+        "n": "Whole Wheat (Volkoren)",
+        "o": null,
+        "p": "1.80",
+        "s": "500 g"
       }
     ]
 },
@@ -684,6 +696,12 @@ export const supermarkets: Supermarket[] = [
         "o": null,
         "p": "1.19",
         "s": "1 L"
+      },
+      {
+        "n": "Whole Wheat (Volkoren)",
+        "o": null,
+        "p": "0.99",
+        "s": "500 g"
       }
     ]
 },
@@ -811,6 +829,12 @@ export const supermarkets: Supermarket[] = [
         "o": null,
         "p": "0.99",
         "s": "500 ml"
+      },
+      {
+        "n": "Whole Wheat (Volkoren)",
+        "o": null,
+        "p": "1.99",
+        "s": "500 g"
       }
     ]
 }
@@ -861,7 +885,7 @@ export const findProductInSupermarkets = async (term: string): Promise<Record<st
       results[supermarket.n.toLowerCase()] = matchingProducts.map(product => ({
         n: product.n,
         o: product.o,
-        p: parseFloat(product.p),  // Convert string price to number
+        p: typeof product.p === 'string' ? product.p : String(product.p),  // Fix toString issue with explicit String conversion
         s: product.s,
         l: `${supermarket.u}${product.n.toLowerCase().replace(/\s+/g, '-')}`
       }));
