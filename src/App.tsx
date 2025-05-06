@@ -15,7 +15,6 @@ import {
   FormControl,
   SelectChangeEvent,
   Divider,
-  Alert
 } from '@mui/material';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
@@ -56,7 +55,7 @@ function TabPanel(props: TabPanelProps) {
 }
 
 const App: React.FC = () => {
-  const { country, setCountry, isCountryAvailable } = useCountry();
+  const { country, setCountry } = useCountry();
   const [groceries, setGroceries] = useState<Grocery[]>([]);
   const [inputTabValue, setInputTabValue] = useState(0);
 

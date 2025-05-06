@@ -100,35 +100,49 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
 
   useEffect(() => {
     const fetchPrices = async () => {
-      const updatedGroceries: GroceryWithPrices[] = [];
-      
-      // Process each grocery item that doesn't have prices yet
-      for (const grocery of groceries) {
-        const existingWithPrices = groceriesWithPrices.find(g => g.id === grocery.id);
+      // Use a functional update that doesn't depend on the current groceriesWithPrices value
+      setGroceriesWithPrices(prevGroceriesWithPrices => {
+        const updatedGroceries: GroceryWithPrices[] = [];
         
-        if (existingWithPrices) {
-          updatedGroceries.push(existingWithPrices);
-        } else {
-          // Set loading state for this grocery item
-          setLoading(prev => ({ ...prev, [grocery.id]: true }));
+        // Process each grocery item
+        for (const grocery of groceries) {
+          // Check if this grocery already exists in the previous state
+          const existingWithPrices = prevGroceriesWithPrices.find(g => g.id === grocery.id);
           
-          try {
-            const prices = await fetchPricesForGrocery(grocery);
-            updatedGroceries.push({ ...grocery, prices });
-          } catch (error) {
-            console.error(`Error fetching prices for ${grocery.name}:`, error);
+          if (existingWithPrices) {
+            // Reuse existing data
+            updatedGroceries.push(existingWithPrices);
+          } else {
+            // This is a new grocery, fetch prices asynchronously
+            // Set loading state for this grocery item
+            setLoading(prev => ({ ...prev, [grocery.id]: true }));
+            
+            // Add a placeholder immediately - we'll update it when data arrives
             updatedGroceries.push({ ...grocery, prices: [] });
-          } finally {
-            setLoading(prev => ({ ...prev, [grocery.id]: false }));
+            
+            // Fetch prices in the background
+            fetchPricesForGrocery(grocery)
+              .then(prices => {
+                // Update this specific grocery with its prices
+                setGroceriesWithPrices(current => 
+                  current.map(g => g.id === grocery.id ? { ...g, prices } : g)
+                );
+              })
+              .catch(error => {
+                console.error(`Error fetching prices for ${grocery.name}:`, error);
+              })
+              .finally(() => {
+                setLoading(prev => ({ ...prev, [grocery.id]: false }));
+              });
           }
         }
-      }
-      
-      setGroceriesWithPrices(updatedGroceries);
+        
+        return updatedGroceries;
+      });
     };
     
     fetchPrices();
-  }, [groceries]);
+  }, [groceries]); // groceriesWithPrices is no longer a dependency
 
   // Find the logo URL for a supermarket by name
   const getSupermarketLogo = (name: string): string | undefined => {
