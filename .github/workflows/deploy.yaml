@@ -36,4 +36,16 @@ jobs:
             --dir build \
             --site ${{ secrets.NETLIFY_SITE_ID }} \
             --auth ${{ secrets.NETLIFY_API_TOKEN }} \
-            $prod_flag
+            $prod_flag \
+            --json \
+            > deploy_output.json
+      
+      - name: Generate URL Preview
+        id: url_preview
+        if: ${{ env.BRANCH_NAME != 'main' }}
+        run: |
+          NETLIFY_PREVIEW_URL=$(jq -r '.deploy_url' deploy_output.json)
+          echo "NETLIFY_PREVIEW_URL=$NETLIFY_PREVIEW_URL" >> "$GITHUB_OUTPUT"
+
+      - name: DEBUG
+        run: echo ${{ steps.url_preview.outputs.NETLIFY_PREVIEW_URL }}
