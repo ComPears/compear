@@ -28,6 +28,6 @@ jobs:
         id: netlify_deploy
         run: |
           netlify deploy \
-            --dir dist \
+            --dir build \
             --site 2e697674-d6a3-48c2-bd59-a653cdbbf729 \
             --auth nfp_kf1fegC3jE25LdodiiveiHMZfBn8R6GL9d0a
