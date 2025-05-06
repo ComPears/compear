@@ -2,6 +2,9 @@ name: Deploy webapp
 
 on: [push]
 
+env:
+  BRANCH_NAME: ${{ github.ref_name }}
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -27,7 +30,10 @@ jobs:
       - name: Deploy to Netlify
         id: netlify_deploy
         run: |
+          prod_flag=""
+          if [ "$BRANCH_NAME" = "main" ]; then prod_flag="--prod"; fi
           netlify deploy \
             --dir build \
             --site 2e697674-d6a3-48c2-bd59-a653cdbbf729 \
-            --auth nfp_kf1fegC3jE25LdodiiveiHMZfBn8R6GL9d0a
+            --auth nfp_kf1fegC3jE25LdodiiveiHMZfBn8R6GL9d0a \
+            $prod_flag
