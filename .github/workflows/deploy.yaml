@@ -15,5 +15,19 @@ jobs:
           node-version: 22
           cache: "npm"
 
+      - name: Install Netlify
+        run: npm install netlify-cli@20.1.1 -g
+
       - name: Install Dependencies
         run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Deploy to Netlify
+        id: netlify_deploy
+        run: |
+          netlify deploy \
+            --dir dist \
+            --site 2e697674-d6a3-48c2-bd59-a653cdbbf729 \
+            --auth nfp_kf1fegC3jE25LdodiiveiHMZfBn8R6GL9d0a
