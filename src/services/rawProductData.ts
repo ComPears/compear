@@ -441,7 +441,7 @@ export const supermarkets: Supermarket[] = [
     ]
   }, {
     "n": "Dirk",
-    "u": "https://www.dirk.nl/producten/product/",
+    "u": "https://www.dirk.nl/boodschappen",
     "i": "https://www.dirk.nl/favicon.ico",
     "d": [
       {
@@ -574,7 +574,7 @@ export const supermarkets: Supermarket[] = [
 },
 {
     "n": "Aldi",
-    "u": "https://www.aldi.nl/producten/product/",
+    "u": "https://www.aldi.nl/producten.html",
     "i": "https://www.aldi.nl/favicon.ico",
     "d": [
       {
@@ -707,8 +707,8 @@ export const supermarkets: Supermarket[] = [
 },
 {
     "n": "Lidl",
-    "u": "https://www.lidl.nl/producten/product/",
-    "i": "https://www.lidl.nl/favicon.ico",
+    "u": "https://www.lidl.nl/#",
+    "i": "https://upload.wikimedia.org/wikipedia/commons/9/91/Lidl-Logo.svg",
     "d": [
       {
         "n": "Deluxe Handgemaakte Pizza Margherita",

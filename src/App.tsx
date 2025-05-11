@@ -8,8 +8,6 @@ import {
   Paper, 
   Button, 
   Badge, 
-  Tabs, 
-  Tab,
   MenuItem,
   Select,
   FormControl,
@@ -18,46 +16,16 @@ import {
 } from '@mui/material';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
-import SearchIcon from '@mui/icons-material/Search';
-import ListAltIcon from '@mui/icons-material/ListAlt';
 import LanguageIcon from '@mui/icons-material/Language';
-import GroceryForm from './components/GroceryForm';
 import GroceryComparison from './components/GroceryComparison';
 import ProductSearch from './components/ProductSearch';
 import Footer from './components/Footer';
 import { Grocery } from './types';
 import { useCountry, CountryCode, countries } from './context/CountryContext';
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`simple-tabpanel-${index}`}
-      aria-labelledby={`simple-tab-${index}`}
-      {...other}
-    >
-      {value === index && (
-        <Box sx={{ py: 3 }}>
-          {children}
-        </Box>
-      )}
-    </div>
-  );
-}
-
 const App: React.FC = () => {
   const { country, setCountry } = useCountry();
   const [groceries, setGroceries] = useState<Grocery[]>([]);
-  const [inputTabValue, setInputTabValue] = useState(0);
 
   // Effect to update URL when country changes
   useEffect(() => {
@@ -77,10 +45,6 @@ const App: React.FC = () => {
 
   const handleClearAll = () => {
     setGroceries([]);
-  };
-
-  const handleInputTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setInputTabValue(newValue);
   };
 
   const handleCountryChange = (event: SelectChangeEvent<string>) => {
@@ -179,24 +143,7 @@ const App: React.FC = () => {
                 Prices from supermarkets without APIs are estimated using advanced algorithms.
               </Typography>
               
-              <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                <Tabs 
-                  value={inputTabValue} 
-                  onChange={handleInputTabChange}
-                  aria-label="input method tabs"
-                >
-                  <Tab icon={<SearchIcon />} label="Product Search" />
-                  <Tab icon={<ListAltIcon />} label="Manual Entry" />
-                </Tabs>
-              </Box>
-              
-              <TabPanel value={inputTabValue} index={0}>
-                <ProductSearch onAddGrocery={handleAddGrocery} />
-              </TabPanel>
-              
-              <TabPanel value={inputTabValue} index={1}>
-                <GroceryForm onAddGrocery={handleAddGrocery} />
-              </TabPanel>
+              <ProductSearch onAddGrocery={handleAddGrocery} />
             </Paper>
             
             <GroceryComparison 
