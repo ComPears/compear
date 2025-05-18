@@ -6,7 +6,6 @@ import {
   CardContent,
   Typography,
   CardActionArea,
-  CardMedia,
   Chip,
   Dialog,
   DialogTitle,
@@ -16,14 +15,12 @@ import {
   InputAdornment,
   IconButton,
   Stack,
-  Autocomplete,
   CircularProgress,
   Alert,
   Collapse
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { ProductVariant, Grocery } from '../types';
-import { searchProducts } from '../services/productService';
 import { findProductInSupermarkets } from '../services/rawProductData';
 
 interface ProductSearchProps {
@@ -46,7 +43,6 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
   const [selectedSupermarketProduct, setSelectedSupermarketProduct] = useState<SupermarketProduct | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [quantity, setQuantity] = useState(1);
-  const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showDebug, setShowDebug] = useState(false);
@@ -84,7 +80,6 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
         setSupermarketResults(flatResults);
         
         // Check if no results were found in either search
-        // @ts-ignore - Suppressing type error as this is checking if both searches returned empty
         if (flatResults.length === 0) {
           setError(`No products found for "${searchTerm}". Check if supermarkets.json is loaded correctly.`);
         }
@@ -112,7 +107,6 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
     setQuantity(product.defaultQuantity);
     setShowModal(true);
     setSearchTerm('');
-    setInputValue('');
   };
 
   // Handle product selection from supermarket data
@@ -122,7 +116,6 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
     setQuantity(1); // Default quantity
     setShowModal(true);
     setSearchTerm('');
-    setInputValue('');
   };
 
   // Add product to grocery list
@@ -140,7 +133,6 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
       onAddGrocery(grocery);
       setShowModal(false);
       setSearchTerm('');
-      setInputValue('');
       setSearchResults([]);
       setSupermarketResults([]);
     } else if (selectedSupermarketProduct) {
@@ -177,23 +169,10 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
       onAddGrocery(grocery);
       setShowModal(false);
       setSearchTerm('');
-      setInputValue('');
       setSearchResults([]);
       setSupermarketResults([]);
     }
   };
-
-  // Combine all search results for autocomplete
-  const allOptions = [
-    ...searchResults.map(item => ({ 
-      type: 'product' as const, 
-      item
-    })),
-    ...supermarketResults.map(item => ({ 
-      type: 'supermarket' as const, 
-      item 
-    }))
-  ];
 
   return (
     <>
@@ -202,58 +181,21 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
           Search for Products
         </Typography>
         
-        <Autocomplete
-          freeSolo
-          options={allOptions}
-          getOptionLabel={(option) => {
-            if (typeof option === 'string') return option;
-            
-            if (option.type === 'product') {
-              return `${option.item.name} - ${option.item.variant}`;
-            } else {
-              return `${option.item.n} (${option.item.supermarketName}) - ${option.item.s}`;
-            }
-          }}
-          groupBy={(option) => {
-            if (typeof option === 'string') return '';
-            return option.type === 'product' ? 'Product Database' : 'Supermarket Products';
-          }}
-          value={null}
-          inputValue={inputValue}
-          onInputChange={(_, newInputValue) => {
-            setInputValue(newInputValue);
-            setSearchTerm(newInputValue);
-          }}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Search for products (e.g., milk, bread, popcorn)"
-              variant="outlined"
-              fullWidth
-              InputProps={{
-                ...params.InputProps,
-                endAdornment: (
-                  <>
-                    {loading ? <CircularProgress color="inherit" size={20} /> : null}
-                    {params.InputProps.endAdornment}
-                    <InputAdornment position="end">
-                      <IconButton>
-                        <SearchIcon />
-                      </IconButton>
-                    </InputAdornment>
-                  </>
-                )
-              }}
-            />
-          )}
-          onChange={(_, value) => {
-            if (value && typeof value !== 'string') {
-              if (value.type === 'product') {
-                handleSelectProduct(value.item);
-              } else {
-                handleSelectSupermarketProduct(value.item);
-              }
-            }
+        <TextField
+          label="Search for products (e.g., milk, bread, popcorn)"
+          variant="outlined"
+          fullWidth
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                {loading ? <CircularProgress color="inherit" size={20} /> : null}
+                <IconButton>
+                  <SearchIcon />
+                </IconButton>
+              </InputAdornment>
+            )
           }}
         />
         
@@ -298,56 +240,11 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
         )}
       </Box>
 
-      {/* Product database results section */}
-      {searchResults.length > 0 && (
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            Product Database Results
-          </Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-            {searchResults.map((product) => (
-              <Box key={product.id} sx={{ width: { xs: '100%', sm: '47%', md: '31%' } }}>
-                <Card>
-                  <CardActionArea onClick={() => handleSelectProduct(product)}>
-                    <CardMedia
-                      component="img"
-                      height="140"
-                      image={product.imageUrl || 'https://via.placeholder.com/140x140'}
-                      alt={product.name}
-                      sx={{ objectFit: 'contain', backgroundColor: '#f5f5f5' }}
-                    />
-                    <CardContent>
-                      <Typography variant="h6">
-                        {product.name}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {product.variant}
-                      </Typography>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-                        <Chip 
-                          label={`${product.defaultQuantity} ${product.unit}`} 
-                          size="small" 
-                          color="primary" 
-                          variant="outlined" 
-                        />
-                        {product.category && (
-                          <Chip label={product.category} size="small" color="secondary" variant="outlined" />
-                        )}
-                      </Box>
-                    </CardContent>
-                  </CardActionArea>
-                </Card>
-              </Box>
-            ))}
-          </Box>
-        </Box>
-      )}
-
       {/* Supermarket products section - only show if not loading or explicitly show while loading */}
       {supermarketResults.length > 0 && (
         <Box sx={{ mt: 3 }}>
           <Typography variant="h6" sx={{ mb: 2 }}>
-            Supermarket Products {loading && <Typography component="span" variant="caption" color="text.secondary">(updating...)</Typography>}
+            Market Products {loading && <Typography component="span" variant="caption" color="text.secondary">(updating...)</Typography>}
           </Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
             {supermarketResults.map((product, index) => (
@@ -473,4 +370,4 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
   );
 };
 
-export default ProductSearch; 
+export default ProductSearch;
