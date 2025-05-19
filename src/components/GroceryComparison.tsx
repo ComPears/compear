@@ -14,13 +14,12 @@ import {
   Chip,
   CircularProgress,
   IconButton,
-  Tooltip,
   Avatar,
   Tabs,
-  Tab
+  Tab,
+  Alert
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import InfoIcon from '@mui/icons-material/Info';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import RouteIcon from '@mui/icons-material/Route';
@@ -64,12 +63,10 @@ function TabPanel(props: TabPanelProps) {
 interface SupermarketSummary {
   supermarketName: string;
   totalPrice: number;
-  estimatedCount: number;
-  apiCount: number;
-  unavailableCount: number;
   productCount: number;
   saleCount: number; // Count of items on sale
   totalSavings: number; // Total amount saved from sales
+  products: Record<string, SupermarketPrice>; // Map of product IDs to their prices
 }
 
 const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemoveGrocery }) => {
@@ -184,12 +181,10 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
     const summaries: SupermarketSummary[] = Array.from(supermarketNames).map(name => ({
       supermarketName: name,
       totalPrice: 0,
-      estimatedCount: 0,
-      apiCount: 0,
-      unavailableCount: 0,
       productCount: 0,
       saleCount: 0,
-      totalSavings: 0
+      totalSavings: 0,
+      products: {}
     }));
     
     // Calculate totals for each supermarket
@@ -202,30 +197,41 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
           summary.totalPrice += priceEntry.price;
           summary.productCount++;
           
-          if (priceEntry.isEstimated) {
-            summary.estimatedCount++;
-          } else {
-            summary.apiCount++;
-          }
+          // Store the product in the summary for reference
+          summary.products[grocery.id] = priceEntry;
           
           // Check if the item is on sale
           if (priceEntry.onSale) {
             summary.saleCount++;
             summary.totalSavings += calculateSavings(priceEntry);
           }
-        } else {
-          summary.unavailableCount++;
         }
       });
     });
 
+    // Filter summaries to include only those with all products
+    // Only include supermarkets that have all the products in the grocery list
+    const validSummaries = summaries.filter(summary => 
+      summary.productCount === groceriesWithPrices.length
+    );
+
     // Sort summaries by total price (cheapest first)
-    return summaries.sort((a, b) => a.totalPrice - b.totalPrice);
+    return validSummaries.sort((a, b) => a.totalPrice - b.totalPrice);
   }, [groceriesWithPrices]);
 
   const cheapestSupermarket = useMemo(() => {
     return supermarketSummaries.length > 0 ? supermarketSummaries[0] : null;
   }, [supermarketSummaries]);
+
+  // Check if any grocery has no prices
+  const hasProductsWithNoPrices = useMemo(() => {
+    return groceriesWithPrices.some(grocery => grocery.prices.length === 0);
+  }, [groceriesWithPrices]);
+
+  // Get list of groceries that have no prices
+  const productsNotFound = useMemo(() => {
+    return groceriesWithPrices.filter(grocery => grocery.prices.length === 0);
+  }, [groceriesWithPrices]);
 
   if (groceries.length === 0) {
     return (
@@ -255,6 +261,21 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
           </Tabs>
         </Box>
       )}
+
+      {/* Show alert for products not found in any store */}
+      {hasProductsWithNoPrices && (
+        <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
+          {productsNotFound.length === 1 ? (
+            <>
+              Product <strong>{productsNotFound[0].name}</strong> was not found in any store.
+            </>
+          ) : (
+            <>
+              Products <strong>{productsNotFound.map(g => g.name).join(', ')}</strong> were not found in any store.
+            </>
+          )}
+        </Alert>
+      )}
       
       <TabPanel value={tabValue} index={0}>
         <OptimalShoppingStrategy groceriesWithPrices={groceriesWithPrices} />
@@ -273,7 +294,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
               </Box>
               
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                Total for {groceriesWithPrices.length} items across all Dutch supermarkets
+                Total for {groceriesWithPrices.length} items across Dutch supermarkets
               </Typography>
               
               <TableContainer 
@@ -281,7 +302,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                 variant="outlined" 
                 sx={{ 
                   mt: 2,
-                  maxHeight: 500, // Make the table scrollable
+                  maxHeight: 500, 
                   overflowY: 'auto'
                 }}
               >
@@ -291,7 +312,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                       <TableCell sx={{ fontWeight: 'bold', width: '25%' }}>Supermarket</TableCell>
                       <TableCell align="right" sx={{ fontWeight: 'bold' }}>Total Price</TableCell>
                       <TableCell align="right" sx={{ fontWeight: 'bold' }}>Items Found</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>API/Estimated</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>Products</TableCell>
                       <TableCell align="right" sx={{ fontWeight: 'bold' }}>On Sale</TableCell>
                     </TableRow>
                   </TableHead>
@@ -328,7 +349,10 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                           {summary.productCount}/{groceriesWithPrices.length}
                         </TableCell>
                         <TableCell align="right">
-                          {summary.apiCount}/{summary.estimatedCount}
+                          {Object.keys(summary.products).map(productId => {
+                            const grocery = groceriesWithPrices.find(g => g.id === productId);
+                            return grocery ? grocery.name + ", " : "";
+                          }).join("").replace(/, $/, "")}
                         </TableCell>
                         <TableCell align="right">
                           {summary.saleCount > 0 ? (
@@ -371,6 +395,10 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                   <Box display="flex" justifyContent="center" p={3}>
                     <CircularProgress />
                   </Box>
+                ) : grocery.prices.length === 0 ? (
+                  <Alert severity="warning">
+                    Product not found in any store.
+                  </Alert>
                 ) : (
                   <TableContainer component={Paper} variant="outlined">
                     <Table size="small">
@@ -379,11 +407,10 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                           <TableCell>Supermarket</TableCell>
                           <TableCell align="right">Price</TableCell>
                           <TableCell align="right">Unit Price</TableCell>
-                          <TableCell align="right">Status</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {grocery.prices.sort((a, b) => a.price - b.price).map((price, index) => (
+                        {grocery.prices.sort((a, b) => a.price - b.price).map((price) => (
                           <TableRow 
                             key={price.supermarketName}
                             sx={{
@@ -443,15 +470,6 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                             <TableCell align="right">
                               {displayUnitPrice(price, grocery)}
                             </TableCell>
-                            <TableCell align="right">
-                              {price.isEstimated ? (
-                                <Tooltip title="Price estimated with AI">
-                                  <Chip icon={<InfoIcon />} label="Estimated" size="small" color="warning" />
-                                </Tooltip>
-                              ) : (
-                                <Chip label="API Data" size="small" color="info" />
-                              )}
-                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -467,4 +485,4 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
   );
 };
 
-export default GroceryComparison; 
+export default GroceryComparison;
