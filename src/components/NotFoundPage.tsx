@@ -10,11 +10,16 @@ import {
 } from '@mui/material';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import Footer from './Footer';
+import { LanguageProvider, useLanguage } from '../context/LanguageContext';
 
 /**
  * 404 Page Component displayed for invalid country codes
+ * We wrap this component in its own Language provider since it's displayed outside
+ * of the main AppRouter context
  */
-const NotFoundPage: React.FC = () => {
+const NotFoundPageContent: React.FC = () => {
+  const { t } = useLanguage();
+  
   // Get the current invalid country code from URL
   const getCurrentPath = (): string => {
     try {
@@ -42,7 +47,7 @@ const NotFoundPage: React.FC = () => {
       <AppBar position="static" sx={{ mb: 4 }}>
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            ComPear
+            {t('app.title')}
           </Typography>
         </Toolbar>
       </AppBar>
@@ -51,13 +56,13 @@ const NotFoundPage: React.FC = () => {
         <Paper elevation={3} sx={{ p: 5, textAlign: 'center', width: '100%' }}>
           <ErrorOutlineIcon sx={{ fontSize: 80, color: 'error.main', mb: 2 }} />
           <Typography variant="h4" gutterBottom>
-            404 - Country Not Found
+            {t('404.title')}
           </Typography>
           <Typography variant="body1" paragraph>
-            "{invalidCode}" is not a supported country code.
+            {t('404.notSupported').replace('{code}', invalidCode)}
           </Typography>
           <Typography variant="body1" paragraph sx={{ mb: 4 }}>
-            We currently only support the Netherlands, United Kingdom, and Germany.
+            {t('404.supportedCountries')}
           </Typography>
           <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}>
             <Button 
@@ -65,19 +70,19 @@ const NotFoundPage: React.FC = () => {
               color="primary" 
               onClick={() => navigateToCountry('nl')}
             >
-              Go to Netherlands
+              {t('404.goTo')}
             </Button>
             <Button 
               variant="outlined"
               onClick={() => navigateToCountry('uk')}
             >
-              United Kingdom
+              {t('404.uk')}
             </Button>
             <Button 
               variant="outlined"
               onClick={() => navigateToCountry('de')}
             >
-              Germany
+              {t('404.germany')}
             </Button>
           </Box>
         </Paper>
@@ -85,6 +90,15 @@ const NotFoundPage: React.FC = () => {
       
       <Footer />
     </Box>
+  );
+};
+
+// Wrap the page in a language provider
+const NotFoundPage: React.FC = () => {
+  return (
+    <LanguageProvider initialLanguage="en">
+      <NotFoundPageContent />
+    </LanguageProvider>
   );
 };
 
