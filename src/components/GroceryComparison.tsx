@@ -43,6 +43,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Grocery, GroceryWithPrices, SupermarketPrice } from '../types';
 import { fetchPricesForGrocery, supermarkets } from '../services/supermarketService';
 import OptimalShoppingStrategy from './OptimalShoppingStrategy';
+import { useLanguage } from '../context/LanguageContext';
+import { useCountry } from '../context/CountryContext';
 
 interface GroceryComparisonProps {
   groceries: Grocery[];
@@ -88,6 +90,8 @@ interface SupermarketSummary {
 }
 
 const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemoveGrocery }) => {
+  const { t } = useLanguage();
+  const { country } = useCountry();
   const [groceriesWithPrices, setGroceriesWithPrices] = useState<GroceryWithPrices[]>([]);
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [tabValue, setTabValue] = useState(0);
@@ -317,11 +321,11 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
       .then(() => {
-        alert('Shopping list copied to clipboard!');
+        alert(t('clipboard.copied'));
       })
       .catch(err => {
         console.error('Failed to copy text: ', err);
-        alert('Could not copy to clipboard. Please share manually.');
+        alert(t('clipboard.failed'));
       });
   };
 
@@ -339,7 +343,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
       <Card>
         <CardContent>
           <Typography variant="subtitle1" align="center">
-            Add grocery items to compare prices
+            {t('individual.addItemsPrompt')}
           </Typography>
         </CardContent>
       </Card>
@@ -356,9 +360,9 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
             aria-label="view modes"
             centered
           >
-            <Tab icon={<CompareIcon />} label="Compare All Stores" />
-            <Tab icon={<RouteIcon />} label="Optimal Strategy" />
-            <Tab icon={<ShoppingCartIcon />} label="Individual Items" />
+            <Tab icon={<CompareIcon />} label={t('tabs.compareAllStores')} />
+            <Tab icon={<RouteIcon />} label={t('tabs.optimalStrategy')} />
+            <Tab icon={<ShoppingCartIcon />} label={t('tabs.individualItems')} />
           </Tabs>
         </Box>
       )}
@@ -371,12 +375,14 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
               <Box display="flex" alignItems="center" mb={2}>
                 <CompareIcon sx={{ mr: 1.5 }} color="primary" />
                 <Typography variant="h6" component="div">
-                  All Stores Comparison
+                  {t('tabs.compareAllStores')}
                 </Typography>
               </Box>
               
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                Total for {groceriesWithPrices.length} items across all Dutch supermarkets
+                {t('app.totalItems')
+                  .replace('{count}', groceriesWithPrices.length.toString())
+                  .replace('{country}', country.name)}
               </Typography>
               
               <TableContainer 
@@ -391,17 +397,17 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                 <Box sx={{ p: 2, bgcolor: 'info.light', borderRadius: 1, mb: 2, display: 'flex', alignItems: 'center' }}>
                   <InfoIcon sx={{ mr: 1 }} color="info" />
                   <Typography variant="body2">
-                    Some prices are estimated using advanced algorithms when official data isn't available.
+                    {t('info.estimatedPrices')}
                   </Typography>
                 </Box>
                 <Table size="small" stickyHeader>
                   <TableHead>
                     <TableRow>
-                      <TableCell sx={{ fontWeight: 'bold', width: '25%' }}>Supermarket</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>Total Price</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>Items Found</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>Est. Prices</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>On Sale</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', width: '25%' }}>{t('table.supermarket')}</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>{t('table.totalPrice')}</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>{t('table.itemsFound')}</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>{t('table.estPrices')}</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>{t('table.onSale')}</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -428,7 +434,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                               {summary.supermarketName}
                               {summary === cheapestSupermarket && (
                                 <Chip 
-                                  label="Cheapest" 
+                                  label={t('label.cheapest')} 
                                   size="small" 
                                   color="success" 
                                   sx={{ ml: 1 }}
@@ -443,25 +449,29 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                         </TableCell>
                         <TableCell align="right">
                           {summary.estimatedCount > 0 ? (
-                            <Tooltip title="Prices estimated using advanced algorithms">
-                              <Chip 
-                                icon={<InfoIcon />} 
-                                label={`${summary.estimatedCount}`} 
-                                size="small" 
-                                color="info" 
-                              />
-                            </Tooltip>
-                          ) : "None"}
+                            <>
+                              <Tooltip title={t('info.estimatedPrices')}>
+                                <span>
+                                  <Chip 
+                                    icon={<InfoIcon />} 
+                                    label={`${summary.estimatedCount}`} 
+                                    size="small" 
+                                    color="info" 
+                                  />
+                                </span>
+                              </Tooltip>
+                            </>
+                          ) : t('label.none')}
                         </TableCell>
                         <TableCell align="right">
                           {summary.saleCount > 0 ? (
                             <Chip 
                               icon={<LocalOfferIcon />} 
-                              label={`${summary.saleCount} items`} 
+                              label={`${summary.saleCount} ${t('label.items')}`} 
                               size="small" 
                               color="secondary" 
                             />
-                          ) : "None"}
+                          ) : t('label.none')}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -483,7 +493,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
           <Box sx={{ p: 2, bgcolor: 'info.light', borderRadius: 1, mb: 3, display: 'flex', alignItems: 'center' }}>
             <InfoIcon sx={{ mr: 1 }} color="info" />
             <Typography variant="body2">
-              Some prices are estimated using advanced algorithms when official data isn't available.
+              {t('individual.estimatedText')}
             </Typography>
           </Box>
         )}
@@ -492,46 +502,47 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
           
           return (
             <Accordion key={grocery.id} sx={{ mb: 2 }}>
-              <AccordionSummary 
-                expandIcon={<ExpandMoreIcon />}
-                aria-controls={`panel-${grocery.id}-content`}
-                id={`panel-${grocery.id}-header`}
-              >
-                <Box display="flex" justifyContent="space-between" alignItems="center" width="100%" pr={2}>
-                  <Typography variant="h6" component="div">
-                    {grocery.name} {grocery.quantity > 1 && `(${grocery.quantity} ${formatUnitLabel(grocery)})`}
-                  </Typography>
-                  <Box display="flex" alignItems="center">
-                    {lowestPriceSupermarket && (
-                      <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
-                        <Avatar 
-                          src={getSupermarketLogo(lowestPriceSupermarket.supermarketName)} 
-                          alt={lowestPriceSupermarket.supermarketName}
-                          sx={{ width: 24, height: 24, mr: 1 }}
-                        />
-                        <Typography variant="body1">
-                          {formatCurrency(lowestPriceSupermarket.price)}
-                        </Typography>
-                        <Chip 
-                          label="Lowest" 
-                          size="small" 
-                          color="success" 
-                          sx={{ ml: 1 }}
-                        />
-                      </Box>
-                    )}
-                    <IconButton 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onRemoveGrocery(grocery.id);
-                      }} 
-                      size="small"
-                    >
-                      <DeleteIcon />
-                    </IconButton>
+              <Box sx={{ display: 'flex', width: '100%', alignItems: 'center' }}>
+                <AccordionSummary 
+                  expandIcon={<ExpandMoreIcon />}
+                  aria-controls={`panel-${grocery.id}-content`}
+                  id={`panel-${grocery.id}-header`}
+                  sx={{ flex: 1, '&.Mui-expanded': { minHeight: 48 } }}
+                >
+                  <Box display="flex" justifyContent="space-between" alignItems="center" width="100%" pr={2}>
+                    <Typography variant="h6" component="div">
+                      {grocery.name} {grocery.quantity > 1 && `(${grocery.quantity} ${formatUnitLabel(grocery)})`}
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      {lowestPriceSupermarket && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
+                          <Avatar 
+                            src={getSupermarketLogo(lowestPriceSupermarket.supermarketName)} 
+                            alt={lowestPriceSupermarket.supermarketName}
+                            sx={{ width: 24, height: 24, mr: 1 }}
+                          />
+                          <Typography variant="body1">
+                            {formatCurrency(lowestPriceSupermarket.price)}
+                          </Typography>
+                          <Chip 
+                            label={t('label.lowest')} 
+                            size="small" 
+                            color="success" 
+                            sx={{ ml: 1 }}
+                          />
+                        </Box>
+                      )}
+                    </Box>
                   </Box>
-                </Box>
-              </AccordionSummary>
+                </AccordionSummary>
+                <IconButton 
+                  onClick={() => onRemoveGrocery(grocery.id)} 
+                  size="small"
+                  sx={{ mr: 2 }}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Box>
               <AccordionDetails>
                 {loading[grocery.id] ? (
                   <Box display="flex" justifyContent="center" p={3}>
@@ -542,10 +553,10 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                     <Table size="small">
                       <TableHead>
                         <TableRow>
-                          <TableCell>Supermarket</TableCell>
-                          <TableCell align="right">Price</TableCell>
-                          <TableCell align="right">Unit Price</TableCell>
-                          <TableCell align="right">Est. Prices</TableCell>
+                          <TableCell>{t('table.supermarket')}</TableCell>
+                          <TableCell align="right">{t('table.price')}</TableCell>
+                          <TableCell align="right">{t('table.unitPrice')}</TableCell>
+                          <TableCell align="right">{t('table.estPrices')}</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -569,7 +580,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                                   {price.supermarketName}
                                   {price === lowestPriceSupermarket && (
                                     <Chip 
-                                      label="Lowest" 
+                                      label={t('label.lowest')} 
                                       size="small" 
                                       color="success" 
                                       sx={{ ml: 1 }}
@@ -585,7 +596,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                                     {formatCurrency(price.price)}
                                     <Chip 
                                       icon={<LocalOfferIcon />} 
-                                      label="Sale" 
+                                      label={t('label.sale')} 
                                       size="small" 
                                       color="secondary" 
                                       sx={{ ml: 1 }}
@@ -611,8 +622,10 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                             </TableCell>
                             <TableCell align="right">
                               {price.isEstimated ? (
-                                <Tooltip title="Price estimated using algorithms">
-                                  <Chip icon={<InfoIcon />} label="Estimated" size="small" color="info" />
+                                <Tooltip title={t('info.estimatedPrices')}>
+                                  <span>
+                                    <Chip icon={<InfoIcon />} label={t('label.estimated')} size="small" color="info" />
+                                  </span>
                                 </Tooltip>
                               ) : null}
                             </TableCell>
@@ -635,52 +648,71 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
         maxWidth="md"
         fullWidth
       >
-        {selectedSupermarket && (
-          <>
-            <DialogTitle>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              {selectedSupermarket && (
+                <>
                   <Avatar 
                     src={getSupermarketLogo(selectedSupermarket.supermarketName)} 
                     alt={selectedSupermarket.supermarketName}
-                    sx={{ width: 32, height: 32, mr: 2 }}
+                    sx={{ width: 32, height: 32, mr: 1.5 }}
                   />
-                  <Typography variant="h6">
-                    {selectedSupermarket.supermarketName}
-                  </Typography>
-                </Box>
-                <IconButton onClick={handleCloseProductDialog} size="small">
-                  <CloseIcon />
-                </IconButton>
-              </Box>
-            </DialogTitle>
-            <DialogContent dividers>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                <Typography variant="body1" color="text.secondary">
-                  {selectedSupermarket.productCount} of {groceriesWithPrices.length} items found
-                </Typography>
-                <Typography variant="body1">
-                  Total: {formatCurrency(selectedSupermarket.totalPrice)}
-                </Typography>
-              </Box>
-              
-              {selectedSupermarket.saleCount > 0 && (
-                <Box sx={{ 
-                  mb: 2, 
-                  p: 1, 
-                  bgcolor: 'secondary.light', 
-                  borderRadius: 1,
-                  display: 'flex',
-                  alignItems: 'center'
-                }}>
-                  <LocalOfferIcon sx={{ mr: 1 }} color="secondary" />
-                  <Typography variant="body2">
-                    You save {formatCurrency(selectedSupermarket.totalSavings)} on {selectedSupermarket.saleCount} items
-                  </Typography>
-                </Box>
+                  {t('dialog.productsInSupermarket').replace('{supermarket}', selectedSupermarket?.supermarketName || '')}
+                </>
               )}
+            </Box>
+            <Box>
+              <IconButton color="inherit" onClick={handleShareSupermarketList} size="small">
+                <Tooltip title={t('info.shareList')}>
+                  <span>
+                    <ShareIcon />
+                  </span>
+                </Tooltip>
+              </IconButton>
+              <IconButton onClick={handleCloseProductDialog} size="small">
+                <CloseIcon />
+              </IconButton>
+            </Box>
+          </Box>
+        </DialogTitle>
+        <DialogContent dividers>
+          {selectedSupermarket && (
+            <Box>
+              {/* Supermarket stats */}
+              <Box sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                <Chip 
+                  label={t('dialog.total').replace('{amount}', formatCurrency(selectedSupermarket.totalPrice))} 
+                  color="primary" 
+                  variant="outlined" 
+                />
+                
+                {selectedSupermarket.saleCount > 0 && (
+                  <Chip 
+                    icon={<LocalOfferIcon />}
+                    label={t('dialog.saleItems').replace('{count}', selectedSupermarket.saleCount.toString())}
+                    color="secondary"
+                    variant="outlined"
+                  />
+                )}
+                
+                {selectedSupermarket.estimatedCount > 0 && (
+                  <Tooltip title={t('info.estimatedPrices')}>
+                    <span>
+                      <Chip 
+                        icon={<InfoIcon />}
+                        label={t('dialog.estimatedPrices').replace('{count}', selectedSupermarket.estimatedCount.toString())}
+                        color="info"
+                        variant="outlined"
+                      />
+                    </span>
+                  </Tooltip>
+                )}
+              </Box>
               
               <Divider sx={{ mb: 2 }} />
+              
+              {/* List of products */}
               <List>
                 {groceriesWithPrices.map(grocery => {
                   const price = grocery.prices.find(p => p.supermarketName === selectedSupermarket.supermarketName);
@@ -695,65 +727,56 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                             {grocery.quantity > 1 && ` (${grocery.quantity} ${formatUnitLabel(grocery)})`}
                           </Typography>
                         }
-                        secondary={
-                          price.isEstimated ? (
-                            <Tooltip title="Price estimated using algorithms">
-                              <Chip icon={<InfoIcon />} label="Estimated" size="small" color="info" sx={{ mt: 0.5 }} />
-                            </Tooltip>
-                          ) : null
-                        }
                       />
-                      <Box>
+                      <Box sx={{ ml: 2, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                        {price.isEstimated && (
+                          <Box sx={{ mb: 1 }}>
+                            <Tooltip title={t('info.estimatedPrices')}>
+                              <span>
+                                <Chip icon={<InfoIcon />} label={t('label.estimated')} size="small" color="info" />
+                              </span>
+                            </Tooltip>
+                          </Box>
+                        )}
+                        
                         {price.onSale ? (
-                          <Box>
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-                              {formatCurrency(price.price)}
-                              <Chip 
-                                icon={<LocalOfferIcon />} 
-                                label="Sale" 
-                                size="small" 
-                                color="secondary" 
-                                sx={{ ml: 1 }}
-                              />
-                            </Box>
-                            <Typography 
-                              variant="caption" 
-                              sx={{ 
-                                textDecoration: 'line-through', 
-                                color: 'text.secondary',
-                                display: 'block',
-                                textAlign: 'right'
-                              }}
-                            >
+                          <>
+                            <Typography variant="body1" sx={{ fontWeight: 'bold', color: 'secondary.main' }}>
+                              {formatCurrency(price.price)} <LocalOfferIcon fontSize="small" />
+                            </Typography>
+                            <Typography variant="caption" sx={{ textDecoration: 'line-through', display: 'block' }}>
                               {price.regularPrice && formatCurrency(price.regularPrice)}
                             </Typography>
-                          </Box>
+                          </>
                         ) : (
-                          formatCurrency(price.price)
+                          <Typography variant="body1">
+                            {formatCurrency(price.price)}
+                          </Typography>
                         )}
-                        {displayUnitPrice(price, grocery) && (
-                          <Typography variant="caption" sx={{ display: 'block', textAlign: 'right' }}>
+                        
+                        {price.unitPrice && (
+                          <Typography variant="caption" color="text.secondary">
                             {displayUnitPrice(price, grocery)}
                           </Typography>
                         )}
                       </Box>
                     </ListItem>
                   );
-                }).filter(Boolean)}
+                })}
               </List>
-            </DialogContent>
-            <DialogActions>
-              <Button 
-                onClick={handleShareSupermarketList}
-                variant="contained" 
-                startIcon={<ShareIcon />}
-                color="primary"
-              >
-                Share List
-              </Button>
-            </DialogActions>
-          </>
-        )}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseProductDialog}>{t('dialog.close')}</Button>
+          <Button 
+            startIcon={<ShareIcon />} 
+            onClick={handleShareSupermarketList} 
+            variant="contained"
+          >
+            {t('dialog.share')}
+          </Button>
+        </DialogActions>
       </Dialog>
     </Box>
   );

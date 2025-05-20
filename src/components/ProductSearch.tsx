@@ -24,6 +24,7 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import { ProductVariant, Grocery } from '../types';
 import { findProductInSupermarkets } from '../services/rawProductData';
+import { useLanguage } from '../context/LanguageContext';
 
 interface ProductSearchProps {
   onAddGrocery: (grocery: Grocery) => void;
@@ -38,6 +39,7 @@ interface SupermarketProduct {
 }
 
 const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<ProductVariant[]>([]);
   const [supermarketResults, setSupermarketResults] = useState<SupermarketProduct[]>([]);
@@ -125,7 +127,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
         
         // Check if no results were found in either search
         if (flatResults.length === 0) {
-          setError(`No products found for "${searchTerm}". Check if supermarkets.json is loaded correctly.`);
+          setError(t('search.noProductsFound').replace('{term}', searchTerm));
         }
         setLoading(false);
       } else if (searchTerm.trim().length === 0) {
@@ -247,7 +249,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
     <>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h6" sx={{ mb: 2 }}>
-          Search for Products
+          {t('search.title')}
         </Typography>
         
         <Autocomplete
@@ -264,7 +266,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
           }}
           groupBy={(option) => {
             if (typeof option === 'string') return '';
-            return option.type === 'product' ? 'Product Database' : 'Supermarket Products';
+            return option.type === 'product' ? t('search.productDatabase') : t('search.supermarketProducts');
           }}
           value={null}
           inputValue={inputValue}
@@ -275,7 +277,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
           renderInput={(params) => (
             <TextField
               {...params}
-              label="Search for products (e.g., milk, bread, popcorn)"
+              label={t('search.placeholder')}
               variant="outlined"
               fullWidth
               InputProps={{
@@ -310,7 +312,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
           <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
             <CircularProgress size={16} sx={{ mr: 1 }} />
             <Typography variant="caption" color="text.secondary">
-              Searching supermarkets...
+              {t('search.searching')}
             </Typography>
           </Box>
         )}
@@ -319,7 +321,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
         {error && (
           <Alert severity="warning" sx={{ mt: 2 }} action={
             <Button color="inherit" size="small" onClick={() => setShowDebug(!showDebug)}>
-              {showDebug ? 'Hide Debug' : 'Show Debug'}
+              {showDebug ? t('search.hideDebug') : t('search.showDebug')}
             </Button>
           }>
             {error}
@@ -341,7 +343,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
         
         {(searchResults.length > 0 || supermarketResults.length > 0) && (
           <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 1 }}>
-            Found {searchResults.length + supermarketResults.length} products. Click on one to add to your list.
+            {t('search.resultsFound').replace('{count}', (searchResults.length + supermarketResults.length).toString())}
           </Typography>
         )}
       </Box>
@@ -350,7 +352,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
       {searchResults.length > 0 && (
         <Box sx={{ mb: 4 }}>
           <Typography variant="h6" sx={{ mb: 2 }}>
-            Product Database Results
+            {t('search.productDatabase')}
           </Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
             {searchResults.map((product) => (
@@ -395,7 +397,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
       {supermarketResults.length > 0 && (
         <Box sx={{ mt: 3 }}>
           <Typography variant="h6" sx={{ mb: 2 }}>
-            Supermarket Products {loading && <Typography component="span" variant="caption" color="text.secondary">(updating...)</Typography>}
+            {t('search.supermarketProducts')} {loading && <Typography component="span" variant="caption" color="text.secondary">{t('search.updating')}</Typography>}
           </Typography>
           
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
@@ -428,7 +430,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
       {/* Product selection modal */}
       <Dialog open={showModal} onClose={() => setShowModal(false)}>
         <DialogTitle>
-          Add to Shopping List
+          {t('search.addToList')}
         </DialogTitle>
         <DialogContent>
           {selectedProduct && (
@@ -462,14 +464,14 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
                   </Typography>
                   {selectedProduct.category && (
                     <Typography variant="body2" color="text.secondary">
-                      Category: {selectedProduct.category}
+                      {t('search.category').replace('{category}', selectedProduct.category)}
                     </Typography>
                   )}
                 </Box>
               </Box>
 
               <TextField
-                label={`Quantity (${selectedProduct.unit})`}
+                label={t('search.quantityUnit').replace('{unit}', selectedProduct.unit)}
                 type="number"
                 value={quantity}
                 onChange={(e) => setQuantity(parseFloat(e.target.value))}
@@ -495,7 +497,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
               </Box>
 
               <TextField
-                label="Quantity"
+                label={t('search.quantity')}
                 type="number"
                 value={quantity}
                 onChange={(e) => setQuantity(parseFloat(e.target.value))}
@@ -508,13 +510,13 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowModal(false)}>Cancel</Button>
+          <Button onClick={() => setShowModal(false)}>{t('search.cancel')}</Button>
           <Button 
             onClick={handleAddToList} 
             variant="contained" 
             color="primary"
           >
-            Add to List
+            {t('search.addToListButton')}
           </Button>
         </DialogActions>
       </Dialog>

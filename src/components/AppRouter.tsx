@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { CountryProvider, VALID_COUNTRY_CODES, CountryCode } from '../context/CountryContext';
+import { LanguageProvider, LanguageCode } from '../context/LanguageContext';
 import App from '../App';
 import NotFoundPage from './NotFoundPage';
 
@@ -12,6 +13,8 @@ const AppRouter: React.FC = () => {
   const [isInvalidRoute, setIsInvalidRoute] = useState(false);
   // Store valid country code from URL
   const [countryCode, setCountryCode] = useState<CountryCode>('nl');
+  // Store initial language based on country
+  const [initialLanguage, setInitialLanguage] = useState<LanguageCode>('en');
   
   useEffect(() => {
     // Function to validate URL and update state
@@ -30,6 +33,15 @@ const AppRouter: React.FC = () => {
           // Update URL with default country without refreshing
           window.history.replaceState(null, '', `/${defaultCountry}`);
           setCountryCode(defaultCountry);
+          
+          // Set initial language based on country
+          const countryToLanguage: Record<string, LanguageCode> = {
+            'nl': 'nl',
+            'uk': 'en',
+            'de': 'de'
+          };
+          setInitialLanguage(countryToLanguage[defaultCountry] || 'en');
+          
           setIsInvalidRoute(false);
           return;
         }
@@ -37,6 +49,15 @@ const AppRouter: React.FC = () => {
         // Check if country code is valid
         if (VALID_COUNTRY_CODES.includes(urlCountryCode)) {
           setCountryCode(urlCountryCode as CountryCode);
+          
+          // Set initial language based on country
+          const countryToLanguage: Record<string, LanguageCode> = {
+            'nl': 'nl',
+            'uk': 'en',
+            'de': 'de'
+          };
+          setInitialLanguage(countryToLanguage[urlCountryCode] || 'en');
+          
           setIsInvalidRoute(false);
         } else {
           // Invalid country code - don't redirect
@@ -46,6 +67,7 @@ const AppRouter: React.FC = () => {
         console.error('Error validating route:', error);
         // Default to Netherlands on error
         setCountryCode('nl');
+        setInitialLanguage('nl');
         setIsInvalidRoute(false);
       }
     };
@@ -72,7 +94,9 @@ const AppRouter: React.FC = () => {
   // Otherwise, render the application with the validated country code
   return (
     <CountryProvider initialCountryCode={countryCode}>
-      <App />
+      <LanguageProvider initialLanguage={initialLanguage}>
+        <App />
+      </LanguageProvider>
     </CountryProvider>
   );
 };

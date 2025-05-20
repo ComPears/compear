@@ -25,6 +25,24 @@ export const supermarkets: Supermarket[] = [
         "s": "200 g"
       },
       {
+        "n": "Houdbare halfvolle melk",
+        "o": null,
+        "p": "1.05",
+        "s": "1 L"
+      },
+      {
+        "n": "AH Biologisch Rode linzen",
+        "o": null,
+        "p": "2.49",
+        "s": "500 g"
+      },
+      {
+        "n": "AH Biologisch Groene linzen",
+        "o": null,
+        "p": "2.49",
+        "s": "500 g"
+      },
+      {
         "n": "AH Terra Biologisch kikkererwten",
         "o": null,
         "p": "1.99",
@@ -445,7 +463,7 @@ export const supermarkets: Supermarket[] = [
     "i": "https://www.dirk.nl/favicon.ico",
     "d": [
       {
-        "n": "Dirk Halfvolle Melk",
+        "n": "Halfvolle Melk",
         "o": null,
         "p": "1.09",
         "s": "1 L"
@@ -692,7 +710,7 @@ export const supermarkets: Supermarket[] = [
         "s": "350 g"
       },
       {
-        "n": "Aldi Biologische Melk",
+        "n": "Biologische Melk",
         "o": null,
         "p": "1.19",
         "s": "1 L"
