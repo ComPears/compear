@@ -2,6 +2,69 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+## Environment Setup
+
+The application uses environment variables for configuration. You'll need to set up email service credentials for the suggestion feature to work.
+
+### 1. Create Environment File
+
+Create a `.env` file in the project root with the following variables:
+
+```env
+# Email Service Configuration
+# Choose one of the following options:
+
+# Option 1: EmailJS (Recommended)
+# Get these from https://www.emailjs.com/
+REACT_APP_EMAILJS_SERVICE_ID=your_service_id
+REACT_APP_EMAILJS_TEMPLATE_ID=your_template_id
+REACT_APP_EMAILJS_PUBLIC_KEY=your_public_key
+
+# Option 2: Formspree (Alternative)
+# Get this from https://formspree.io/
+REACT_APP_FORMSPREE_FORM_ID=your_form_id
+
+# Admin Email (where suggestions are sent)
+REACT_APP_ADMIN_EMAIL=admin@compears.shop
+```
+
+### 2. Email Service Setup Options
+
+#### Option A: EmailJS (Recommended)
+1. Go to [EmailJS.com](https://www.emailjs.com/) and create a free account
+2. Create an email service (Gmail, Outlook, etc.)
+3. Create an email template with these variables:
+   - `{{from_name}}` - User's name
+   - `{{from_email}}` - User's email
+   - `{{message}}` - The suggestion text
+   - `{{to_email}}` - Admin email
+   - `{{reply_to}}` - User's email for replies
+4. Get your Service ID, Template ID, and Public Key
+5. Add them to your `.env` file
+
+#### Option B: Formspree
+1. Go to [Formspree.io](https://formspree.io/) and create an account
+2. Create a new form
+3. Get your form ID
+4. Add it to your `.env` file as `REACT_APP_FORMSPREE_FORM_ID`
+
+### 3. Example Email Template (EmailJS)
+
+**Subject:** `New ComPear Suggestion from {{from_name}}`
+
+**Body:**
+```
+You have received a new suggestion for ComPear!
+
+From: {{from_name}} ({{from_email}})
+
+Message:
+{{message}}
+
+---
+Sent via ComPear Suggestion System
+```
+
 ## Available Scripts
 
 In the project directory, you can run:

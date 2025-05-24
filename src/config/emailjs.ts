@@ -6,15 +6,46 @@
  * 2. Create a free account
  * 3. Create an email service (Gmail, Outlook, etc.)
  * 4. Create an email template
- * 5. Get your credentials and replace the values below
+ * 5. Create a .env file in the project root with your credentials
+ * 
+ * Required Environment Variables:
+ * - REACT_APP_EMAILJS_SERVICE_ID
+ * - REACT_APP_EMAILJS_TEMPLATE_ID
+ * - REACT_APP_EMAILJS_PUBLIC_KEY
  */
 
 export const EMAILJS_CONFIG = {
-  // Replace these with your actual EmailJS credentials
-  SERVICE_ID: 'YOUR_SERVICE_ID',       // e.g., 'service_abc123'
-  TEMPLATE_ID: 'YOUR_TEMPLATE_ID',     // e.g., 'template_xyz789'
-  PUBLIC_KEY: 'YOUR_PUBLIC_KEY',       // e.g., 'user_abcdefghijklmnop'
+  SERVICE_ID: process.env.REACT_APP_EMAILJS_SERVICE_ID || '',
+  TEMPLATE_ID: process.env.REACT_APP_EMAILJS_TEMPLATE_ID || '',
+  PUBLIC_KEY: process.env.REACT_APP_EMAILJS_PUBLIC_KEY || '',
 };
+
+// Validate that required environment variables are set
+const validateConfig = () => {
+  const missingVars = [];
+  
+  if (!EMAILJS_CONFIG.SERVICE_ID) {
+    missingVars.push('REACT_APP_EMAILJS_SERVICE_ID');
+  }
+  if (!EMAILJS_CONFIG.TEMPLATE_ID) {
+    missingVars.push('REACT_APP_EMAILJS_TEMPLATE_ID');
+  }
+  if (!EMAILJS_CONFIG.PUBLIC_KEY) {
+    missingVars.push('REACT_APP_EMAILJS_PUBLIC_KEY');
+  }
+  
+  if (missingVars.length > 0) {
+    console.warn(
+      'Missing EmailJS environment variables:',
+      missingVars.join(', '),
+      '\nPlease create a .env file with these variables.'
+    );
+  }
+  
+  return missingVars.length === 0;
+};
+
+export const isEmailJSConfigured = validateConfig();
 
 /**
  * Email Template Variables (for reference):

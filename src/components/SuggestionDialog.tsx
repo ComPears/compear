@@ -14,7 +14,6 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import SendIcon from '@mui/icons-material/Send';
-import { useLanguage } from '../context/LanguageContext';
 import { sendSuggestion } from '../services/emailService';
 
 interface SuggestionDialogProps {
@@ -23,7 +22,6 @@ interface SuggestionDialogProps {
 }
 
 const SuggestionDialog: React.FC<SuggestionDialogProps> = ({ open, onClose }) => {
-  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     name: '',
     email: '',

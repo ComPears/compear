@@ -1,9 +1,9 @@
 import emailjs from '@emailjs/browser';
-import { EMAILJS_CONFIG } from '../config/emailjs';
+import { EMAILJS_CONFIG, isEmailJSConfigured } from '../config/emailjs';
 
 /**
- * Email Service for sending suggestions to admin@compears.shop
- * Choose one of the following methods based on your preference
+ * Email Service for sending suggestions
+ * Configuration is managed through environment variables
  */
 
 interface SuggestionData {
@@ -12,38 +12,62 @@ interface SuggestionData {
   suggestion: string;
 }
 
+// Get admin email from environment variables
+const ADMIN_EMAIL = process.env.REACT_APP_ADMIN_EMAIL || 'admin@compears.shop';
+const FORMSPREE_FORM_ID = process.env.REACT_APP_FORMSPREE_FORM_ID || '';
+
 // ========================================
 // OPTION 1: EmailJS (Recommended - No backend needed)
 // ========================================
 // Install: npm install @emailjs/browser ✅
 // Setup: Create account at https://www.emailjs.com/
-// Configuration is now in src/config/emailjs.ts
+// Configuration is managed through environment variables
 
 export const sendWithEmailJS = async (data: SuggestionData) => {
+  if (!isEmailJSConfigured) {
+    throw new Error(
+      'EmailJS is not properly configured. Please check your environment variables.'
+    );
+  }
+
   const templateParams = {
     from_name: data.name || 'Anonymous',
     from_email: data.email || 'No email provided',
     message: data.suggestion,
-    to_email: 'admin@compears.shop',
+    to_email: ADMIN_EMAIL,
     reply_to: data.email || 'noreply@compears.shop'
   };
 
-  return emailjs.send(
-    EMAILJS_CONFIG.SERVICE_ID,
-    EMAILJS_CONFIG.TEMPLATE_ID,
-    templateParams,
-    EMAILJS_CONFIG.PUBLIC_KEY
-  );
+  try {
+    const response = await emailjs.send(
+      EMAILJS_CONFIG.SERVICE_ID,
+      EMAILJS_CONFIG.TEMPLATE_ID,
+      templateParams,
+      EMAILJS_CONFIG.PUBLIC_KEY
+    );
+    
+    console.log('Email sent successfully:', response);
+    return response;
+  } catch (error) {
+    console.error('EmailJS error:', error);
+    throw new Error('Failed to send email via EmailJS');
+  }
 };
 
 // ========================================
 // OPTION 2: Formspree (Simple form service)
 // ========================================
 // Setup: Create account at https://formspree.io/
-// Get your form endpoint and replace YOUR_FORM_ID
+// Set REACT_APP_FORMSPREE_FORM_ID in your .env file
 
 export const sendWithFormspree = async (data: SuggestionData) => {
-  const response = await fetch('https://formspree.io/f/YOUR_FORM_ID', {
+  if (!FORMSPREE_FORM_ID) {
+    throw new Error(
+      'Formspree form ID is not configured. Please set REACT_APP_FORMSPREE_FORM_ID in your .env file.'
+    );
+  }
+
+  const response = await fetch(`https://formspree.io/f/${FORMSPREE_FORM_ID}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -58,7 +82,7 @@ export const sendWithFormspree = async (data: SuggestionData) => {
   });
 
   if (!response.ok) {
-    throw new Error('Failed to send suggestion');
+    throw new Error('Failed to send suggestion via Formspree');
   }
 
   return response.json();
@@ -84,7 +108,7 @@ export const sendWithNetlifyForms = async (data: SuggestionData) => {
   });
 
   if (!response.ok) {
-    throw new Error('Failed to send suggestion');
+    throw new Error('Failed to send suggestion via Netlify Forms');
   }
 
   return response;
@@ -105,28 +129,40 @@ export const sendWithBackendAPI = async (data: SuggestionData) => {
       name: data.name || 'Anonymous',
       email: data.email || 'No email provided',
       suggestion: data.suggestion,
-      to: 'admin@compears.shop'
+      to: ADMIN_EMAIL
     }),
   });
 
   if (!response.ok) {
-    throw new Error('Failed to send suggestion');
+    throw new Error('Failed to send suggestion via backend API');
   }
 
   return response.json();
 };
 
 // ========================================
-// QUICK START: Use this for testing
+// MAIN EXPORT: Use this for sending suggestions
 // ========================================
-// This just logs to console - replace with your chosen method above
 
 export const sendSuggestion = async (data: SuggestionData) => {
-  // Using EmailJS to send suggestions to admin@compears.shop
-  return sendWithEmailJS(data);
-  
-  // Alternative methods (uncomment to use):
-  // return sendWithFormspree(data);
-  // return sendWithNetlifyForms(data);
-  // return sendWithBackendAPI(data);
+  try {
+    // Primary method: EmailJS
+    if (isEmailJSConfigured) {
+      return await sendWithEmailJS(data);
+    }
+    
+    // Fallback method: Formspree
+    if (FORMSPREE_FORM_ID) {
+      return await sendWithFormspree(data);
+    }
+    
+    // If no service is configured, throw an error
+    throw new Error(
+      'No email service is configured. Please set up EmailJS or Formspree in your .env file.'
+    );
+    
+  } catch (error) {
+    console.error('Error sending suggestion:', error);
+    throw error;
+  }
 }; 
