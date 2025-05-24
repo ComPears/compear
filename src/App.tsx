@@ -33,13 +33,8 @@ const App: React.FC = () => {
   const [groceries, setGroceries] = useState<Grocery[]>([]);
   const [triggerCheapestDialog, setTriggerCheapestDialog] = useState(false);
 
-  // Effect to update URL when country changes
-  useEffect(() => {
-    // Update the URL to match the selected country
-    if (!window.location.pathname.startsWith(`/${country.code}`)) {
-      window.history.pushState(null, '', `/${country.code}`);
-    }
-  }, [country.code]);
+  // Note: URL management is handled by AppRouter.tsx
+  // No need to manage URL changes here to avoid conflicts
 
   const handleAddGrocery = (newGrocery: Grocery) => {
     setGroceries(prevGroceries => [...prevGroceries, newGrocery]);

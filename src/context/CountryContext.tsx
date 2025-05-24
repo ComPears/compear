@@ -1,11 +1,11 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 export type CountryCode = 'nl' | 'uk' | 'de';
 
 // Valid country codes for the application
 export const VALID_COUNTRY_CODES = ['nl', 'uk', 'de'];
 
-interface CountryInfo {
+export interface CountryInfo {
   code: CountryCode;
   name: string;
   available: boolean;
@@ -49,14 +49,23 @@ export const CountryProvider: React.FC<CountryProviderProps> = ({
     return countries.find(c => c.code === initialCountryCode) || countries[0];
   };
   
-  const [country, setCountryState] = useState<CountryInfo>(getInitialCountry());
+  const [country, setCountryState] = useState<CountryInfo>(() => getInitialCountry());
 
-  // Update country state and localStorage, but don't touch URL
+
+
+  // Update country state, localStorage, and URL
   const setCountry = (countryCode: CountryCode) => {
     const selectedCountry = countries.find(c => c.code === countryCode) || countries[0];
     setCountryState(selectedCountry);
+    
+    // Only update localStorage when user explicitly changes country (not from URL)
     localStorage.setItem('countryCode', countryCode);
     document.title = `ComPear - ${selectedCountry.name}`;
+    
+    // Update URL to match the selected country
+    if (window.location.pathname !== `/${countryCode}`) {
+      window.history.pushState(null, '', `/${countryCode}`);
+    }
   };
   
   const isCountryAvailable = (countryCode: CountryCode): boolean => {
