@@ -276,105 +276,8 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
           )}
         </Alert>
       )}
-      
+
       <TabPanel value={tabValue} index={0}>
-        <OptimalShoppingStrategy groceriesWithPrices={groceriesWithPrices} />
-      </TabPanel>
-      
-      <TabPanel value={tabValue} index={1}>
-        {/* Total Summary Card */}
-        {groceriesWithPrices.length > 0 && supermarketSummaries.length > 0 && (
-          <Card sx={{ mb: 4 }}>
-            <CardContent>
-              <Box display="flex" alignItems="center" mb={2}>
-                <CompareIcon sx={{ mr: 1.5 }} color="primary" />
-                <Typography variant="h6" component="div">
-                  All Stores Comparison
-                </Typography>
-              </Box>
-              
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Total for {groceriesWithPrices.length} items across Dutch supermarkets
-              </Typography>
-              
-              <TableContainer 
-                component={Paper} 
-                variant="outlined" 
-                sx={{ 
-                  mt: 2,
-                  maxHeight: 500, 
-                  overflowY: 'auto'
-                }}
-              >
-                <Table size="small" stickyHeader>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell sx={{ fontWeight: 'bold', width: '25%' }}>Supermarket</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>Total Price</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>Items Found</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>Products</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>On Sale</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {supermarketSummaries.map((summary) => (
-                      <TableRow 
-                        key={summary.supermarketName}
-                        sx={{
-                          backgroundColor: summary === cheapestSupermarket ? 'success.light' : 'inherit'
-                        }}
-                      >
-                        <TableCell component="th" scope="row">
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <Avatar 
-                              src={getSupermarketLogo(summary.supermarketName)} 
-                              alt={summary.supermarketName}
-                              sx={{ width: 24, height: 24, mr: 1 }}
-                            />
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                              {summary.supermarketName}
-                              {summary === cheapestSupermarket && (
-                                <Chip 
-                                  label="Cheapest" 
-                                  size="small" 
-                                  color="success" 
-                                  sx={{ ml: 1 }}
-                                />
-                              )}
-                            </Box>
-                          </Box>
-                        </TableCell>
-                        <TableCell align="right">{formatCurrency(summary.totalPrice)}</TableCell>
-                        <TableCell align="right">
-                          {summary.productCount}/{groceriesWithPrices.length}
-                        </TableCell>
-                        <TableCell align="right">
-                          {Object.keys(summary.products).map(productId => {
-                            const grocery = groceriesWithPrices.find(g => g.id === productId);
-                            return grocery ? grocery.name + ", " : "";
-                          }).join("").replace(/, $/, "")}
-                        </TableCell>
-                        <TableCell align="right">
-                          {summary.saleCount > 0 ? (
-                            <Chip 
-                              icon={<LocalOfferIcon />} 
-                              label={`${summary.saleCount} items`} 
-                              size="small" 
-                              color="secondary" 
-                            />
-                          ) : "None"}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </CardContent>
-          </Card>
-        )}
-      </TabPanel>
-      
-      <TabPanel value={tabValue} index={2}>
         {/* Individual Grocery Cards */}
         {groceriesWithPrices.map((grocery) => {
           const lowestPriceSupermarket = getLowestPriceSupermarket(grocery.prices);
@@ -480,6 +383,103 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
             </Card>
           );
         })}
+      </TabPanel>
+
+      <TabPanel value={tabValue} index={1}>
+        {/* Total Summary Card */}
+        {groceriesWithPrices.length > 0 && supermarketSummaries.length > 0 && (
+          <Card sx={{ mb: 4 }}>
+            <CardContent>
+              <Box display="flex" alignItems="center" mb={2}>
+                <CompareIcon sx={{ mr: 1.5 }} color="primary" />
+                <Typography variant="h6" component="div">
+                  All Stores Comparison
+                </Typography>
+              </Box>
+              
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                Total for {groceriesWithPrices.length} items across Dutch supermarkets
+              </Typography>
+              
+              <TableContainer 
+                component={Paper} 
+                variant="outlined" 
+                sx={{ 
+                  mt: 2,
+                  maxHeight: 500, 
+                  overflowY: 'auto'
+                }}
+              >
+                <Table size="small" stickyHeader>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 'bold', width: '25%' }}>Supermarket</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>Total Price</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>Items Found</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>Products</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>On Sale</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {supermarketSummaries.map((summary) => (
+                      <TableRow 
+                        key={summary.supermarketName}
+                        sx={{
+                          backgroundColor: summary === cheapestSupermarket ? 'success.light' : 'inherit'
+                        }}
+                      >
+                        <TableCell component="th" scope="row">
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Avatar 
+                              src={getSupermarketLogo(summary.supermarketName)} 
+                              alt={summary.supermarketName}
+                              sx={{ width: 24, height: 24, mr: 1 }}
+                            />
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              {summary.supermarketName}
+                              {summary === cheapestSupermarket && (
+                                <Chip 
+                                  label="Cheapest" 
+                                  size="small" 
+                                  color="success" 
+                                  sx={{ ml: 1 }}
+                                />
+                              )}
+                            </Box>
+                          </Box>
+                        </TableCell>
+                        <TableCell align="right">{formatCurrency(summary.totalPrice)}</TableCell>
+                        <TableCell align="right">
+                          {summary.productCount}/{groceriesWithPrices.length}
+                        </TableCell>
+                        <TableCell align="right">
+                          {Object.keys(summary.products).map(productId => {
+                            const grocery = groceriesWithPrices.find(g => g.id === productId);
+                            return grocery ? grocery.name + ", " : "";
+                          }).join("").replace(/, $/, "")}
+                        </TableCell>
+                        <TableCell align="right">
+                          {summary.saleCount > 0 ? (
+                            <Chip 
+                              icon={<LocalOfferIcon />} 
+                              label={`${summary.saleCount} items`} 
+                              size="small" 
+                              color="secondary" 
+                            />
+                          ) : "None"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </CardContent>
+          </Card>
+        )}
+      </TabPanel>
+      
+      <TabPanel value={tabValue} index={2}>
+        <OptimalShoppingStrategy groceriesWithPrices={groceriesWithPrices} />
       </TabPanel>
     </Box>
   );
