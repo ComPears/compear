@@ -138,6 +138,7 @@ const App: React.FC = () => {
                 onClick={handleSuggestionClick}
                 sx={{ mr: 2 }}
                 aria-label="Open suggestion dialog"
+                aria-haspopup="dialog"
               >
                 <LightbulbIcon />
               </IconButton>
