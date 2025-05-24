@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Container, 
   Typography, 
@@ -74,9 +74,9 @@ const App: React.FC = () => {
     }
   };
 
-  const handleCheapestDialogHandled = () => {
+  const handleCheapestDialogHandled = useCallback(() => {
     setTriggerCheapestDialog(false);
-  };
+  }, []);
 
   return (
     <Box sx={{ 
