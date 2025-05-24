@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Container, 
   Typography, 
@@ -31,6 +31,7 @@ const App: React.FC = () => {
   const { country, setCountry } = useCountry();
   const { language, setLanguage, t } = useLanguage();
   const [groceries, setGroceries] = useState<Grocery[]>([]);
+  const [triggerCheapestDialog, setTriggerCheapestDialog] = useState(false);
 
   // Effect to update URL when country changes
   useEffect(() => {
@@ -66,6 +67,16 @@ const App: React.FC = () => {
       setLanguage(newLanguage);
     }
   };
+
+  const handleCartClick = () => {
+    if (groceries.length > 0) {
+      setTriggerCheapestDialog(true);
+    }
+  };
+
+  const handleCheapestDialogHandled = useCallback(() => {
+    setTriggerCheapestDialog(false);
+  }, []);
 
   return (
     <Box sx={{ 
@@ -119,9 +130,17 @@ const App: React.FC = () => {
             
             {country.available && (
               <>
-                <Badge badgeContent={groceries.length} color="secondary" sx={{ mr: 2 }}>
-                  <ShoppingCartIcon />
-                </Badge>
+                <IconButton
+                  color="inherit"
+                  onClick={handleCartClick}
+                  disabled={groceries.length === 0}
+                  aria-label="Open cheapest supermarket dialog"
+                  sx={{ mr: 2 }}
+                >
+                  <Badge badgeContent={groceries.length} color="secondary">
+                    <ShoppingCartIcon />
+                  </Badge>
+                </IconButton>
                 {groceries.length > 0 && (
                   <Button 
                     color="inherit" 
@@ -173,7 +192,9 @@ const App: React.FC = () => {
             
             <GroceryComparison 
               groceries={groceries} 
-              onRemoveGrocery={handleRemoveGrocery} 
+              onRemoveGrocery={handleRemoveGrocery}
+              openCheapestDialog={triggerCheapestDialog}
+              onCheapestDialogHandled={handleCheapestDialogHandled}
             />
           </>
         )}
