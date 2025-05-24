@@ -40,6 +40,7 @@ import CompareIcon from '@mui/icons-material/Compare';
 import ShareIcon from '@mui/icons-material/Share';
 import CloseIcon from '@mui/icons-material/Close';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { useTheme, useMediaQuery } from '@mui/material';
 import { Grocery, GroceryWithPrices, SupermarketPrice } from '../types';
 import { fetchPricesForGrocery, supermarkets } from '../services/supermarketService';
 import OptimalShoppingStrategy from './OptimalShoppingStrategy';
@@ -77,9 +78,14 @@ function TabPanel(props: TabPanelProps) {
       id={`simple-tabpanel-${index}`}
       aria-labelledby={`simple-tab-${index}`}
       {...other}
+      style={{ width: '100%' }} // Ensure full width
     >
       {value === index && (
-        <Box sx={{ pt: 3 }}>
+        <Box sx={{ 
+          pt: { xs: 2, sm: 3 }, // Less top padding on mobile
+          px: { xs: 0, sm: 0 }, // Consistent padding
+          width: '100%'
+        }}>
           {children}
         </Box>
       )}
@@ -107,6 +113,8 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({
 }) => {
   const { t } = useLanguage();
   const { country } = useCountry();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [groceriesWithPrices, setGroceriesWithPrices] = useState<GroceryWithPrices[]>([]);
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [tabValue, setTabValue] = useState(0);
@@ -381,11 +389,55 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({
             value={tabValue} 
             onChange={handleTabChange} 
             aria-label="view modes"
-            centered
+            variant="fullWidth"
+            sx={{
+              // Mobile responsive styling
+              '& .MuiTab-root': {
+                minHeight: { xs: 60, sm: 48 }, // Taller on mobile for better touch targets
+                fontSize: { xs: '0.75rem', sm: '0.875rem' }, // Smaller text on mobile
+                px: { xs: 0.5, sm: 2 }, // Less padding on mobile
+                '&.Mui-selected': {
+                  backgroundColor: { xs: 'action.selected', sm: 'transparent' }, // Highlight selected tab on mobile
+                  fontWeight: 'bold'
+                }
+              },
+              '& .MuiTab-iconWrapper': {
+                mb: { xs: 0.5, sm: 1 },
+              },
+              // Enhanced tab indicator
+              '& .MuiTabs-indicator': {
+                height: { xs: 3, sm: 2 }, // Thicker indicator on mobile
+                backgroundColor: 'primary.main'
+              }
+            }}
           >
-            <Tab icon={<ShoppingCartIcon />} label={t('tabs.individualItems')} />
-            <Tab icon={<CompareIcon />} label={t('tabs.compareAllStores')} />
-            <Tab icon={<RouteIcon />} label={t('tabs.optimalStrategy')} />
+            <Tab 
+              icon={<ShoppingCartIcon />} 
+              label={isMobile ? t('tabs.individualItemsShort') : t('tabs.individualItems')}
+              sx={{
+                '& .MuiTab-labelContainer': {
+                  fontSize: { xs: '0.7rem', sm: '0.875rem' }
+                }
+              }}
+            />
+            <Tab 
+              icon={<CompareIcon />} 
+              label={isMobile ? t('tabs.compareAllStoresShort') : t('tabs.compareAllStores')}
+              sx={{
+                '& .MuiTab-labelContainer': {
+                  fontSize: { xs: '0.7rem', sm: '0.875rem' }
+                }
+              }}
+            />
+            <Tab 
+              icon={<RouteIcon />} 
+              label={isMobile ? t('tabs.optimalStrategyShort') : t('tabs.optimalStrategy')}
+              sx={{
+                '& .MuiTab-labelContainer': {
+                  fontSize: { xs: '0.7rem', sm: '0.875rem' }
+                }
+              }}
+            />
           </Tabs>
         </Box>
       )}
@@ -562,21 +614,22 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({
                   .replace('{country}', country.name)}
               </Typography>
               
+              {/* Info box - always visible above the table */}
+              <Box sx={{ p: 2, bgcolor: 'info.light', borderRadius: 1, mt: 2, mb: 2, display: 'flex', alignItems: 'center' }}>
+                <InfoIcon sx={{ mr: 1 }} color="info" />
+                <Typography variant="body2">
+                  {t('info.estimatedPrices')}
+                </Typography>
+              </Box>
+              
               <TableContainer 
                 component={Paper} 
                 variant="outlined" 
                 sx={{ 
-                  mt: 2,
                   maxHeight: 500, // Make the table scrollable
                   overflowY: 'auto'
                 }}
               >
-                <Box sx={{ p: 2, bgcolor: 'info.light', borderRadius: 1, mb: 2, display: 'flex', alignItems: 'center' }}>
-                  <InfoIcon sx={{ mr: 1 }} color="info" />
-                  <Typography variant="body2">
-                    {t('info.estimatedPrices')}
-                  </Typography>
-                </Box>
                 <Table size="small" stickyHeader>
                   <TableHead>
                     <TableRow>
