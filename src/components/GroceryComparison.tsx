@@ -49,7 +49,15 @@ import { useCountry } from '../context/CountryContext';
 interface GroceryComparisonProps {
   groceries: Grocery[];
   onRemoveGrocery: (id: string) => void;
+  /** 
+   * When true, triggers the cheapest supermarket dialog to open automatically.
+   * Used to open the dialog from external components (e.g., cart icon click).
+   */
   openCheapestDialog?: boolean;
+  /** 
+   * Callback function called after the cheapest dialog trigger has been handled.
+   * Should be used to reset the openCheapestDialog state in the parent component.
+   */
   onCheapestDialogHandled?: () => void;
 }
 
