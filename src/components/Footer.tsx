@@ -21,7 +21,7 @@ const Footer: React.FC = () => {
           align="center"
           sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 0.5 }}
         >
-          Born out of conversation in the Nigerians @ NL community
+          Made with
           <FavoriteIcon color="error" fontSize="small" sx={{ mx: 0.5 }} />
         </Typography>
       </Container>

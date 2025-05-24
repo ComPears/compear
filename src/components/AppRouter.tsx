@@ -5,79 +5,87 @@ import App from '../App';
 import NotFoundPage from './NotFoundPage';
 
 /**
+ * Validate the current URL and return the appropriate country code and route validity
+ */
+const validateCurrentRoute = () => {
+  try {
+    // Extract country code from URL
+    const pathSegments = window.location.pathname.split('/').filter(Boolean);
+    const urlCountryCode = pathSegments[0];
+    
+    // Handle missing country code
+    if (!urlCountryCode) {
+      // Only use localStorage if there's no URL country code
+      const savedCountry = localStorage.getItem('countryCode') as CountryCode;
+      const defaultCountry = VALID_COUNTRY_CODES.includes(savedCountry) ? savedCountry : 'nl';
+      
+      // Update URL with default country without refreshing
+      window.history.replaceState(null, '', `/${defaultCountry}`);
+      
+      return {
+        countryCode: defaultCountry,
+        isInvalid: false,
+        language: defaultCountry === 'nl' ? 'nl' as LanguageCode : defaultCountry === 'de' ? 'de' as LanguageCode : 'en' as LanguageCode
+      };
+    }
+    
+    // Check if country code is valid
+    if (VALID_COUNTRY_CODES.includes(urlCountryCode)) {
+      // Clear localStorage if it conflicts with URL to prevent interference
+      const savedCountry = localStorage.getItem('countryCode');
+      if (savedCountry && savedCountry !== urlCountryCode) {
+        localStorage.removeItem('countryCode');
+      }
+      
+      // Set language based on country
+      const language = urlCountryCode === 'nl' ? 'nl' as LanguageCode : urlCountryCode === 'de' ? 'de' as LanguageCode : 'en' as LanguageCode;
+      
+      return {
+        countryCode: urlCountryCode as CountryCode,
+        isInvalid: false,
+        language
+      };
+    } else {
+      // Invalid country code - show 404
+      return {
+        countryCode: 'nl' as CountryCode, // fallback for type safety
+        isInvalid: true,
+        language: 'en' as LanguageCode
+      };
+    }
+  } catch (error) {
+    console.error('Error validating route:', error);
+    // Default to Netherlands on error
+    return {
+      countryCode: 'nl' as CountryCode,
+      isInvalid: false,
+      language: 'nl' as LanguageCode
+    };
+  }
+};
+
+/**
  * AppRouter component that handles routing and country validation
  * This component acts as the entry point for the application
  */
 const AppRouter: React.FC = () => {
+  // Validate route synchronously during initialization to avoid loading flash
+  const initialRouteState = validateCurrentRoute();
+  
   // Track if page should show 404
-  const [isInvalidRoute, setIsInvalidRoute] = useState(false);
+  const [isInvalidRoute, setIsInvalidRoute] = useState(initialRouteState.isInvalid);
   // Store valid country code from URL
-  const [countryCode, setCountryCode] = useState<CountryCode>('nl');
+  const [countryCode, setCountryCode] = useState<CountryCode>(initialRouteState.countryCode);
   // Store initial language based on country
-  const [initialLanguage, setInitialLanguage] = useState<LanguageCode>('en');
+  const [initialLanguage, setInitialLanguage] = useState<LanguageCode>(initialRouteState.language);
   
   useEffect(() => {
-    // Function to validate URL and update state
-    const validateRoute = () => {
-      try {
-        // Extract country code from URL
-        const pathSegments = window.location.pathname.split('/').filter(Boolean);
-        const urlCountryCode = pathSegments[0];
-        
-        // Handle missing country code
-        if (!urlCountryCode) {
-          // Get country from localStorage or default to 'nl'
-          const savedCountry = localStorage.getItem('countryCode') as CountryCode;
-          const defaultCountry = VALID_COUNTRY_CODES.includes(savedCountry) ? savedCountry : 'nl';
-          
-          // Update URL with default country without refreshing
-          window.history.replaceState(null, '', `/${defaultCountry}`);
-          setCountryCode(defaultCountry);
-          
-          // Set initial language based on country
-          const countryToLanguage: Record<string, LanguageCode> = {
-            'nl': 'nl',
-            'uk': 'en',
-            'de': 'de'
-          };
-          setInitialLanguage(countryToLanguage[defaultCountry] || 'en');
-          
-          setIsInvalidRoute(false);
-          return;
-        }
-        
-        // Check if country code is valid
-        if (VALID_COUNTRY_CODES.includes(urlCountryCode)) {
-          setCountryCode(urlCountryCode as CountryCode);
-          
-          // Set initial language based on country
-          const countryToLanguage: Record<string, LanguageCode> = {
-            'nl': 'nl',
-            'uk': 'en',
-            'de': 'de'
-          };
-          setInitialLanguage(countryToLanguage[urlCountryCode] || 'en');
-          
-          setIsInvalidRoute(false);
-        } else {
-          // Invalid country code - don't redirect
-          setIsInvalidRoute(true);
-        }
-      } catch (error) {
-        console.error('Error validating route:', error);
-        // Default to Netherlands on error
-        setCountryCode('nl');
-        setInitialLanguage('nl');
-        setIsInvalidRoute(false);
-      }
-    };
-    
-    // Initialize validation
-    validateRoute();
-    
-    // Handle browser navigation events
+    // Handle browser navigation events (back/forward buttons)
     const handlePopState = () => {
-      validateRoute();
+      const routeState = validateCurrentRoute();
+      setIsInvalidRoute(routeState.isInvalid);
+      setCountryCode(routeState.countryCode);
+      setInitialLanguage(routeState.language);
     };
     
     window.addEventListener('popstate', handlePopState);

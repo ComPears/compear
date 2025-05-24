@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 // Import translations
 import { translations } from '../translations';
-import { useCountry } from './CountryContext';
+import { useCountryOptional } from './CountryContext';
 
 // Define available languages
 export type LanguageCode = 'en' | 'nl' | 'de';
@@ -40,24 +40,29 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
   children,
   initialLanguage = 'en'
 }) => {
-  const { country } = useCountry();
+  // Use safe version that doesn't throw when context is not available (e.g., in 404 page)
+  const countryContext = useCountryOptional();
+  const countryCode = countryContext?.country?.code || null;
+
   const [language, setLanguageState] = useState<LanguageCode>(initialLanguage);
 
-  // Update language based on country code
+  // Update language based on country code (only if country context is available)
   useEffect(() => {
-    // Map country code to language code
-    const countryToLanguage: Record<string, LanguageCode> = {
-      'nl': 'nl',
-      'uk': 'en',
-      'de': 'de'
-    };
-    
-    const newLanguage = countryToLanguage[country.code] || 'en';
-    setLanguageState(newLanguage);
-    
-    // Store in localStorage
-    localStorage.setItem('language', newLanguage);
-  }, [country.code]);
+    if (countryCode) {
+      // Map country code to language code
+      const countryToLanguage: Record<string, LanguageCode> = {
+        'nl': 'nl',
+        'uk': 'en',
+        'de': 'de'
+      };
+      
+      const newLanguage = countryToLanguage[countryCode] || 'en';
+      setLanguageState(newLanguage);
+      
+      // Store in localStorage
+      localStorage.setItem('language', newLanguage);
+    }
+  }, [countryCode]);
 
   // Translation function
   const t = (key: string): string => {
