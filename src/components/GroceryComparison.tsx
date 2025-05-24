@@ -360,134 +360,14 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
             aria-label="view modes"
             centered
           >
+            <Tab icon={<ShoppingCartIcon />} label={t('tabs.individualItems')} />
             <Tab icon={<CompareIcon />} label={t('tabs.compareAllStores')} />
             <Tab icon={<RouteIcon />} label={t('tabs.optimalStrategy')} />
-            <Tab icon={<ShoppingCartIcon />} label={t('tabs.individualItems')} />
           </Tabs>
         </Box>
       )}
       
       <TabPanel value={tabValue} index={0}>
-        {/* Total Summary Card */}
-        {groceriesWithPrices.length > 0 && supermarketSummaries.length > 0 && (
-          <Card sx={{ mb: 4 }}>
-            <CardContent>
-              <Box display="flex" alignItems="center" mb={2}>
-                <CompareIcon sx={{ mr: 1.5 }} color="primary" />
-                <Typography variant="h6" component="div">
-                  {t('tabs.compareAllStores')}
-                </Typography>
-              </Box>
-              
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                {t('app.totalItems')
-                  .replace('{count}', groceriesWithPrices.length.toString())
-                  .replace('{country}', country.name)}
-              </Typography>
-              
-              <TableContainer 
-                component={Paper} 
-                variant="outlined" 
-                sx={{ 
-                  mt: 2,
-                  maxHeight: 500, // Make the table scrollable
-                  overflowY: 'auto'
-                }}
-              >
-                <Box sx={{ p: 2, bgcolor: 'info.light', borderRadius: 1, mb: 2, display: 'flex', alignItems: 'center' }}>
-                  <InfoIcon sx={{ mr: 1 }} color="info" />
-                  <Typography variant="body2">
-                    {t('info.estimatedPrices')}
-                  </Typography>
-                </Box>
-                <Table size="small" stickyHeader>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell sx={{ fontWeight: 'bold', width: '25%' }}>{t('table.supermarket')}</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>{t('table.totalPrice')}</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>{t('table.itemsFound')}</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>{t('table.estPrices')}</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>{t('table.onSale')}</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {supermarketSummaries.map((summary) => (
-                      <TableRow 
-                        key={summary.supermarketName}
-                        sx={{
-                          backgroundColor: summary === cheapestSupermarket ? 'success.light' : 'inherit',
-                          cursor: 'pointer',
-                          '&:hover': {
-                            backgroundColor: summary === cheapestSupermarket ? 'success.main' : 'action.hover',
-                          }
-                        }}
-                        onClick={() => handleOpenProductDialog(summary)}
-                      >
-                        <TableCell component="th" scope="row">
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <Avatar 
-                              src={getSupermarketLogo(summary.supermarketName)} 
-                              alt={summary.supermarketName}
-                              sx={{ width: 24, height: 24, mr: 1 }}
-                            />
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                              {summary.supermarketName}
-                              {summary === cheapestSupermarket && (
-                                <Chip 
-                                  label={t('label.cheapest')} 
-                                  size="small" 
-                                  color="success" 
-                                  sx={{ ml: 1 }}
-                                />
-                              )}
-                            </Box>
-                          </Box>
-                        </TableCell>
-                        <TableCell align="right">{formatCurrency(summary.totalPrice)}</TableCell>
-                        <TableCell align="right">
-                          {summary.productCount}/{groceriesWithPrices.length}
-                        </TableCell>
-                        <TableCell align="right">
-                          {summary.estimatedCount > 0 ? (
-                            <>
-                              <Tooltip title={t('info.estimatedPrices')}>
-                                <span>
-                                  <Chip 
-                                    icon={<InfoIcon />} 
-                                    label={`${summary.estimatedCount}`} 
-                                    size="small" 
-                                    color="info" 
-                                  />
-                                </span>
-                              </Tooltip>
-                            </>
-                          ) : t('label.none')}
-                        </TableCell>
-                        <TableCell align="right">
-                          {summary.saleCount > 0 ? (
-                            <Chip 
-                              icon={<LocalOfferIcon />} 
-                              label={`${summary.saleCount} ${t('label.items')}`} 
-                              size="small" 
-                              color="secondary" 
-                            />
-                          ) : t('label.none')}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </CardContent>
-          </Card>
-        )}
-      </TabPanel>
-      
-      <TabPanel value={tabValue} index={1}>
-        <OptimalShoppingStrategy groceriesWithPrices={groceriesWithPrices} />
-      </TabPanel>
-      
-      <TabPanel value={tabValue} index={2}>
         {/* Individual Grocery Cards */}
         {groceriesWithPrices.some(grocery => grocery.prices.some(price => price.isEstimated)) && (
           <Box sx={{ p: 2, bgcolor: 'info.light', borderRadius: 1, mb: 3, display: 'flex', alignItems: 'center' }}>
@@ -639,6 +519,126 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
             </Accordion>
           );
         })}
+      </TabPanel>
+      
+      <TabPanel value={tabValue} index={1}>
+        {/* Total Summary Card */}
+        {groceriesWithPrices.length > 0 && supermarketSummaries.length > 0 && (
+          <Card sx={{ mb: 4 }}>
+            <CardContent>
+              <Box display="flex" alignItems="center" mb={2}>
+                <CompareIcon sx={{ mr: 1.5 }} color="primary" />
+                <Typography variant="h6" component="div">
+                  {t('tabs.compareAllStores')}
+                </Typography>
+              </Box>
+              
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                {t('app.totalItems')
+                  .replace('{count}', groceriesWithPrices.length.toString())
+                  .replace('{country}', country.name)}
+              </Typography>
+              
+              <TableContainer 
+                component={Paper} 
+                variant="outlined" 
+                sx={{ 
+                  mt: 2,
+                  maxHeight: 500, // Make the table scrollable
+                  overflowY: 'auto'
+                }}
+              >
+                <Box sx={{ p: 2, bgcolor: 'info.light', borderRadius: 1, mb: 2, display: 'flex', alignItems: 'center' }}>
+                  <InfoIcon sx={{ mr: 1 }} color="info" />
+                  <Typography variant="body2">
+                    {t('info.estimatedPrices')}
+                  </Typography>
+                </Box>
+                <Table size="small" stickyHeader>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 'bold', width: '25%' }}>{t('table.supermarket')}</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>{t('table.totalPrice')}</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>{t('table.itemsFound')}</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>{t('table.estPrices')}</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>{t('table.onSale')}</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {supermarketSummaries.map((summary) => (
+                      <TableRow 
+                        key={summary.supermarketName}
+                        sx={{
+                          backgroundColor: summary === cheapestSupermarket ? 'success.light' : 'inherit',
+                          cursor: 'pointer',
+                          '&:hover': {
+                            backgroundColor: summary === cheapestSupermarket ? 'success.main' : 'action.hover',
+                          }
+                        }}
+                        onClick={() => handleOpenProductDialog(summary)}
+                      >
+                        <TableCell component="th" scope="row">
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Avatar 
+                              src={getSupermarketLogo(summary.supermarketName)} 
+                              alt={summary.supermarketName}
+                              sx={{ width: 24, height: 24, mr: 1 }}
+                            />
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              {summary.supermarketName}
+                              {summary === cheapestSupermarket && (
+                                <Chip 
+                                  label={t('label.cheapest')} 
+                                  size="small" 
+                                  color="success" 
+                                  sx={{ ml: 1 }}
+                                />
+                              )}
+                            </Box>
+                          </Box>
+                        </TableCell>
+                        <TableCell align="right">{formatCurrency(summary.totalPrice)}</TableCell>
+                        <TableCell align="right">
+                          {summary.productCount}/{groceriesWithPrices.length}
+                        </TableCell>
+                        <TableCell align="right">
+                          {summary.estimatedCount > 0 ? (
+                            <>
+                              <Tooltip title={t('info.estimatedPrices')}>
+                                <span>
+                                  <Chip 
+                                    icon={<InfoIcon />} 
+                                    label={`${summary.estimatedCount}`} 
+                                    size="small" 
+                                    color="info" 
+                                  />
+                                </span>
+                              </Tooltip>
+                            </>
+                          ) : t('label.none')}
+                        </TableCell>
+                        <TableCell align="right">
+                          {summary.saleCount > 0 ? (
+                            <Chip 
+                              icon={<LocalOfferIcon />} 
+                              label={`${summary.saleCount} ${t('label.items')}`} 
+                              size="small" 
+                              color="secondary" 
+                            />
+                          ) : t('label.none')}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </CardContent>
+          </Card>
+        )}
+      </TabPanel>
+      
+      <TabPanel value={tabValue} index={2}>
+        <OptimalShoppingStrategy groceriesWithPrices={groceriesWithPrices} />
       </TabPanel>
 
       {/* Product List Dialog */}
