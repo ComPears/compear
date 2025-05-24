@@ -42,19 +42,22 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
 }) => {
   // Try to get country context, but don't crash if it's not available (e.g., in 404 page)
   let country: CountryInfo | null = null;
+  let countryCode: string | null = null;
   try {
     const countryContext = useCountry();
     country = countryContext.country;
+    countryCode = country.code;
   } catch (error) {
     // useCountry is not available, probably in 404 page or standalone usage
     country = null;
+    countryCode = null;
   }
 
   const [language, setLanguageState] = useState<LanguageCode>(initialLanguage);
 
   // Update language based on country code (only if country context is available)
   useEffect(() => {
-    if (country) {
+    if (countryCode) {
       // Map country code to language code
       const countryToLanguage: Record<string, LanguageCode> = {
         'nl': 'nl',
@@ -62,13 +65,13 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
         'de': 'de'
       };
       
-      const newLanguage = countryToLanguage[country.code] || 'en';
+      const newLanguage = countryToLanguage[countryCode] || 'en';
       setLanguageState(newLanguage);
       
       // Store in localStorage
       localStorage.setItem('language', newLanguage);
     }
-  }, [country?.code]);
+  }, [countryCode]);
 
   // Translation function
   const t = (key: string): string => {
