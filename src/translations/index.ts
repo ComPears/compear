@@ -19,6 +19,11 @@ const en: Translations = {
   'tabs.optimalStrategy': 'Optimal Strategy',
   'tabs.individualItems': 'Individual Items',
   
+  // Short mobile tab labels
+  'tabs.individualItemsShort': 'Items',
+  'tabs.compareAllStoresShort': 'Compare', 
+  'tabs.optimalStrategyShort': 'Strategy',
+  
   // Table Headers - Updated
   'table.supermarket': 'Supermarket',
   'table.totalPrice': 'Total Price',
@@ -121,6 +126,11 @@ const nl: Translations = {
   'tabs.optimalStrategy': 'Optimale Strategie',
   'tabs.individualItems': 'Individuele Producten',
   
+  // Short mobile tab labels
+  'tabs.individualItemsShort': 'Items',
+  'tabs.compareAllStoresShort': 'Vergelijk',
+  'tabs.optimalStrategyShort': 'Strategie',
+  
   // Table Headers - Updated to match the actual data display
   'table.supermarket': 'Supermarkt',
   'table.totalPrice': 'Totale Prijs',
@@ -221,6 +231,11 @@ const de: Translations = {
   'tabs.compareAllStores': 'Alle Geschäfte Vergleichen',
   'tabs.optimalStrategy': 'Optimale Strategie',
   'tabs.individualItems': 'Einzelne Produkte',
+  
+  // Short mobile tab labels  
+  'tabs.individualItemsShort': 'Artikel',
+  'tabs.compareAllStoresShort': 'Vergleich',
+  'tabs.optimalStrategyShort': 'Strategie',
   
   // Search Component
   'search.title': 'Produkte Suchen',

@@ -26,10 +26,13 @@ import Footer from './components/Footer';
 import { Grocery } from './types';
 import { useCountry, CountryCode, countries } from './context/CountryContext';
 import { useLanguage, LanguageCode } from './context/LanguageContext';
+import { useTheme, useMediaQuery } from '@mui/material';
 
 const App: React.FC = () => {
   const { country, setCountry } = useCountry();
   const { language, setLanguage, t } = useLanguage();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md')); // Use 'md' for better mobile experience
   const [groceries, setGroceries] = useState<Grocery[]>([]);
   const [triggerCheapestDialog, setTriggerCheapestDialog] = useState(false);
 
@@ -80,12 +83,20 @@ const App: React.FC = () => {
       minHeight: '100vh'
     }}>
       <AppBar position="static" sx={{ mb: 4 }}>
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            {t('app.title')}
+        <Toolbar sx={{ px: { xs: 1, sm: 3 } }}> {/* Responsive padding */}
+          <Typography 
+            variant={isMobile ? "h6" : "h6"} 
+            component="div" 
+            sx={{ 
+              flexGrow: 1,
+              fontSize: { xs: '1rem', sm: '1.25rem' }, // Smaller title on mobile
+              minWidth: 0 // Allow text to shrink
+            }}
+          >
+            {isMobile ? "ComPear" : t('app.title')} {/* Shorter title on mobile */}
           </Typography>
-          <Box display="flex" alignItems="center">
-            <FormControl sx={{ minWidth: 120, mr: 2 }} size="small">
+          <Box display="flex" alignItems="center" sx={{ gap: { xs: 0.5, sm: 1 } }}>
+            <FormControl sx={{ minWidth: { xs: 80, sm: 120 }, mr: { xs: 1, sm: 2 } }} size="small">
               <Select
                 value={country.code}
                 onChange={handleCountryChange}
@@ -98,8 +109,11 @@ const App: React.FC = () => {
                 }}
                 renderValue={(selected) => (
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <LanguageIcon sx={{ mr: 1 }} />
-                    {countries.find(c => c.code === selected)?.name || 'Country'}
+                    <LanguageIcon sx={{ mr: { xs: 0.5, sm: 1 } }} />
+                    {isMobile 
+                      ? selected.toUpperCase() // Show country code on mobile (e.g., "NL")
+                      : (countries.find(c => c.code === selected)?.name || 'Country')
+                    }
                   </Box>
                 )}
               >
@@ -115,13 +129,22 @@ const App: React.FC = () => {
               <IconButton
                 color="inherit"
                 onClick={handleLanguageChange}
-                sx={{ mr: 2 }}
+                sx={{ mr: { xs: 0.5, sm: 2 }, p: { xs: 1, sm: 1 } }}
+                size={isMobile ? "small" : "medium"}
               >
-                <TranslateIcon />
+                <TranslateIcon fontSize={isMobile ? "small" : "medium"} />
               </IconButton>
             </Tooltip>
             
-            <Divider orientation="vertical" flexItem sx={{ bgcolor: 'rgba(255, 255, 255, 0.3)', mr: 2 }} />
+            <Divider 
+              orientation="vertical" 
+              flexItem 
+              sx={{ 
+                bgcolor: 'rgba(255, 255, 255, 0.3)', 
+                mr: { xs: 0.5, sm: 2 },
+                display: { xs: 'none', sm: 'block' } // Hide divider on mobile to save space
+              }} 
+            />
             
             {country.available && (
               <>
@@ -130,20 +153,35 @@ const App: React.FC = () => {
                   onClick={handleCartClick}
                   disabled={groceries.length === 0}
                   aria-label="Open cheapest supermarket dialog"
-                  sx={{ mr: 2 }}
+                  sx={{ mr: { xs: 0.5, sm: 2 }, p: { xs: 1, sm: 1 } }}
+                  size={isMobile ? "small" : "medium"}
                 >
                   <Badge badgeContent={groceries.length} color="secondary">
-                    <ShoppingCartIcon />
+                    <ShoppingCartIcon fontSize={isMobile ? "small" : "medium"} />
                   </Badge>
                 </IconButton>
                 {groceries.length > 0 && (
-                  <Button 
-                    color="inherit" 
-                    startIcon={<DeleteSweepIcon />} 
-                    onClick={handleClearAll}
-                  >
-                    {t('app.clearAll')}
-                  </Button>
+                  isMobile ? (
+                    <Tooltip title={t('app.clearAll')}>
+                      <IconButton
+                        color="inherit"
+                        onClick={handleClearAll}
+                        size="small"
+                        sx={{ p: 1 }}
+                      >
+                        <DeleteSweepIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  ) : (
+                    <Button 
+                      color="inherit" 
+                      startIcon={<DeleteSweepIcon />} 
+                      onClick={handleClearAll}
+                      sx={{ minWidth: 'auto' }}
+                    >
+                      {t('app.clearAll')}
+                    </Button>
+                  )
                 )}
               </>
             )}
