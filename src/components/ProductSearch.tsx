@@ -282,39 +282,6 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
         )}
       </Box>
 
-      {/* Supermarket products section */}
-      {supermarketResults.length > 0 && (
-        <Box sx={{ mt: 3 }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            Market Products {loading && <Typography component="span" variant="caption" color="text.secondary">(updating...)</Typography>}
-          </Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-            {supermarketResults.map((product, index) => (
-              <Box key={`${product.supermarketName}-${product.n}-${index}`} sx={{ width: { xs: '100%', sm: '47%', md: '31%' } }}>
-                <Card>
-                  <CardActionArea onClick={() => handleSelectSupermarketProduct(product)}>
-                    <CardContent>
-                      <Typography variant="h6">
-                        {product.n}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {product.s}
-                      </Typography>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1, alignItems: 'center' }}>
-                        <Chip label={product.supermarketName} size="small" color="secondary" />
-                        <Typography variant="h6" color="primary" fontWeight="bold">
-                          €{product.p.toFixed(2)}
-                        </Typography>
-                      </Box>
-                    </CardContent>
-                  </CardActionArea>
-                </Card>
-              </Box>
-            ))}
-          </Box>
-        </Box>
-      )}
-
       {/* Product selection modal */}
       <Dialog open={showModal} onClose={() => setShowModal(false)}>
         <DialogTitle>

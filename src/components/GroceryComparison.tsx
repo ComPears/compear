@@ -255,9 +255,9 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
             aria-label="view modes"
             centered
           >
-            <Tab icon={<RouteIcon />} label="Optimal Strategy" />
-            <Tab icon={<CompareIcon />} label="Compare All Stores" />
             <Tab icon={<ShoppingCartIcon />} label="Individual Items" />
+            <Tab icon={<CompareIcon />} label="Compare All Stores" />
+            <Tab icon={<RouteIcon />} label="Optimal Strategy" />
           </Tabs>
         </Box>
       )}
