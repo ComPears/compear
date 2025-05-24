@@ -31,6 +31,7 @@ const App: React.FC = () => {
   const { country, setCountry } = useCountry();
   const { language, setLanguage, t } = useLanguage();
   const [groceries, setGroceries] = useState<Grocery[]>([]);
+  const [triggerCheapestDialog, setTriggerCheapestDialog] = useState(false);
 
   // Effect to update URL when country changes
   useEffect(() => {
@@ -65,6 +66,16 @@ const App: React.FC = () => {
     if (['en', 'nl', 'de'].includes(newLanguage)) {
       setLanguage(newLanguage);
     }
+  };
+
+  const handleCartClick = () => {
+    if (groceries.length > 0) {
+      setTriggerCheapestDialog(true);
+    }
+  };
+
+  const handleCheapestDialogHandled = () => {
+    setTriggerCheapestDialog(false);
   };
 
   return (
@@ -119,9 +130,16 @@ const App: React.FC = () => {
             
             {country.available && (
               <>
-                <Badge badgeContent={groceries.length} color="secondary" sx={{ mr: 2 }}>
-                  <ShoppingCartIcon />
-                </Badge>
+                <IconButton
+                  color="inherit"
+                  onClick={handleCartClick}
+                  disabled={groceries.length === 0}
+                  sx={{ mr: 2 }}
+                >
+                  <Badge badgeContent={groceries.length} color="secondary">
+                    <ShoppingCartIcon />
+                  </Badge>
+                </IconButton>
                 {groceries.length > 0 && (
                   <Button 
                     color="inherit" 
@@ -173,7 +191,9 @@ const App: React.FC = () => {
             
             <GroceryComparison 
               groceries={groceries} 
-              onRemoveGrocery={handleRemoveGrocery} 
+              onRemoveGrocery={handleRemoveGrocery}
+              openCheapestDialog={triggerCheapestDialog}
+              onCheapestDialogHandled={handleCheapestDialogHandled}
             />
           </>
         )}

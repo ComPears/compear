@@ -49,6 +49,8 @@ import { useCountry } from '../context/CountryContext';
 interface GroceryComparisonProps {
   groceries: Grocery[];
   onRemoveGrocery: (id: string) => void;
+  openCheapestDialog?: boolean;
+  onCheapestDialogHandled?: () => void;
 }
 
 interface TabPanelProps {
@@ -89,7 +91,12 @@ interface SupermarketSummary {
   totalSavings: number; // Total amount saved from sales
 }
 
-const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemoveGrocery }) => {
+const GroceryComparison: React.FC<GroceryComparisonProps> = ({ 
+  groceries, 
+  onRemoveGrocery, 
+  openCheapestDialog = false,
+  onCheapestDialogHandled 
+}) => {
   const { t } = useLanguage();
   const { country } = useCountry();
   const [groceriesWithPrices, setGroceriesWithPrices] = useState<GroceryWithPrices[]>([]);
@@ -337,6 +344,14 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
   const handleCloseProductDialog = () => {
     setProductDialogOpen(false);
   };
+
+  // Handle opening cheapest supermarket dialog from external trigger
+  useEffect(() => {
+    if (openCheapestDialog && cheapestSupermarket && groceriesWithPrices.length > 0) {
+      handleOpenProductDialog(cheapestSupermarket);
+      onCheapestDialogHandled?.();
+    }
+  }, [openCheapestDialog, cheapestSupermarket, groceriesWithPrices.length, onCheapestDialogHandled]);
 
   if (groceries.length === 0) {
     return (
