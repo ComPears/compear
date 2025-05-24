@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 // Import translations
 import { translations } from '../translations';
-import { useCountry, CountryInfo } from './CountryContext';
+import { useCountryOptional } from './CountryContext';
 
 // Define available languages
 export type LanguageCode = 'en' | 'nl' | 'de';
@@ -40,18 +40,9 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
   children,
   initialLanguage = 'en'
 }) => {
-  // Try to get country context, but don't crash if it's not available (e.g., in 404 page)
-  let country: CountryInfo | null = null;
-  let countryCode: string | null = null;
-  try {
-    const countryContext = useCountry();
-    country = countryContext.country;
-    countryCode = country.code;
-  } catch (error) {
-    // useCountry is not available, probably in 404 page or standalone usage
-    country = null;
-    countryCode = null;
-  }
+  // Use safe version that doesn't throw when context is not available (e.g., in 404 page)
+  const countryContext = useCountryOptional();
+  const countryCode = countryContext?.country?.code || null;
 
   const [language, setLanguageState] = useState<LanguageCode>(initialLanguage);
 

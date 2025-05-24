@@ -34,6 +34,12 @@ export const useCountry = () => {
   return context;
 };
 
+// Safe version of useCountry that returns null when context is not available
+export const useCountryOptional = () => {
+  const context = useContext(CountryContext);
+  return context || null;
+};
+
 interface CountryProviderProps {
   children: ReactNode;
   initialCountryCode?: CountryCode;
