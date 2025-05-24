@@ -354,12 +354,13 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({
   };
 
   // Handle opening cheapest supermarket dialog from external trigger
+  const memoizedGroceriesWithPrices = useMemo(() => groceriesWithPrices, [groceriesWithPrices]);
   useEffect(() => {
-    if (openCheapestDialog && cheapestSupermarket && groceriesWithPrices.length > 0) {
+    if (openCheapestDialog && cheapestSupermarket && memoizedGroceriesWithPrices.length > 0) {
       handleOpenProductDialog(cheapestSupermarket);
       onCheapestDialogHandled?.();
     }
-  }, [openCheapestDialog, cheapestSupermarket, groceriesWithPrices.length, onCheapestDialogHandled]);
+  }, [openCheapestDialog, cheapestSupermarket, memoizedGroceriesWithPrices, onCheapestDialogHandled]);
 
   if (groceries.length === 0) {
     return (
