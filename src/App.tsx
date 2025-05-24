@@ -134,7 +134,7 @@ const App: React.FC = () => {
                   color="inherit"
                   onClick={handleCartClick}
                   disabled={groceries.length === 0}
-                  aria-label="Open cart"
+                  aria-label="Open cheapest supermarket dialog"
                   sx={{ mr: 2 }}
                 >
                   <Badge badgeContent={groceries.length} color="secondary">
