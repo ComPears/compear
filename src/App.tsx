@@ -202,7 +202,7 @@ const App: React.FC = () => {
                 {t('app.title')}
               </Typography>
               <Typography variant="body1" color="text.secondary" paragraph>
-                {t('app.description').replace('{country}', country.name)}
+                {t(`app.description.${country.code}`) || t('app.description').replace('{country}', country.name)}
               </Typography>
               
               <ProductSearch onAddGrocery={handleAddGrocery} />
