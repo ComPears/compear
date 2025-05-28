@@ -20,9 +20,11 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import LanguageIcon from '@mui/icons-material/Language';
 import TranslateIcon from '@mui/icons-material/Translate';
+import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import GroceryComparison from './components/GroceryComparison';
 import ProductSearch from './components/ProductSearch';
 import Footer from './components/Footer';
+import SuggestionDialog from './components/SuggestionDialog';
 import { Grocery } from './types';
 import { useCountry, CountryCode, countries } from './context/CountryContext';
 import { useLanguage, LanguageCode } from './context/LanguageContext';
@@ -35,6 +37,7 @@ const App: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md')); // Use 'md' for better mobile experience
   const [groceries, setGroceries] = useState<Grocery[]>([]);
   const [triggerCheapestDialog, setTriggerCheapestDialog] = useState(false);
+  const [suggestionDialogOpen, setSuggestionDialogOpen] = useState(false);
 
   // Note: URL management is handled by AppRouter.tsx
   // No need to manage URL changes here to avoid conflicts
@@ -75,6 +78,14 @@ const App: React.FC = () => {
   const handleCheapestDialogHandled = useCallback(() => {
     setTriggerCheapestDialog(false);
   }, []);
+
+  const handleSuggestionClick = () => {
+    setSuggestionDialogOpen(true);
+  };
+
+  const handleSuggestionDialogClose = () => {
+    setSuggestionDialogOpen(false);
+  };
 
   return (
     <Box sx={{ 
@@ -133,6 +144,18 @@ const App: React.FC = () => {
                 size={isMobile ? "small" : "medium"}
               >
                 <TranslateIcon fontSize={isMobile ? "small" : "medium"} />
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title="Share a suggestion">
+              <IconButton
+                color="inherit"
+                onClick={handleSuggestionClick}
+                sx={{ mr: 2 }}
+                aria-label="Open suggestion dialog"
+                aria-haspopup="dialog"
+              >
+                <LightbulbIcon />
               </IconButton>
             </Tooltip>
             
@@ -217,7 +240,7 @@ const App: React.FC = () => {
                 {t('app.title')}
               </Typography>
               <Typography variant="body1" color="text.secondary" paragraph>
-                {t('app.description').replace('{country}', country.name)}
+                {t(`app.description.${country.code}`) || t('app.description').replace('{country}', country.name)}
               </Typography>
               
               <ProductSearch onAddGrocery={handleAddGrocery} />
@@ -234,6 +257,11 @@ const App: React.FC = () => {
       </Container>
       
       <Footer />
+      
+      <SuggestionDialog 
+        open={suggestionDialogOpen}
+        onClose={handleSuggestionDialogClose}
+      />
     </Box>
   );
 };
