@@ -11,12 +11,12 @@ export interface Grocery {
 export interface SupermarketPrice {
   supermarketName: string;
   price: number;
-  isEstimated: boolean;
-  unitPrice?: number; // price per kg/liter where applicable
-  priceDate?: string; // when the price was retrieved
-  url?: string; // link to the product on the supermarket's website
-  onSale?: boolean; // whether the product is currently on sale
-  regularPrice?: number; // the regular price before the sale
+  productName?: string;  // The actual product name at this supermarket
+  size?: string;         // The size/quantity of the product
+  unitPrice?: number;
+  onSale?: boolean;
+  regularPrice?: number;
+  link?: string;
 }
 
 export interface GroceryWithPrices extends Grocery {

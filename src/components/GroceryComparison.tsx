@@ -308,6 +308,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                       <TableHead>
                         <TableRow>
                           <TableCell>Supermarket</TableCell>
+                          <TableCell>Product Name</TableCell>
                           <TableCell align="right">Price</TableCell>
                           <TableCell align="right">Unit Price</TableCell>
                         </TableRow>
@@ -341,6 +342,16 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                                   )}
                                 </Box>
                               </Box>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
+                                {price.productName || grocery.name}
+                              </Typography>
+                              {price.size && (
+                                <Typography variant="caption" color="text.secondary">
+                                  {price.size}
+                                </Typography>
+                              )}
                             </TableCell>
                             <TableCell align="right">
                               {price.onSale ? (

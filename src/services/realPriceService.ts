@@ -211,16 +211,16 @@ export const getRealPricesForGrocery = async (grocery: Grocery): Promise<Superma
     }
 
     // Find the supermarket info from our database
-    const supermarket = supermarkets.find(s => s.id.toLowerCase() === supermarketId.toLowerCase());
+    const supermarket = supermarkets.find(s => s.id?.toLowerCase() === supermarketId.toLowerCase());
     if (!supermarket) continue;
 
     // Create a standard price object
     const price: SupermarketPrice = {
       supermarketName: supermarket.name,
       price: bestMatch.p,
-      isEstimated: false,
-      priceDate: new Date().toISOString(),
-      url: `${supermarketData[supermarketId].u}${bestMatch.l}`,
+      // isEstimated: false,
+      // priceDate: new Date().toISOString(),
+      // url: `${supermarketData[supermarketId].u}${bestMatch.l}`,
     };
 
     // Check if it's a sale price (implement logic to detect sales)
