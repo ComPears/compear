@@ -1,221 +1,375 @@
 import { Grocery, SupermarketPrice, Supermarket } from '../types';
-import { supermarkets as rawSupermarkets, findProductInSupermarkets } from './rawProductData';
+import { getRealPricesForGrocery } from './realPriceService';
 
-// List of Dutch supermarkets derived from rawProductData
-export const supermarkets: Supermarket[] = rawSupermarkets.map(supermarket => ({
-  id: supermarket.n.toLowerCase(),
-  name: supermarket.n,
-  logo: supermarket.i,
-  hasAPI: true // All supermarkets in rawProductData have their data
-}));
+// List of Dutch supermarkets based on market data and user input
+// Source: https://en.wikipedia.org/wiki/List_of_supermarket_chains_in_the_Netherlands
+export const supermarkets: Supermarket[] = [
+  { 
+    id: 'ah', 
+    name: 'Albert Heijn', 
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/e/eb/Albert_Heijn_Logo.svg', 
+    hasAPI: true 
+  },
+  { 
+    id: 'jumbo', 
+    name: 'Jumbo', 
+    logo: 'https://commons.wikimedia.org/wiki/File:Logo_of_Jumbo_Supermarkten_(2010).svg', 
+    hasAPI: true 
+  },
+  { 
+    id: 'lidl', 
+    name: 'Lidl', 
+    logo: 'https://commons.wikimedia.org/wiki/File:Lidl-Logo.svg', 
+    hasAPI: false 
+  },
+  { 
+    id: 'aldi', 
+    name: 'Aldi', 
+    logo: 'https://commons.wikimedia.org/wiki/File:AldiWorldwideLogo.svg', 
+    hasAPI: false 
+  },
+  { 
+    id: 'plus', 
+    name: 'Plus', 
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/9/92/PLUS_supermarket_logo.svg', 
+    hasAPI: true 
+  },
+  { 
+    id: 'coop', 
+    name: 'Coop', 
+    logo: 'https://commons.wikimedia.org/wiki/File:Coop_Logo.svg', 
+    hasAPI: false 
+  },
+  { 
+    id: 'dirk', 
+    name: 'Dirk', 
+    logo: 'https://commons.wikimedia.org/wiki/File:Logo_of_Dirk.svg', 
+    hasAPI: false 
+  },
+  { 
+    id: 'dekamarkt', 
+    name: 'Dekamarkt', 
+    logo: 'https://commons.wikimedia.org/wiki/File:Logo_of_Dekamarkt.svg', 
+    hasAPI: false 
+  },
+  { 
+    id: 'hoogvliet', 
+    name: 'Hoogvliet', 
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/9/91/Hoogvliet_logo.svg', 
+    hasAPI: false 
+  },
+  { 
+    id: 'janlinders', 
+    name: 'Jan Linders', 
+    logo: 'https://commons.wikimedia.org/wiki/File:Logo_Jan_Linders.svg', 
+    hasAPI: false 
+  },
+  { 
+    id: 'poiesz', 
+    name: 'Poiesz', 
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/5/58/Poiesz_logo.svg', 
+    hasAPI: false 
+  },
+  { 
+    id: 'spar', 
+    name: 'Spar', 
+    logo: 'https://commons.wikimedia.org/wiki/File:SPAR_Logo.svg', 
+    hasAPI: false 
+  },
+  { 
+    id: 'boni', 
+    name: 'Boni', 
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/6/6a/Logo_Boni_2023.svg', 
+    hasAPI: false 
+  },
+  { 
+    id: 'picnic', 
+    name: 'Picnic', 
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/e/ef/Logo_picnic.svg', 
+    hasAPI: true 
+  },
+  { 
+    id: 'boonsmarkt', 
+    name: 'Boon\'s Markt', 
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/3/32/Boon%27s_Markt_logo.svg', 
+    hasAPI: false 
+  },
+  { 
+    id: 'dagwinkel', 
+    name: 'Dagwinkel', 
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/f/f5/Dagwinkel_logo.svg', 
+    hasAPI: false 
+  },
+  { 
+    id: 'ekoplaza', 
+    name: 'EkoPlaza', 
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Ekoplaza_logo.svg/1200px-Ekoplaza_logo.svg.png', 
+    hasAPI: false 
+  },
+  { 
+    id: 'makro', 
+    name: 'Makro', 
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/c/cf/Makro_Logo.svg', 
+    hasAPI: false 
+  },
+  { 
+    id: 'crisp', 
+    name: 'Crisp', 
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/a/ad/Logo_Crisp_Supermarkt.png', 
+    hasAPI: true 
+  },
+  { 
+    id: 'gorillas', 
+    name: 'Gorillas', 
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Gorillas_Logo.svg/1200px-Gorillas_Logo.svg.png', 
+    hasAPI: false 
+  },
+  { 
+    id: 'vomar', 
+    name: 'Vomar', 
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/f/f4/Vomar_logo.svg', 
+    hasAPI: false 
+  }
+];
+
+// This would be a real API call in a production application
+const fetchPriceFromAPI = async (supermarketId: string, grocery: Grocery): Promise<SupermarketPrice | null> => {
+  // Simulate API response time
+  await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 500));
+  
+  // Mock data for the supermarkets with API
+  if (['ah', 'jumbo', 'plus', 'picnic', 'crisp'].includes(supermarketId)) {
+    // Generate a somewhat realistic price based on the grocery name
+    const basePrice = ((grocery.name.length * 7) % 10) + 1;
+    const price = basePrice + (Math.random() * 2 - 1);
+    
+    // Different pricing strategies per supermarket
+    let finalPrice = price;
+    if (supermarketId === 'ah') finalPrice = price * 1.05; // AH is a bit more expensive
+    if (supermarketId === 'jumbo') finalPrice = price * 0.95; // Jumbo claims to be cheaper
+    if (supermarketId === 'plus') finalPrice = price * 1.0; // Plus is average
+    if (supermarketId === 'picnic') finalPrice = price * 0.92; // Picnic is online-only and cheaper
+    if (supermarketId === 'crisp') finalPrice = price * 1.15; // Crisp is premium/organic
+    
+    // Calculate unit price if applicable
+    let unitPrice: number | undefined;
+    if (grocery.unit === 'kg' || grocery.unit === 'liter') {
+      unitPrice = finalPrice / grocery.quantity;
+    } else if (grocery.unit === 'gram' || grocery.unit === 'ml') {
+      unitPrice = (finalPrice / grocery.quantity) * 1000;
+    }
+    
+    // Randomly decide if the product is on sale (about 30% chance)
+    const isOnSale = Math.random() < 0.3;
+    let onSale = undefined;
+    let regularPrice = undefined;
+    
+    if (isOnSale) {
+      onSale = true;
+      // Regular price is 10-30% higher than the sale price
+      const saleDiscount = 1 + (Math.random() * 0.2 + 0.1);
+      regularPrice = parseFloat((finalPrice * saleDiscount).toFixed(2));
+      // The final price is already the sale price
+    }
+    
+    return {
+      supermarketName: supermarkets.find(s => s.id === supermarketId)?.name || '',
+      price: parseFloat(finalPrice.toFixed(2)),
+      isEstimated: false,
+      unitPrice: unitPrice ? parseFloat(unitPrice.toFixed(2)) : undefined,
+      priceDate: new Date().toISOString(),
+      url: `https://www.${supermarketId}.nl/producten/${grocery.name.toLowerCase().replace(/\s+/g, '-')}`,
+      onSale,
+      regularPrice
+    };
+  }
+  
+  // No API available for this supermarket
+  return null;
+};
+
+// Use AI (simulated) to estimate prices for supermarkets without API
+const estimatePriceWithAI = async (grocery: Grocery, otherPrices: SupermarketPrice[]): Promise<SupermarketPrice> => {
+  // Get a random supermarket without API
+  const supermarketsWithoutAPI = supermarkets.filter(s => !s.hasAPI);
+  const randomIndex = Math.floor(Math.random() * supermarketsWithoutAPI.length);
+  const supermarket = supermarketsWithoutAPI[randomIndex];
+  
+  // Add a small delay to simulate AI processing time
+  await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 200));
+  
+  // Calculate estimated price based on available prices with some variance
+  let estimatedPrice: number;
+  
+  if (otherPrices.length > 0) {
+    // Get average of known prices
+    const avgPrice = otherPrices.reduce((sum, p) => sum + p.price, 0) / otherPrices.length;
+    
+    // Add some randomness to simulate AI estimation with different pricing strategies
+    let discount = 1.0;
+    
+    // Apply different pricing strategies based on supermarket ID
+    switch(supermarket.id) {
+      case 'lidl':
+      case 'aldi':
+        discount = 0.88; // Discount supermarkets are typically cheaper
+        break;
+      case 'coop':
+      case 'spar':
+        discount = 1.05; // Convenience stores are typically more expensive
+        break;
+      case 'dirk':
+        discount = 0.92; // Dirk is known for lower prices
+        break;
+      case 'boni':
+      case 'poiesz':
+        discount = 0.97; // Regional chains have mid-range prices
+        break;
+      default:
+        discount = 0.98; // Default slightly lower than average
+    }
+    
+    // Add some small random variation (±5%)
+    discount *= (1 + (Math.random() * 0.1 - 0.05));
+    
+    estimatedPrice = avgPrice * discount;
+  } else {
+    // No prices available - completely guessing based on product name
+    const basePrice = ((grocery.name.length * 5) % 8) + 1;
+    
+    // Apply different pricing strategies based on supermarket ID
+    switch(supermarket.id) {
+      case 'lidl':
+      case 'aldi':
+        estimatedPrice = basePrice * 0.85;
+        break;
+      case 'coop':
+      case 'spar':
+        estimatedPrice = basePrice * 1.15;
+        break;
+      case 'dirk':
+        estimatedPrice = basePrice * 0.9;
+        break;
+      default:
+        estimatedPrice = basePrice * 1.0;
+    }
+  }
+  
+  // Calculate unit price if applicable
+  let unitPrice: number | undefined;
+  if (grocery.unit === 'kg' || grocery.unit === 'liter') {
+    unitPrice = estimatedPrice / grocery.quantity;
+  } else if (grocery.unit === 'gram' || grocery.unit === 'ml') {
+    unitPrice = (estimatedPrice / grocery.quantity) * 1000;
+  }
+  
+  // For discount supermarkets like Lidl and Aldi, simulate weekly specials
+  // They have a higher chance of items being on sale
+  const saleChance = supermarket.id === 'lidl' || supermarket.id === 'aldi' ? 0.4 : 0.25;
+  const isOnSale = Math.random() < saleChance;
+  let onSale = undefined;
+  let regularPrice = undefined;
+  
+  if (isOnSale) {
+    onSale = true;
+    // For discount stores, regular prices might be 5-20% higher
+    const saleDiscount = 1 + (Math.random() * 0.15 + 0.05);
+    regularPrice = parseFloat((estimatedPrice * saleDiscount).toFixed(2));
+    // The estimated price is already the sale price
+  }
+  
+  return {
+    supermarketName: supermarket?.name || '',
+    price: parseFloat(estimatedPrice.toFixed(2)),
+    isEstimated: true,
+    unitPrice: unitPrice ? parseFloat(unitPrice.toFixed(2)) : undefined,
+    priceDate: new Date().toISOString(),
+    onSale,
+    regularPrice
+  };
+};
 
 // Main function to fetch prices for a grocery item
 export const fetchPricesForGrocery = async (grocery: Grocery): Promise<SupermarketPrice[]> => {
   try {
-    // Use the grocery name to search for products
-    const searchTerm = grocery.variant || grocery.name;
-    const results = await findProductInSupermarkets(searchTerm);
+    // First, try to get real prices from the supermarkets.json data
+    const realPrices = await getRealPricesForGrocery(grocery);
+    console.log(`Found ${realPrices.length} real prices for ${grocery.name}`);
     
-    // Flatten and transform the results into SupermarketPrice[] format
-    const prices: SupermarketPrice[] = [];
+    // Get the supermarkets we already have prices for
+    const supermarketsWithRealPrices = new Set(realPrices.map(p => 
+      supermarkets.find(s => s.name === p.supermarketName)?.id || ''
+    ).filter(id => id !== ''));
     
-    for (const [supermarketCode, products] of Object.entries(results)) {
-      // Get the supermarket info
-      const supermarket = supermarkets.find(s => s.id.toLowerCase() === supermarketCode.toLowerCase());
-      if (!supermarket) continue;
-      
-      // Only use the first (best) match for each supermarket
-      if (products.length > 0) {
-        const product = products[0];
-        
-        // Parse the price from string to number
-        let price: number;
-        try {
-          // Handle different price formats - remove currency symbols and convert commas to dots
-          const priceStr = typeof product.p === 'string' 
-            ? product.p.replace('€', '').replace(',', '.').trim()
-            : product.p.toString();
-          price = parseFloat(priceStr);
-          
-          // If the price is not a valid number, throw an error
-          if (isNaN(price)) {
-            throw new Error(`Invalid price: ${product.p}`);
-          }
-        } catch (error) {
-          console.warn(`Error parsing price for product ${product.n}:`, error);
-          // Skip this product if we can't parse the price
-          continue;
-        }
-        
-        // Create a standardized price object
-        const priceObj: SupermarketPrice = {
-          supermarketName: supermarket.name,
-          price: price,
-          isEstimated: false, // All prices from rawProductData are considered real
-          priceDate: new Date().toISOString(),
-          url: product.l || `https://www.${supermarketCode.toLowerCase()}.nl/producten/${product.n.toLowerCase().replace(/\s+/g, '-')}`,
-        };
-        
-        // Check if it has a sale price (o property not null)
-        if (product.o !== null && product.o !== undefined) {
-          priceObj.onSale = true;
-          
-          // Handle the regular price - ensure it's a number
-          try {
-            const regularPriceStr = typeof product.o === 'string' 
-              ? product.o.replace('€', '').replace(',', '.').trim()
-              : product.o.toString();
-            const regularPrice = parseFloat(regularPriceStr);
-            
-            if (!isNaN(regularPrice)) {
-              priceObj.regularPrice = regularPrice;
-            }
-          } catch (error) {
-            console.warn(`Error parsing regular price for product ${product.n}:`, error);
-            // Continue without setting regularPrice
-          }
-        }
-        
-        // Calculate unit price if we can parse the size
-        if (product.s) {
-          try {
-            const sizeStr = product.s.toLowerCase();
-            
-            // Extract quantity and unit
-            const sizeMatch = sizeStr.match(/(\d+[.,]?\d*)\s*(g|kg|gram|ml|l|liter|stuk|piece|stuks)/i);
-            if (sizeMatch) {
-              let quantity = parseFloat(sizeMatch[1].replace(',', '.'));
-              let unit = sizeMatch[2].toLowerCase();
-              
-              // Map various unit representations to standard units
-              if (['gram', 'g'].includes(unit)) {
-                unit = 'gram';
-              } else if (['kg', 'kilo'].includes(unit)) {
-                unit = 'kg';
-              } else if (['ml', 'milliliter'].includes(unit)) {
-                unit = 'ml';
-              } else if (['l', 'liter'].includes(unit)) {
-                unit = 'liter';
-              } else if (['stuk', 'piece', 'stuks'].includes(unit)) {
-                unit = 'piece';
-              }
-              
-              // Convert to standard units for comparison
-              if (unit === 'gram' && grocery.unit === 'kg') {
-                priceObj.unitPrice = (price / quantity) * 1000;
-              } else if (unit === 'kg' && grocery.unit === 'gram') {
-                priceObj.unitPrice = (price / quantity) / 1000;
-              } else if (unit === 'ml' && grocery.unit === 'liter') {
-                priceObj.unitPrice = (price / quantity) * 1000;
-              } else if (unit === 'liter' && grocery.unit === 'ml') {
-                priceObj.unitPrice = (price / quantity) / 1000;
-              } else if (unit === grocery.unit) {
-                // Same units, simple division
-                priceObj.unitPrice = price / quantity;
-              }
-              
-              if (priceObj.unitPrice) {
-                priceObj.unitPrice = parseFloat(priceObj.unitPrice.toFixed(2));
-              }
-            }
-          } catch (error) {
-            console.warn(`Could not parse size information for unit price: ${product.s}`, error);
-          }
-        }
-        
-        prices.push(priceObj);
-      }
+    // For supermarkets with APIs that don't have real prices, fetch from API
+    const apiPromises = supermarkets
+      .filter(s => s.hasAPI && !supermarketsWithRealPrices.has(s.id))
+      .map(s => fetchPriceFromAPI(s.id, grocery));
+    
+    const apiResults = await Promise.all(apiPromises);
+    const validApiResults = apiResults.filter((result): result is SupermarketPrice => result !== null);
+    
+    // For remaining supermarkets, estimate prices
+    const supermarketsWithPrices = new Set([
+      ...Array.from(supermarketsWithRealPrices),
+      ...validApiResults.map(p => 
+        supermarkets.find(s => s.name === p.supermarketName)?.id || ''
+      ).filter(id => id !== '')
+    ]);
+    
+    // Estimate prices for ALL supermarkets without prices yet (not just a limited number)
+    const remainingSupermarkets = supermarkets
+      .filter(s => !supermarketsWithPrices.has(s.id));
+    
+    console.log(`Estimating prices for ${remainingSupermarkets.length} additional supermarkets`);
+    
+    const estimatedPrices: SupermarketPrice[] = [];
+    
+    for (const supermarket of remainingSupermarkets) {
+      const estimatedPrice = await estimatePriceWithAI(grocery, [...realPrices, ...validApiResults]);
+      estimatedPrice.supermarketName = supermarket.name;
+      estimatedPrices.push(estimatedPrice);
     }
     
-    // For any supermarkets that don't have prices, add estimated prices
-    const supermarketsWithPrices = new Set(prices.map(p => p.supermarketName));
-    const missingSupermarkets = supermarkets.filter(s => !supermarketsWithPrices.has(s.name));
+    // Combine all prices
+    const allPrices = [...realPrices, ...validApiResults, ...estimatedPrices];
+    console.log(`Total prices collected: ${allPrices.length} for ${supermarkets.length} supermarkets`);
     
-    // Add estimated prices for missing supermarkets
-    for (const supermarket of missingSupermarkets) {
-      // Calculate estimated price based on available prices
-      let estimatedPrice: number;
-      
-      if (prices.length > 0) {
-        // Get average of known prices with some randomness
-        const avgPrice = prices.reduce((sum, p) => sum + p.price, 0) / prices.length;
-        const variance = 0.1; // 10% variance
-        estimatedPrice = avgPrice * (1 + (Math.random() * variance * 2 - variance));
-      } else {
-        // No prices available, generate a reasonable price based on the name
-        estimatedPrice = (grocery.name.length * 0.5) + 1 + (Math.random() * 2);
-      }
-      
-      // Calculate unit price if applicable
-      let unitPrice: number | undefined;
-      if (grocery.unit === 'kg' || grocery.unit === 'liter') {
-        unitPrice = estimatedPrice / grocery.quantity;
-      } else if (grocery.unit === 'gram' || grocery.unit === 'ml') {
-        unitPrice = (estimatedPrice / grocery.quantity) * 1000;
-      }
-      
-      // Randomly decide if the product is on sale
-      const isOnSale = Math.random() < 0.3;
-      let onSale = undefined;
-      let regularPrice = undefined;
-      
-      if (isOnSale) {
-        onSale = true;
-        const saleDiscount = 1 + (Math.random() * 0.2 + 0.1);
-        regularPrice = parseFloat((estimatedPrice * saleDiscount).toFixed(2));
-      }
-      
-      // Create the estimated price object
-      const estimatedPriceObj: SupermarketPrice = {
-        supermarketName: supermarket.name,
-        price: parseFloat(estimatedPrice.toFixed(2)),
-        isEstimated: true,
-        unitPrice: unitPrice ? parseFloat(unitPrice.toFixed(2)) : undefined,
-        priceDate: new Date().toISOString(),
-        onSale,
-        regularPrice
-      };
-      
-      prices.push(estimatedPriceObj);
-    }
-    
-    return prices;
+    return allPrices;
   } catch (error) {
     console.error('Error fetching prices:', error);
     
-    // Fallback to generating estimated prices for all supermarkets
-    return supermarkets.map(supermarket => {
-      // Generate a random price between 1 and 10
-      const basePrice = Math.random() * 9 + 1;
-      const price = parseFloat(basePrice.toFixed(2));
-      
-      // Calculate unit price if applicable
-      let unitPrice: number | undefined;
-      if (grocery.unit === 'kg' || grocery.unit === 'liter') {
-        unitPrice = price / grocery.quantity;
-      } else if (grocery.unit === 'gram' || grocery.unit === 'ml') {
-        unitPrice = (price / grocery.quantity) * 1000;
-      }
-      
-      // 30% chance of being on sale
-      const isOnSale = Math.random() < 0.3;
-      let onSale = undefined;
-      let regularPrice = undefined;
-      
-      if (isOnSale) {
-        onSale = true;
-        regularPrice = parseFloat((price * (1 + Math.random() * 0.2 + 0.1)).toFixed(2));
-      }
-      
-      return {
-        supermarketName: supermarket.name,
-        price,
-        isEstimated: true,
-        unitPrice: unitPrice ? parseFloat(unitPrice.toFixed(2)) : undefined,
-        priceDate: new Date().toISOString(),
-        onSale,
-        regularPrice
-      };
-    });
+    // Fallback to original method but ensure ALL supermarkets are included
+    const apiPromises = supermarkets
+      .filter(s => s.hasAPI)
+      .map(s => fetchPriceFromAPI(s.id, grocery));
+    
+    const apiResults = await Promise.all(apiPromises);
+    const validApiResults = apiResults.filter((result): result is SupermarketPrice => result !== null);
+    
+    // Get supermarkets already covered by API results
+    const supermarketsWithAPIPrices = new Set(
+      validApiResults.map(p => 
+        supermarkets.find(s => s.name === p.supermarketName)?.id || ''
+      ).filter(id => id !== '')
+    );
+    
+    // Estimate prices for ALL remaining supermarkets
+    const remainingSupermarkets = supermarkets
+      .filter(s => !supermarketsWithAPIPrices.has(s.id));
+    
+    const estimatedPrices: SupermarketPrice[] = [];
+    
+    for (const supermarket of remainingSupermarkets) {
+      const estimatedPrice = await estimatePriceWithAI(grocery, validApiResults);
+      estimatedPrice.supermarketName = supermarket.name;
+      estimatedPrices.push(estimatedPrice);
+    }
+    
+    // Combine all prices
+    const allPrices = [...validApiResults, ...estimatedPrices];
+    console.log(`Total estimated prices: ${allPrices.length} for ${supermarkets.length} supermarkets`);
+    
+    return allPrices;
   }
 }; 
