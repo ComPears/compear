@@ -21,6 +21,8 @@ import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import ShareIcon from '@mui/icons-material/Share';
 import { GroceryWithPrices, SupermarketPrice } from '../types';
 import { supermarkets } from '../services/supermarketService';
+import { useLanguage } from '../context/LanguageContext';
+import { useCountry } from '../context/CountryContext';
 
 interface OptimalShoppingStrategyProps {
   groceriesWithPrices: GroceryWithPrices[];
@@ -41,6 +43,8 @@ interface SupermarketInStrategy {
 }
 
 const OptimalShoppingStrategy: React.FC<OptimalShoppingStrategyProps> = ({ groceriesWithPrices }) => {
+  const { t } = useLanguage();
+  const { country } = useCountry();
   
   // Find the logo URL for a supermarket by name
   const getSupermarketLogo = (name: string): string => {
@@ -178,11 +182,11 @@ const OptimalShoppingStrategy: React.FC<OptimalShoppingStrategyProps> = ({ groce
     if (!optimalStrategy) return;
 
     // Create text to share
-    let shareText = "🛒 My ComPear Optimal Shopping List 🛒\n\n";
+    let shareText = `🛒 ${t('optimal.shoppingListTitle')} 🛒\n\n`;
     
     // For each supermarket, list the items to buy
     optimalStrategy.supermarkets.forEach(supermarket => {
-      shareText += `At ${supermarket.name}:\n`;
+      shareText += `${t('optimal.at').replace('{store}', supermarket.name)}\n`;
       
       supermarket.items.forEach(item => {
         shareText += `- ${item.name}: ${formatCurrency(item.price)}`;
@@ -192,11 +196,11 @@ const OptimalShoppingStrategy: React.FC<OptimalShoppingStrategyProps> = ({ groce
         shareText += '\n';
       });
       
-      shareText += `Subtotal: ${formatCurrency(supermarket.totalPrice)}\n\n`;
+      shareText += `${t('optimal.subtotal').replace('{amount}', formatCurrency(supermarket.totalPrice))}\n\n`;
     });
     
-    shareText += `Total: ${formatCurrency(optimalStrategy.totalPrice)}\n`;
-    shareText += "Made with ComPear - Compare grocery prices across Dutch supermarkets!";
+    shareText += `${t('optimal.total').replace('{amount}', formatCurrency(optimalStrategy.totalPrice))}\n`;
+    shareText += t('optimal.madeWith').replace('{country}', country.name);
     
     // Share using the Web Share API if available
     if (navigator.share) {
@@ -217,11 +221,11 @@ const OptimalShoppingStrategy: React.FC<OptimalShoppingStrategyProps> = ({ groce
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
       .then(() => {
-        alert('Shopping list copied to clipboard!');
+        alert(t('clipboard.copied'));
       })
       .catch(err => {
         console.error('Failed to copy text: ', err);
-        alert('Could not copy to clipboard. Please share manually.');
+        alert(t('clipboard.failed'));
       });
   };
 
@@ -235,7 +239,7 @@ const OptimalShoppingStrategy: React.FC<OptimalShoppingStrategyProps> = ({ groce
         <Box display="flex" alignItems="center" mb={2}>
           <RouteIcon sx={{ mr: 1.5 }} color="primary" />
           <Typography variant="h6" component="div">
-            Optimal Shopping Strategy
+            {t('optimal.title')}
           </Typography>
           <Button 
             variant="outlined" 
@@ -244,12 +248,12 @@ const OptimalShoppingStrategy: React.FC<OptimalShoppingStrategyProps> = ({ groce
             sx={{ ml: 'auto' }}
             onClick={handleShare}
           >
-            Share List
+            {t('optimal.shareList')}
           </Button>
         </Box>
         
         <Typography variant="body2" color="text.secondary" gutterBottom>
-          The optimal shopping strategy for buying items across multiple stores
+          {t('optimal.description')}
         </Typography>
         
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2, mb: 3 }}>
@@ -257,7 +261,7 @@ const OptimalShoppingStrategy: React.FC<OptimalShoppingStrategyProps> = ({ groce
             <Chip
               key={supermarket.name}
               avatar={<Avatar src={supermarket.logo} alt={supermarket.name} />}
-              label={`${supermarket.name} (${supermarket.items.length} items)`}
+              label={`${supermarket.name} (${t('optimal.itemCount').replace('{count}', supermarket.items.length.toString())})`}
               color="primary"
               variant="outlined"
             />
@@ -273,7 +277,7 @@ const OptimalShoppingStrategy: React.FC<OptimalShoppingStrategyProps> = ({ groce
                 <Avatar src={supermarket.logo} alt={supermarket.name} sx={{ mr: 2 }} />
                 <Typography variant="subtitle1">{supermarket.name}</Typography>
                 <Typography variant="body2" sx={{ ml: 2, color: 'text.secondary' }}>
-                  {supermarket.items.length} items
+                  {t('optimal.itemCount').replace('{count}', supermarket.items.length.toString())}
                 </Typography>
                 <Typography variant="subtitle1" sx={{ ml: 'auto' }}>
                   {formatCurrency(supermarket.totalPrice)}
@@ -292,7 +296,7 @@ const OptimalShoppingStrategy: React.FC<OptimalShoppingStrategyProps> = ({ groce
                             {formatCurrency(item.price)}
                             <Chip 
                               icon={<LocalOfferIcon />} 
-                              label="Sale" 
+                              label={t('label.sale')} 
                               size="small" 
                               color="secondary" 
                               sx={{ ml: 1 }}
@@ -320,7 +324,7 @@ const OptimalShoppingStrategy: React.FC<OptimalShoppingStrategyProps> = ({ groce
         
         <Box sx={{ mt: 3, p: 2, bgcolor: 'success.light', borderRadius: 2 }}>
           <Typography variant="subtitle1">
-            Total Cost: {formatCurrency(optimalStrategy.totalPrice)}
+            {t('optimal.totalCost').replace('{cost}', formatCurrency(optimalStrategy.totalPrice))}
           </Typography>
         </Box>
       </CardContent>
