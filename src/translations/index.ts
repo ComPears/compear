@@ -1,0 +1,241 @@
+import { Translations } from '../context/LanguageContext';
+
+// English translations
+const en: Translations = {
+  // App Header
+  'app.title': 'ComPear',
+  'app.clearAll': 'Clear All',
+  'app.comingSoon': 'Coming Soon',
+  'app.weWillBeAvailable': 'We will be available in {country} soon!',
+  'app.currentlyOnlyNetherlandsSupported': 'Currently, only Netherlands is supported.',
+  'app.switchToNetherlands': 'Switch to Netherlands',
+  'app.totalItems': 'Total for {count} items across all {country} supermarkets',
+  
+  // Main Content
+  'app.description': 'Add grocery items to compare prices across {country} supermarkets. Prices from supermarkets without APIs are estimated using advanced algorithms.',
+  
+  // Compare All Stores Tab
+  'tabs.compareAllStores': 'Compare All Stores',
+  'tabs.optimalStrategy': 'Optimal Strategy',
+  'tabs.individualItems': 'Individual Items',
+  
+  // Table Headers - Updated
+  'table.supermarket': 'Supermarket',
+  'table.totalPrice': 'Total Price',
+  'table.itemsFound': 'Items Found',
+  'table.estPrices': 'Est. Prices',
+  'table.onSale': 'On Sale',
+  
+  // Product Table Headers
+  'table.product': 'Product',
+  'table.quantity': 'Quantity',
+  'table.price': 'Price',
+  'table.unitPrice': 'Unit Price',
+  
+  // Labels
+  'label.cheapest': 'Cheapest',
+  'label.lowest': 'Lowest',
+  'label.sale': 'Sale',
+  'label.estimated': 'Estimated',
+  'label.none': 'None',
+  'label.items': 'items',
+  
+  // Tooltips and Info
+  'info.estimatedPrices': 'Estimated prices are calculated using advanced algorithms when actual prices are not available.',
+  'info.clickToView': 'Click to view products',
+  'info.shareList': 'Share this list',
+  
+  // Dialogs
+  'dialog.close': 'Close',
+  'dialog.share': 'Share',
+  'dialog.productsInSupermarket': 'Products in {supermarket}',
+  
+  // Not Found Page
+  '404.title': '404 - Country Not Found',
+  '404.notSupported': '"{code}" is not a supported country code.',
+  '404.supportedCountries': 'We currently only support the Netherlands, United Kingdom, and Germany.',
+  '404.goTo': 'Go to Netherlands',
+  '404.uk': 'United Kingdom',
+  '404.germany': 'Germany',
+  
+  // Search Component
+  'search.title': 'Search for Products',
+  'search.placeholder': 'Search for products (e.g., milk, bread, popcorn)',
+  'search.searching': 'Searching supermarkets...',
+  'search.resultsFound': 'Found {count} products. Click on one to add to your list.',
+  'search.productDatabase': 'Product Database Results',
+  'search.supermarketProducts': 'Supermarket Products',
+  'search.updating': '(updating...)',
+  'search.addToList': 'Add to Shopping List',
+  'search.category': 'Category: {category}',
+  'search.quantityUnit': 'Quantity ({unit})',
+  'search.quantity': 'Quantity',
+  'search.cancel': 'Cancel',
+  'search.addToListButton': 'Add to List',
+  'search.noProductsFound': 'No products found for "{term}". Check if supermarkets.json is loaded correctly.',
+  'search.showDebug': 'Show Debug',
+  'search.hideDebug': 'Hide Debug',
+  
+  // Optimal Strategy
+  'optimal.title': 'Optimal Shopping Strategy',
+  'optimal.description': 'The optimal shopping strategy for buying items across multiple stores',
+  'optimal.shareList': 'Share List',
+  'optimal.itemCount': '{count} items',
+  'optimal.totalCost': 'Total Cost: {cost}',
+  'optimal.shoppingListTitle': 'My ComPear Optimal Shopping List',
+  'optimal.at': 'At {store}:',
+  'optimal.subtotal': 'Subtotal: {amount}',
+  'optimal.total': 'Total: {amount}',
+  'optimal.madeWith': 'Made with ComPear - Compare grocery prices across {country} supermarkets!',
+  
+  // Individual Items section
+  'individual.estimatedText': 'Some prices are estimated using advanced algorithms when official data isn\'t available.',
+  'individual.addItemsPrompt': 'Add grocery items to compare prices',
+  
+  // Clipboard messages
+  'clipboard.copied': 'Shopping list copied to clipboard!',
+  'clipboard.failed': 'Could not copy to clipboard. Please share manually.',
+  
+  // Product Dialog Labels
+  'dialog.total': 'Total: {amount}',
+  'dialog.saleItems': 'Sale Items: {count}',
+  'dialog.estimatedPrices': 'Estimated Prices: {count}',
+};
+
+// Dutch translations
+const nl: Translations = {
+  // App Header
+  'app.title': 'ComPear',
+  'app.clearAll': 'Alles Wissen',
+  'app.comingSoon': 'Binnenkort Beschikbaar',
+  'app.weWillBeAvailable': 'We zijn binnenkort beschikbaar in {country}!',
+  'app.currentlyOnlyNetherlandsSupported': 'Momenteel wordt alleen Nederland ondersteund.',
+  'app.switchToNetherlands': 'Ga naar Nederland',
+  'app.totalItems': 'Totaal voor {count} artikelen in alle {country} supermarkten',
+  
+  // Main Content
+  'app.description': 'Voeg boodschappen toe om prijzen te vergelijken tussen verschillende Nederlandse supermarkten. Prijzen van supermarkten zonder API\'s worden geschat met geavanceerde algoritmen.',
+  
+  // Compare All Stores Tab
+  'tabs.compareAllStores': 'Vergelijk Alle Winkels',
+  'tabs.optimalStrategy': 'Optimale Strategie',
+  'tabs.individualItems': 'Individuele Producten',
+  
+  // Table Headers - Updated to match the actual data display
+  'table.supermarket': 'Supermarkt',
+  'table.totalPrice': 'Totale Prijs',
+  'table.itemsFound': 'Artikelen Gevonden',
+  'table.estPrices': 'Geschatte Prijzen',
+  'table.onSale': 'In de Aanbieding',
+  
+  // Product Table Headers
+  'table.product': 'Product',
+  'table.quantity': 'Hoeveelheid',
+  'table.price': 'Prijs',
+  'table.unitPrice': 'Prijs per Eenheid',
+  
+  // Labels
+  'label.cheapest': 'Goedkoopst',
+  'label.lowest': 'Laagste',
+  'label.sale': 'Aanbieding',
+  'label.estimated': 'Geschat',
+  'label.none': 'Geen',
+  'label.items': 'artikelen',
+  
+  // Tooltips and Info
+  'info.estimatedPrices': 'Geschatte prijzen worden berekend met geavanceerde algoritmen wanneer werkelijke prijzen niet beschikbaar zijn.',
+  'info.clickToView': 'Klik om producten te bekijken',
+  'info.shareList': 'Deel deze lijst',
+  
+  // Dialogs
+  'dialog.close': 'Sluiten',
+  'dialog.share': 'Delen',
+  'dialog.productsInSupermarket': 'Producten bij {supermarket}',
+  
+  // Not Found Page
+  '404.title': '404 - Land Niet Gevonden',
+  '404.notSupported': '"{code}" is geen ondersteunde landcode.',
+  '404.supportedCountries': 'We ondersteunen momenteel alleen Nederland, Verenigd Koninkrijk en Duitsland.',
+  '404.goTo': 'Ga naar Nederland',
+  '404.uk': 'Verenigd Koninkrijk',
+  '404.germany': 'Duitsland',
+  
+  // Search Component
+  'search.title': 'Zoek Producten',
+  'search.placeholder': 'Zoek naar producten (bijv. melk, brood, popcorn)',
+  'search.searching': 'Supermarkten doorzoeken...',
+  'search.resultsFound': '{count} producten gevonden. Klik op een product om het aan je lijst toe te voegen.',
+  'search.productDatabase': 'Resultaten Productdatabase',
+  'search.supermarketProducts': 'Supermarkt Producten',
+  'search.updating': '(bijwerken...)',
+  'search.addToList': 'Aan Boodschappenlijst Toevoegen',
+  'search.category': 'Categorie: {category}',
+  'search.quantityUnit': 'Hoeveelheid ({unit})',
+  'search.quantity': 'Hoeveelheid',
+  'search.cancel': 'Annuleren',
+  'search.addToListButton': 'Aan Lijst Toevoegen',
+  'search.noProductsFound': 'Geen producten gevonden voor "{term}". Controleer of supermarkets.json correct is geladen.',
+  'search.showDebug': 'Debug Tonen',
+  'search.hideDebug': 'Debug Verbergen',
+  
+  // Optimal Strategy
+  'optimal.title': 'Optimale Winkelstrategie',
+  'optimal.description': 'De optimale winkelstrategie om artikelen te kopen bij verschillende winkels',
+  'optimal.shareList': 'Lijst Delen',
+  'optimal.itemCount': '{count} artikelen',
+  'optimal.totalCost': 'Totale Kosten: {cost}',
+  'optimal.shoppingListTitle': 'Mijn ComPear Optimale Boodschappenlijst',
+  'optimal.at': 'Bij {store}:',
+  'optimal.subtotal': 'Subtotaal: {amount}',
+  'optimal.total': 'Totaal: {amount}',
+  'optimal.madeWith': 'Gemaakt met ComPear - Vergelijk boodschappenprijzen bij Nederlandse supermarkten!',
+  
+  // Individual Items section
+  'individual.estimatedText': 'Sommige prijzen worden geschat met geavanceerde algoritmen wanneer officiële gegevens niet beschikbaar zijn.',
+  'individual.addItemsPrompt': 'Voeg boodschappen toe om prijzen te vergelijken',
+  
+  // Clipboard messages
+  'clipboard.copied': 'Boodschappenlijst gekopieerd naar klembord!',
+  'clipboard.failed': 'Kon niet kopiëren naar klembord. Deel a.u.b. handmatig.',
+  
+  // Product Dialog Labels
+  'dialog.total': 'Totaal: {amount}',
+  'dialog.saleItems': 'Artikelen in Aanbieding: {count}',
+  'dialog.estimatedPrices': 'Geschatte Prijzen: {count}',
+};
+
+// German translations (basic)
+const de: Translations = {
+  // App Header
+  'app.title': 'ComPear',
+  'app.clearAll': 'Alles Löschen',
+  'app.comingSoon': 'Demnächst Verfügbar',
+  'app.weWillBeAvailable': 'Wir werden bald in {country} verfügbar sein!',
+  'app.currentlyOnlyNetherlandsSupported': 'Derzeit wird nur die Niederlande unterstützt.',
+  'app.switchToNetherlands': 'Zu den Niederlanden wechseln',
+  
+  // Main Content
+  'app.description': 'Fügen Sie Lebensmittel hinzu, um Preise in verschiedenen Supermärkten zu vergleichen. Preise von Supermärkten ohne APIs werden mit fortschrittlichen Algorithmen geschätzt.',
+  
+  // Basic tabs
+  'tabs.compareAllStores': 'Alle Geschäfte Vergleichen',
+  'tabs.optimalStrategy': 'Optimale Strategie',
+  'tabs.individualItems': 'Einzelne Produkte',
+  
+  // Search Component
+  'search.title': 'Produkte Suchen',
+  'search.placeholder': 'Nach Produkten suchen (z.B. Milch, Brot, Popcorn)',
+  'search.searching': 'Supermärkte werden durchsucht...',
+  'search.resultsFound': '{count} Produkte gefunden. Klicken Sie auf eines, um es Ihrer Liste hinzuzufügen.',
+  'search.productDatabase': 'Ergebnisse der Produktdatenbank',
+  'search.supermarketProducts': 'Supermarkt-Produkte',
+  'search.cancel': 'Abbrechen',
+  'search.addToListButton': 'Zur Liste Hinzufügen'
+};
+
+// Export all translations
+export const translations = {
+  en,
+  nl,
+  de
+}; 
