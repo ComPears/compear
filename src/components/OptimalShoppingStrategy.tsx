@@ -200,7 +200,7 @@ const OptimalShoppingStrategy: React.FC<OptimalShoppingStrategyProps> = ({ groce
     });
     
     shareText += `${t('optimal.total').replace('{amount}', formatCurrency(optimalStrategy.totalPrice))}\n`;
-    shareText += t('optimal.madeWith').replace('{country}', country.name);
+    shareText += t(`optimal.madeWith.${country.code}`) || t('optimal.madeWith').replace('{country}', country.name);
     
     // Share using the Web Share API if available
     if (navigator.share) {

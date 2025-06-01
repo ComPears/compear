@@ -13,11 +13,19 @@ const en: Translations = {
   
   // Main Content
   'app.description': 'Add grocery items to compare prices across {country} supermarkets. Prices from supermarkets without APIs are estimated using advanced algorithms.',
+  'app.description.nl': 'Add grocery items to compare prices across Dutch supermarkets. Prices from supermarkets without APIs are estimated using advanced algorithms.',
+  'app.description.uk': 'Add grocery items to compare prices across UK supermarkets. Prices from supermarkets without APIs are estimated using advanced algorithms.',
+  'app.description.de': 'Add grocery items to compare prices across German supermarkets. Prices from supermarkets without APIs are estimated using advanced algorithms.',
   
   // Compare All Stores Tab
   'tabs.compareAllStores': 'Compare All Stores',
   'tabs.optimalStrategy': 'Optimal Strategy',
   'tabs.individualItems': 'Individual Items',
+  
+  // Short mobile tab labels
+  'tabs.individualItemsShort': 'Items',
+  'tabs.compareAllStoresShort': 'Compare', 
+  'tabs.optimalStrategyShort': 'Strategy',
   
   // Table Headers - Updated
   'table.supermarket': 'Supermarket',
@@ -87,6 +95,9 @@ const en: Translations = {
   'optimal.subtotal': 'Subtotal: {amount}',
   'optimal.total': 'Total: {amount}',
   'optimal.madeWith': 'Made with ComPear - Compare grocery prices across {country} supermarkets!',
+  'optimal.madeWith.nl': 'Made with ComPear - Compare grocery prices across Dutch supermarkets!',
+  'optimal.madeWith.uk': 'Made with ComPear - Compare grocery prices across UK supermarkets!',
+  'optimal.madeWith.de': 'Made with ComPear - Compare grocery prices across German supermarkets!',
   
   // Individual Items section
   'individual.estimatedText': 'Some prices are estimated using advanced algorithms when official data isn\'t available.',
@@ -114,12 +125,20 @@ const nl: Translations = {
   'app.totalItems': 'Totaal voor {count} artikelen in alle {country} supermarkten',
   
   // Main Content
-  'app.description': 'Voeg boodschappen toe om prijzen te vergelijken tussen verschillende Nederlandse supermarkten. Prijzen van supermarkten zonder API\'s worden geschat met geavanceerde algoritmen.',
+  'app.description': 'Voeg boodschappen toe om prijzen te vergelijken tussen verschillende {country} supermarkten. Prijzen van supermarkten zonder API\'s worden geschat met geavanceerde algoritmen.',
+  'app.description.nl': 'Voeg boodschappen toe om prijzen te vergelijken tussen verschillende Nederlandse supermarkten. Prijzen van supermarkten zonder API\'s worden geschat met geavanceerde algoritmen.',
+  'app.description.uk': 'Voeg boodschappen toe om prijzen te vergelijken tussen verschillende Britse supermarkten. Prijzen van supermarkten zonder API\'s worden geschat met geavanceerde algoritmen.',
+  'app.description.de': 'Voeg boodschappen toe om prijzen te vergelijken tussen verschillende Duitse supermarkten. Prijzen van supermarkten zonder API\'s worden geschat met geavanceerde algoritmen.',
   
   // Compare All Stores Tab
   'tabs.compareAllStores': 'Vergelijk Alle Winkels',
   'tabs.optimalStrategy': 'Optimale Strategie',
   'tabs.individualItems': 'Individuele Producten',
+  
+  // Short mobile tab labels
+  'tabs.individualItemsShort': 'Items',
+  'tabs.compareAllStoresShort': 'Vergelijk',
+  'tabs.optimalStrategyShort': 'Strategie',
   
   // Table Headers - Updated to match the actual data display
   'table.supermarket': 'Supermarkt',
@@ -188,7 +207,10 @@ const nl: Translations = {
   'optimal.at': 'Bij {store}:',
   'optimal.subtotal': 'Subtotaal: {amount}',
   'optimal.total': 'Totaal: {amount}',
-  'optimal.madeWith': 'Gemaakt met ComPear - Vergelijk boodschappenprijzen bij Nederlandse supermarkten!',
+  'optimal.madeWith': 'Gemaakt met ComPear - Vergelijk boodschappenprijzen bij {country} supermarkten!',
+  'optimal.madeWith.nl': 'Gemaakt met ComPear - Vergelijk boodschappenprijzen bij Nederlandse supermarkten!',
+  'optimal.madeWith.uk': 'Gemaakt met ComPear - Vergelijk boodschappenprijzen bij Britse supermarkten!',
+  'optimal.madeWith.de': 'Gemaakt met ComPear - Vergelijk boodschappenprijzen bij Duitse supermarkten!',
   
   // Individual Items section
   'individual.estimatedText': 'Sommige prijzen worden geschat met geavanceerde algoritmen wanneer officiële gegevens niet beschikbaar zijn.',
@@ -215,12 +237,20 @@ const de: Translations = {
   'app.switchToNetherlands': 'Zu den Niederlanden wechseln',
   
   // Main Content
-  'app.description': 'Fügen Sie Lebensmittel hinzu, um Preise in verschiedenen Supermärkten zu vergleichen. Preise von Supermärkten ohne APIs werden mit fortschrittlichen Algorithmen geschätzt.',
+  'app.description': 'Fügen Sie Lebensmittel hinzu, um Preise in verschiedenen {country} Supermärkten zu vergleichen. Preise von Supermärkten ohne APIs werden mit fortschrittlichen Algorithmen geschätzt.',
+  'app.description.nl': 'Fügen Sie Lebensmittel hinzu, um Preise in verschiedenen niederländischen Supermärkten zu vergleichen. Preise von Supermärkten ohne APIs werden mit fortschrittlichen Algorithmen geschätzt.',
+  'app.description.uk': 'Fügen Sie Lebensmittel hinzu, um Preise in verschiedenen britischen Supermärkten zu vergleichen. Preise von Supermärkten ohne APIs werden mit fortschrittlichen Algorithmen geschätzt.',
+  'app.description.de': 'Fügen Sie Lebensmittel hinzu, um Preise in verschiedenen deutschen Supermärkten zu vergleichen. Preise von Supermärkten ohne APIs werden mit fortschrittlichen Algorithmen geschätzt.',
   
   // Basic tabs
   'tabs.compareAllStores': 'Alle Geschäfte Vergleichen',
   'tabs.optimalStrategy': 'Optimale Strategie',
   'tabs.individualItems': 'Einzelne Produkte',
+  
+  // Short mobile tab labels  
+  'tabs.individualItemsShort': 'Artikel',
+  'tabs.compareAllStoresShort': 'Vergleich',
+  'tabs.optimalStrategyShort': 'Strategie',
   
   // Search Component
   'search.title': 'Produkte Suchen',
@@ -230,7 +260,13 @@ const de: Translations = {
   'search.productDatabase': 'Ergebnisse der Produktdatenbank',
   'search.supermarketProducts': 'Supermarkt-Produkte',
   'search.cancel': 'Abbrechen',
-  'search.addToListButton': 'Zur Liste Hinzufügen'
+  'search.addToListButton': 'Zur Liste Hinzufügen',
+  
+  // Optimal Strategy
+  'optimal.madeWith': 'Erstellt mit ComPear - Vergleichen Sie Lebensmittelpreise in {country} Supermärkten!',
+  'optimal.madeWith.nl': 'Erstellt mit ComPear - Vergleichen Sie Lebensmittelpreise in niederländischen Supermärkten!',
+  'optimal.madeWith.uk': 'Erstellt mit ComPear - Vergleichen Sie Lebensmittelpreise in britischen Supermärkten!',
+  'optimal.madeWith.de': 'Erstellt mit ComPear - Vergleichen Sie Lebensmittelpreise in deutschen Supermärkten!'
 };
 
 // Export all translations
