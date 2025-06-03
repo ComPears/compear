@@ -17,13 +17,17 @@ import {
   Avatar,
   Tabs,
   Tab,
-  Alert
+  Alert,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import RouteIcon from '@mui/icons-material/Route';
 import CompareIcon from '@mui/icons-material/Compare';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Grocery, GroceryWithPrices, SupermarketPrice } from '../types';
 import { fetchPricesForGrocery, supermarkets } from '../services/supermarketService';
 import OptimalShoppingStrategy from './OptimalShoppingStrategy';
@@ -73,9 +77,17 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
   const [groceriesWithPrices, setGroceriesWithPrices] = useState<GroceryWithPrices[]>([]);
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [tabValue, setTabValue] = useState(0);
+  const [expandedAccordions, setExpandedAccordions] = useState<Record<string, boolean>>({});
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
+  };
+
+  const handleAccordionChange = (groceryId: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
+    setExpandedAccordions(prev => ({
+      ...prev,
+      [groceryId]: isExpanded
+    }));
   };
 
   useEffect(() => {
@@ -278,22 +290,95 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
       )}
 
       <TabPanel value={tabValue} index={0}>
-        {/* Individual Grocery Cards */}
+        {/* Individual Grocery Accordions */}
         {groceriesWithPrices.map((grocery) => {
           const lowestPriceSupermarket = getLowestPriceSupermarket(grocery.prices);
+          const isExpanded = expandedAccordions[grocery.id] || false;
           
           return (
-            <Card key={grocery.id} sx={{ mb: 3 }}>
-              <CardContent>
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                  <Typography variant="h6" component="div">
-                    {grocery.name} {grocery.quantity > 1 && `(${grocery.quantity} ${formatUnitLabel(grocery)})`}
-                  </Typography>
-                  <IconButton onClick={() => onRemoveGrocery(grocery.id)} size="small">
-                    <DeleteIcon />
+            <Accordion 
+              key={grocery.id} 
+              expanded={isExpanded}
+              onChange={handleAccordionChange(grocery.id)}
+              sx={{ mb: 1 }}
+            >
+              <AccordionSummary 
+                expandIcon={<ExpandMoreIcon />}
+                aria-controls={`panel-${grocery.id}-content`}
+                id={`panel-${grocery.id}-header`}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', pr: 2 }}>
+                  {/* Searched Item */}
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 'medium' }}>
+                      {grocery.name}
+                    </Typography>
+                    {grocery.quantity > 1 && (
+                      <Typography variant="caption" color="text.secondary">
+                        {grocery.quantity} {formatUnitLabel(grocery)}
+                      </Typography>
+                    )}
+                  </Box>
+
+                  {/* Supermarket & Price Info */}
+                  {loading[grocery.id] ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
+                      <CircularProgress size={16} sx={{ mr: 1 }} />
+                      <Typography variant="body2" color="text.secondary">
+                        Loading...
+                      </Typography>
+                    </Box>
+                  ) : grocery.prices.length === 0 ? (
+                    <Box sx={{ mr: 2 }}>
+                      <Typography variant="body2" color="error">
+                        Not found
+                      </Typography>
+                    </Box>
+                  ) : lowestPriceSupermarket ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
+                      <Avatar 
+                        src={getSupermarketLogo(lowestPriceSupermarket.supermarketName)} 
+                        alt={lowestPriceSupermarket.supermarketName}
+                        sx={{ width: 20, height: 20, mr: 1 }}
+                      />
+                      <Typography variant="body2" sx={{ mr: 1 }}>
+                        {lowestPriceSupermarket.supermarketName}
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'success.main' }}>
+                        {formatCurrency(lowestPriceSupermarket.price)}
+                      </Typography>
+                      {lowestPriceSupermarket.onSale && (
+                        <Chip 
+                          icon={<LocalOfferIcon />} 
+                          label="Sale" 
+                          size="small" 
+                          color="secondary" 
+                          sx={{ ml: 0.5, height: 20 }}
+                        />
+                      )}
+                    </Box>
+                  ) : null}
+
+                  {/* Delete Button */}
+                  <IconButton 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemoveGrocery(grocery.id);
+                    }} 
+                    size="small"
+                    sx={{ 
+                      '&:hover': { 
+                        backgroundColor: 'error.light',
+                        color: 'error.contrastText'
+                      }
+                    }}
+                  >
+                    <DeleteIcon fontSize="small" />
                   </IconButton>
                 </Box>
-                
+              </AccordionSummary>
+              
+              <AccordionDetails>
                 {loading[grocery.id] ? (
                   <Box display="flex" justifyContent="center" p={3}>
                     <CircularProgress />
@@ -385,8 +470,8 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                     </Table>
                   </TableContainer>
                 )}
-              </CardContent>
-            </Card>
+              </AccordionDetails>
+            </Accordion>
           );
         })}
       </TabPanel>
