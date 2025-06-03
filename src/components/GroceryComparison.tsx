@@ -87,17 +87,17 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
         const existingWithPrices = groceriesWithPrices.find(g => g.id === grocery.id);
         
         if (existingWithPrices) {
-          updatedGroceries.push(existingWithPrices);
+          updatedGroceries.unshift(existingWithPrices);
         } else {
           // Set loading state for this grocery item
           setLoading(prev => ({ ...prev, [grocery.id]: true }));
           
           try {
             const prices = await fetchPricesForGrocery(grocery);
-            updatedGroceries.push({ ...grocery, prices });
+            updatedGroceries.unshift({ ...grocery, prices });
           } catch (error) {
             console.error(`Error fetching prices for ${grocery.name}:`, error);
-            updatedGroceries.push({ ...grocery, prices: [] });
+            updatedGroceries.unshift({ ...grocery, prices: [] });
           } finally {
             setLoading(prev => ({ ...prev, [grocery.id]: false }));
           }
