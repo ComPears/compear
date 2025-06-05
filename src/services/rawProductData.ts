@@ -12,14 +12,14 @@ export interface Supermarket {
   d: SupermarketProduct[];
 };
 
-export const supermarkets: Supermarket[] = [
+const supermarkets: Supermarket[] = [
   {
     "n": "AH",
     "u": "https://www.ah.nl/producten/product/",
     "i": "https://www.ah.nl/favicon.ico",
     "d": [
       {
-        "n": "Bonduelle Macedoine de legumes",
+        "n": "",
         "o": null,
         "p": "1.39",
         "s": "200 g"
@@ -813,8 +813,20 @@ export const supermarkets: Supermarket[] = [
         "s": "500 ml"
       }
     ]
-}
+  }
 ];
+
+export const filterValidItems = () => {
+  const filteredSuperMarket = supermarkets.map(supermarket => ({
+    ...supermarket,
+    d: supermarket.d.filter(item => {
+      const hasValidName = item.n && item.n.trim() !== '';
+      const hasValidPrice = item.p && item.p.trim() !== '';
+      return hasValidName && hasValidPrice;
+    })
+  }));
+  return filteredSuperMarket;
+}
 
 export const findProductInSupermarkets = async (term: string): Promise<Record<string, any[]>> => {
   console.log("Finding products in supermarkets for:", term);
@@ -824,9 +836,10 @@ export const findProductInSupermarkets = async (term: string): Promise<Record<st
   
   // Create a result object with supermarket codes as keys
   const results: Record<string, any[]> = {};
+  const supermarketValidItems = filterValidItems();
   
   // Search through each supermarket
-  supermarkets.forEach(supermarket => {
+  supermarketValidItems.forEach(supermarket => {
     // Improved matching: search for individual terms when multiple words are entered
     const searchTerms = term.split(/\s+/);
 
