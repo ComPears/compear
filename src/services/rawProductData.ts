@@ -813,21 +813,15 @@ const supermarkets: Supermarket[] = [
         "s": "500 ml"
       }
     ]
-}
+  }
 ];
 
-
-// Filter function to remove items with empty names or prices
 export const filterValidItems = () => {
   const filteredSuperMarket = supermarkets.map(supermarket => ({
     ...supermarket,
     d: supermarket.d.filter(item => {
-      // Check if name exists and is not empty (after trimming whitespace)
       const hasValidName = item.n && item.n.trim() !== '';
-      
-      // Check if price exists and is not empty (after trimming whitespace)
       const hasValidPrice = item.p && item.p.trim() !== '';
-      
       return hasValidName && hasValidPrice;
     })
   }));

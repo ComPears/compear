@@ -273,13 +273,6 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
             </Typography>
           </Box>
         </Collapse>
-        
-        {supermarketResults.length > 0 && (
-          <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 1 }}>
-            Found {supermarketResults.length} products. The first item has been added for comparison.
-            Click on other items to add them to your comparison list.
-          </Typography>
-        )}
       </Box>
 
       {/* Product selection modal */}
