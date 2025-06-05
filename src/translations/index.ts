@@ -39,6 +39,7 @@ const en: Translations = {
   'table.quantity': 'Quantity',
   'table.price': 'Price',
   'table.unitPrice': 'Unit Price',
+  'table.size': 'Size',
   
   // Labels
   'label.cheapest': 'Cheapest',
@@ -152,6 +153,7 @@ const nl: Translations = {
   'table.quantity': 'Hoeveelheid',
   'table.price': 'Prijs',
   'table.unitPrice': 'Prijs per Eenheid',
+  'table.size': 'Maat',
   
   // Labels
   'label.cheapest': 'Goedkoopst',

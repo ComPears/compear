@@ -23,6 +23,7 @@ import {
   AccordionDetails
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { useTheme, useMediaQuery } from '@mui/material';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import RouteIcon from '@mui/icons-material/Route';
@@ -31,6 +32,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Grocery, GroceryWithPrices, SupermarketPrice } from '../types';
 import { fetchPricesForGrocery, supermarkets } from '../services/supermarketService';
 import OptimalShoppingStrategy from './OptimalShoppingStrategy';
+import { useLanguage } from '../context/LanguageContext';
+import { useCountry } from '../context/CountryContext';
 
 interface GroceryComparisonProps {
   groceries: Grocery[];
@@ -77,7 +80,11 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
   const [groceriesWithPrices, setGroceriesWithPrices] = useState<GroceryWithPrices[]>([]);
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [tabValue, setTabValue] = useState(0);
+  const theme = useTheme();
+  const { t } = useLanguage();
+  const { country } = useCountry();
   const [expandedAccordions, setExpandedAccordions] = useState<Record<string, boolean>>({});
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -162,21 +169,6 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
     }
   };
 
-  const displayUnitPrice = (price: SupermarketPrice, grocery: Grocery) => {
-    if (!price.unitPrice) return null;
-    
-    let unitDisplay = '';
-    if (grocery.unit === 'kg' || grocery.unit === 'gram') {
-      unitDisplay = '€/kg';
-    } else if (grocery.unit === 'liter' || grocery.unit === 'ml') {
-      unitDisplay = '€/L';
-    } else {
-      return null;
-    }
-    
-    return `${price.unitPrice.toFixed(2)} ${unitDisplay}`;
-  };
-
   // Calculate summary of prices across all supermarkets
   const supermarketSummaries = useMemo(() => {
     if (groceriesWithPrices.length === 0) return [];
@@ -235,28 +227,6 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
     return supermarketSummaries.length > 0 ? supermarketSummaries[0] : null;
   }, [supermarketSummaries]);
 
-  // Check if any grocery has no prices
-  const hasProductsWithNoPrices = useMemo(() => {
-    return groceriesWithPrices.some(grocery => grocery.prices.length === 0);
-  }, [groceriesWithPrices]);
-
-  // Get list of groceries that have no prices
-  const productsNotFound = useMemo(() => {
-    return groceriesWithPrices.filter(grocery => grocery.prices.length === 0);
-  }, [groceriesWithPrices]);
-
-  if (groceries.length === 0) {
-    return (
-      <Card>
-        <CardContent>
-          <Typography variant="subtitle1" align="center">
-            Add grocery items to compare prices
-          </Typography>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <Box>
       {groceriesWithPrices.length > 0 && (
@@ -267,26 +237,16 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
             aria-label="view modes"
             centered
           >
-            <Tab icon={<ShoppingCartIcon />} label="Individual Items" />
-            <Tab icon={<CompareIcon />} label="Compare All Stores" />
-            <Tab icon={<RouteIcon />} label="Optimal Strategy" />
+            <Tab icon={<ShoppingCartIcon />} label={isMobile ? t('tabs.individualItemsShort') : t('tabs.individualItems')} />
+            <Tab icon={<CompareIcon />} label={isMobile ? t('tabs.compareAllStoresShort') : t('tabs.compareAllStores')} />
+            <Tab icon={<RouteIcon />} label={isMobile ? t('tabs.optimalStrategyShort') : t('tabs.optimalStrategy')}
+              sx={{
+                '& .MuiTab-labelContainer': {
+                  fontSize: { xs: '0.7rem', sm: '0.875rem' }
+                }
+              }} />
           </Tabs>
         </Box>
-      )}
-
-      {/* Show alert for products not found in any store */}
-      {hasProductsWithNoPrices && (
-        <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
-          {productsNotFound.length === 1 ? (
-            <>
-              Product <strong>{productsNotFound[0].name}</strong> was not found in any store.
-            </>
-          ) : (
-            <>
-              Products <strong>{productsNotFound.map(g => g.name).join(', ')}</strong> were not found in any store.
-            </>
-          )}
-        </Alert>
       )}
 
       <TabPanel value={tabValue} index={0}>
@@ -321,20 +281,15 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                   </Box>
 
                   {/* Supermarket & Price Info */}
-                  {loading[grocery.id] ? (
+                  {loading[grocery.id] && (
                     <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
                       <CircularProgress size={16} sx={{ mr: 1 }} />
                       <Typography variant="body2" color="text.secondary">
                         Loading...
                       </Typography>
                     </Box>
-                  ) : grocery.prices.length === 0 ? (
-                    <Box sx={{ mr: 2 }}>
-                      <Typography variant="body2" color="error">
-                        Not found
-                      </Typography>
-                    </Box>
-                  ) : lowestPriceSupermarket ? (
+                  )}
+                  {lowestPriceSupermarket && (
                     <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
                       <Avatar 
                         src={getSupermarketLogo(lowestPriceSupermarket.supermarketName)} 
@@ -357,7 +312,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                         />
                       )}
                     </Box>
-                  ) : null}
+                  )}
 
                   {/* Delete Button */}
                   <IconButton 
@@ -383,19 +338,15 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                   <Box display="flex" justifyContent="center" p={3}>
                     <CircularProgress />
                   </Box>
-                ) : grocery.prices.length === 0 ? (
-                  <Alert severity="warning">
-                    Product not found in any store.
-                  </Alert>
-                ) : (
+                ) : grocery.prices.length >= 1 && (
                   <TableContainer component={Paper} variant="outlined">
                     <Table size="small">
                       <TableHead>
                         <TableRow>
-                          <TableCell>Supermarket</TableCell>
-                          <TableCell>Product Name</TableCell>
-                          <TableCell align="right">Price</TableCell>
-                          <TableCell align="right">Unit Price</TableCell>
+                          <TableCell>{t('table.supermarket')}</TableCell>
+                          <TableCell>{t('table.price')}</TableCell>
+                          <TableCell align="right">{t('table.unitPrice')}</TableCell>
+                          <TableCell align="right">{t('table.size')}</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -462,7 +413,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                               )}
                             </TableCell>
                             <TableCell align="right">
-                              {displayUnitPrice(price, grocery)}
+                              {price.size}
                             </TableCell>
                           </TableRow>
                         ))}
@@ -484,12 +435,14 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
               <Box display="flex" alignItems="center" mb={2}>
                 <CompareIcon sx={{ mr: 1.5 }} color="primary" />
                 <Typography variant="h6" component="div">
-                  All Stores Comparison
+                  {t('tabs.compareAllStores')}
                 </Typography>
               </Box>
               
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                Total for {groceriesWithPrices.length} items across Dutch supermarkets
+                {t('app.totalItems')
+                  .replace('{count}', groceriesWithPrices.length.toString())
+                  .replace('{country}', country.name)}
               </Typography>
               
               <TableContainer 
@@ -504,11 +457,11 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                 <Table size="small" stickyHeader>
                   <TableHead>
                     <TableRow>
-                      <TableCell sx={{ fontWeight: 'bold', width: '25%' }}>Supermarket</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>Total Price</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>Items Found</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>Products</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>On Sale</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', width: '25%' }}>{t('table.supermarket')}</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>{t('table.totalPrice')}</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>{t('table.itemsFound')}</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>{t('table.product')}</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>{t('table.onSale')}</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
