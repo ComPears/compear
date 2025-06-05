@@ -162,21 +162,6 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
     }
   };
 
-  const displayUnitPrice = (price: SupermarketPrice, grocery: Grocery) => {
-    if (!price.unitPrice) return null;
-    
-    let unitDisplay = '';
-    if (grocery.unit === 'kg' || grocery.unit === 'gram') {
-      unitDisplay = '€/kg';
-    } else if (grocery.unit === 'liter' || grocery.unit === 'ml') {
-      unitDisplay = '€/L';
-    } else {
-      return null;
-    }
-    
-    return `${price.unitPrice.toFixed(2)} ${unitDisplay}`;
-  };
-
   // Calculate summary of prices across all supermarkets
   const supermarketSummaries = useMemo(() => {
     if (groceriesWithPrices.length === 0) return [];
