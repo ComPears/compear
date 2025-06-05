@@ -395,7 +395,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                           <TableCell>Supermarket</TableCell>
                           <TableCell>Product Name</TableCell>
                           <TableCell align="right">Price</TableCell>
-                          <TableCell align="right">Unit Price</TableCell>
+                          <TableCell align="right">Size</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -462,7 +462,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                               )}
                             </TableCell>
                             <TableCell align="right">
-                              {displayUnitPrice(price, grocery)}
+                              {price.size}
                             </TableCell>
                           </TableRow>
                         ))}
