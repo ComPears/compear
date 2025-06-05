@@ -22,6 +22,7 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import { Grocery } from '../types';
 import { findProductInSupermarkets } from '../services/rawProductData';
+import { useLanguage } from '../context/LanguageContext';
 
 interface ProductSearchProps {
   onAddGrocery: (grocery: Grocery) => void;
@@ -38,13 +39,13 @@ interface SupermarketProduct {
 const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
   // State declarations
   const [searchTerm, setSearchTerm] = useState('');
-  const [supermarketResults, setSupermarketResults] = useState<SupermarketProduct[]>([]);
   const [selectedSupermarketProduct, setSelectedSupermarketProduct] = useState<SupermarketProduct | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showDebug, setShowDebug] = useState(false);
+  const { t } = useLanguage();
   
   // Refs
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -89,9 +90,6 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
             });
           });
         });
-          
-        console.log(`Total flattened results: ${flatResults.length}`);
-        setSupermarketResults(flatResults);
         
         // Check if no results were found
         if (flatResults.length === 0) {
@@ -206,7 +204,6 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
       // Close modal and reset the search
       setShowModal(false);
       setSearchTerm(''); // Clear search input after adding
-      setSupermarketResults([]); // Clear results after adding
     }
   }, [onAddGrocery, quantity, selectedSupermarketProduct]);
 
@@ -214,11 +211,11 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
     <>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h6" sx={{ mb: 2 }}>
-          Search for Products
+          {t('search.title')}
         </Typography>
         
         <TextField
-          label="Search for products (e.g., milk, bread, popcorn)"
+          label={t('search.placeholder')}
           variant="outlined"
           fullWidth
           value={searchTerm}
