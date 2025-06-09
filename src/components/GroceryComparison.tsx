@@ -154,21 +154,6 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
     return prices.find(p => p.price === lowestPrice);
   };
 
-  const formatUnitLabel = (grocery: Grocery) => {
-    switch(grocery.unit) {
-      case 'kg':
-        return 'kg';
-      case 'gram':
-        return 'g';
-      case 'liter':
-        return 'L';
-      case 'ml':
-        return 'ml';
-      default:
-        return '';
-    }
-  };
-
   // Calculate summary of prices across all supermarkets
   const supermarketSummaries = useMemo(() => {
     if (groceriesWithPrices.length === 0) return [];
