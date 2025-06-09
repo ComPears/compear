@@ -445,6 +445,12 @@ const supermarkets: Supermarket[] = [
         "s": "1 L"
       },
       {
+        "n": "Fullvolle Melk",
+        "o": null,
+        "p": "0.99",
+        "s": "1 L"
+      },
+      {
         "n": "1 de Beste Volkoren Brood",
         "o": null,
         "p": "1.29",
@@ -828,7 +834,7 @@ export const filterValidItems = () => {
   return filteredSuperMarket;
 }
 
-export const findProductInSupermarkets = async (term: string): Promise<Record<string, any[]>> => {
+export const findProductInSupermarkets = (term: string): Record<string, any[]> => {
   console.log("Finding products in supermarkets for:", term);
   if (!term || term.trim().length === 0) return {};
   
@@ -883,5 +889,5 @@ export const findProductInSupermarkets = async (term: string): Promise<Record<st
   
   console.log("Search results:", results);
   // Simulate async behavior to match the expected interface
-  return Promise.resolve(results);
+  return results;
 };

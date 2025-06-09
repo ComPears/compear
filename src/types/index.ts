@@ -6,6 +6,7 @@ export interface Grocery {
   variant?: string; // Optional variant information
   brand?: string;   // Optional brand information
   price?: number;
+  searchKeyword?: string;
 }
 
 export interface SupermarketPrice {

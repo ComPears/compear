@@ -2,19 +2,10 @@ import React, { useState, useCallback, useRef } from 'react';
 import {
   TextField,
   Box,
-  Card,
-  CardContent,
   Typography,
-  CardActionArea,
-  Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
   InputAdornment,
   IconButton,
-  Stack,
   CircularProgress,
   Alert,
   Collapse
@@ -39,9 +30,6 @@ interface SupermarketProduct {
 const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
   // State declarations
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedSupermarketProduct, setSelectedSupermarketProduct] = useState<SupermarketProduct | null>(null);
-  const [showModal, setShowModal] = useState(false);
-  const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showDebug, setShowDebug] = useState(false);
@@ -95,40 +83,41 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
         if (flatResults.length === 0) {
           setError(`No products found for "${searchTerm}". Please try a different search term.`);
         } else {
-          // Automatically add the first product to the grocery list if we have results
-          const firstProduct = flatResults[0];
-          
-          // Parse size information to determine unit
-          let unit: 'kg' | 'gram' | 'liter' | 'ml' | 'piece' = 'piece';
-          
-          const sizeStr = firstProduct.s.toLowerCase();
-          if (sizeStr.includes('kg')) {
-            unit = 'kg';
-          } else if (sizeStr.includes('g')) {
-            unit = 'gram';
-          } else if (sizeStr.includes('l') && !sizeStr.includes('ml')) {
-            unit = 'liter';
-          } else if (sizeStr.includes('ml')) {
-            unit = 'ml';
-          }
-          
-          // Try to extract numeric quantity
-          const match = sizeStr.match(/(\d+(?:\.\d+)?)/);
-          let quantity = 1;
-          if (match) {
-            quantity = parseFloat(match[1]);
-          }
-          
-          const grocery: Grocery = {
-            id: `supermarket-${Date.now()}`,
-            name: firstProduct.n,
-            unit: unit,
-            quantity: quantity,
-            variant: firstProduct.supermarketName
-          };
-          
-          // Add the grocery to the list
-          onAddGrocery(grocery);
+        const cheapestProduct = flatResults.reduce((cheapest, current) => {
+          return current.p < cheapest.p ? current : cheapest;
+        }, flatResults[0]);
+
+        // Parse size information to determine unit
+        let unit: 'kg' | 'gram' | 'liter' | 'ml' | 'piece' = 'piece';
+        
+        const sizeStr = cheapestProduct.s.toLowerCase();
+        if (sizeStr.includes('kg')) {
+          unit = 'kg';
+        } else if (sizeStr.includes('g')) {
+          unit = 'gram';
+        } else if (sizeStr.includes('l') && !sizeStr.includes('ml')) {
+          unit = 'liter';
+        } else if (sizeStr.includes('ml')) {
+          unit = 'ml';
+        }
+        
+        // Try to extract numeric quantity
+        const match = sizeStr.match(/(\d+(?:\.\d+)?)/);
+        let quantity = 1;
+        if (match) {
+          quantity = parseFloat(match[1]);
+        }
+        
+        const grocery: Grocery = {
+          id: `supermarket-${Date.now()}`,
+          name: cheapestProduct.n,
+          unit: unit,
+          quantity: quantity,
+          variant: cheapestProduct.supermarketName,
+          searchKeyword: searchTerm,
+        };
+        onAddGrocery(grocery);
+        setSearchTerm('');
         }
       } catch (error) {
         // Ignore aborted requests
@@ -154,58 +143,6 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
       performSearch();
     }
   }, [performSearch]);
-
-  // Handle product selection from supermarket data
-  const handleSelectSupermarketProduct = useCallback((product: SupermarketProduct) => {
-    setSelectedSupermarketProduct(product);
-    
-    // Try to extract numeric quantity from size string
-    const sizeStr = product.s.toLowerCase();
-    const match = sizeStr.match(/(\d+(?:\.\d+)?)/);
-    if (match) {
-      // Set quantity directly based on extracted value
-      setQuantity(parseFloat(match[1]));
-    } else {
-      // Default to 1 if no quantity found
-      setQuantity(1);
-    }
-    
-    setShowModal(true);
-  }, []);
-
-  // Add product to grocery list
-  const handleAddToList = useCallback(() => {
-    if (selectedSupermarketProduct) {
-      // Parse size information to determine unit
-      let unit: 'kg' | 'gram' | 'liter' | 'ml' | 'piece' = 'piece';
-      
-      const sizeStr = selectedSupermarketProduct.s.toLowerCase();
-      if (sizeStr.includes('kg')) {
-        unit = 'kg';
-      } else if (sizeStr.includes('g')) {
-        unit = 'gram';
-      } else if (sizeStr.includes('l') && !sizeStr.includes('ml')) {
-        unit = 'liter';
-      } else if (sizeStr.includes('ml')) {
-        unit = 'ml';
-      }
-      
-      const grocery: Grocery = {
-        id: `supermarket-${Date.now()}`,
-        name: selectedSupermarketProduct.n,
-        unit: unit,
-        quantity: quantity,
-        variant: selectedSupermarketProduct.supermarketName
-      };
-      
-      // Add grocery to the list and trigger parent component update
-      onAddGrocery(grocery);
-      
-      // Close modal and reset the search
-      setShowModal(false);
-      setSearchTerm(''); // Clear search input after adding
-    }
-  }, [onAddGrocery, quantity, selectedSupermarketProduct]);
 
   return (
     <>
@@ -271,51 +208,6 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
           </Box>
         </Collapse>
       </Box>
-
-      {/* Product selection modal */}
-      <Dialog open={showModal} onClose={() => setShowModal(false)}>
-        <DialogTitle>
-          Add to Shopping List
-        </DialogTitle>
-        <DialogContent>
-          {selectedSupermarketProduct && (
-            <Stack spacing={3} sx={{ mt: 1 }}>
-              <Box>
-                <Typography variant="h6">
-                  {selectedSupermarketProduct.n}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {selectedSupermarketProduct.supermarketName} • {selectedSupermarketProduct.s}
-                </Typography>
-                <Typography variant="body1" sx={{ mt: 1 }}>
-                  €{selectedSupermarketProduct.p.toFixed(2)}
-                </Typography>
-              </Box>
-
-              <TextField
-                label="Quantity"
-                type="number"
-                value={quantity}
-                onChange={(e) => setQuantity(parseFloat(e.target.value) || 1)} 
-                InputProps={{
-                  inputProps: { min: 1, step: 1 }
-                }}
-                fullWidth
-              />
-            </Stack>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowModal(false)}>Cancel</Button>
-          <Button 
-            onClick={handleAddToList} 
-            variant="contained" 
-            color="primary"
-          >
-            Add to List
-          </Button>
-        </DialogActions>
-      </Dialog>
     </>
   );
 };
