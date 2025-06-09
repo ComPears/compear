@@ -273,11 +273,6 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                     <Typography variant="subtitle1" sx={{ fontWeight: 'medium' }}>
                       {grocery.name}
                     </Typography>
-                    {grocery.quantity > 1 && (
-                      <Typography variant="caption" color="text.secondary">
-                        {grocery.quantity} {formatUnitLabel(grocery)}
-                      </Typography>
-                    )}
                   </Box>
                   {lowestPriceSupermarket && (
                     <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
