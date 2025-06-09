@@ -32,38 +32,35 @@ export const supermarkets = [
   },
 ];
 
-export const fetchPricesForGrocery = async (grocery: Grocery): Promise<SupermarketPrice[]> => {
-  try {
-    // Search for the product in all supermarkets
-    const searchResults = await findProductInSupermarkets(grocery.name);
-    
-    const prices: SupermarketPrice[] = [];
+export const fetchPricesForGrocery = (grocery: Grocery): SupermarketPrice[] => {
+  let prices: SupermarketPrice[] = [];
+  // Search for the product in all supermarkets
+  if (grocery?.searchKeyword) {
+    const searchResults = findProductInSupermarkets(grocery?.searchKeyword);
+
+    // console.log("Search result ", grocery?.searchKeyword, searchResults);
     
     // Convert the search results to SupermarketPrice format
     Object.entries(searchResults).forEach(([supermarketCode, products]) => {
+      console.log("Data ", supermarketCode, products);
       if (products && products.length > 0) {
-        // For now, take the first matching product from each supermarket
-        // You might want to implement better logic to select the most relevant product
-        const product = products[0];
-        
-        prices.push({
-          supermarketName: supermarketCode.toUpperCase(),
-          price: product.p,
-          productName: product.n,  // Include the actual product name
-          size: product.s,         // Include the size information
-          unitPrice: calculateUnitPrice(product.p, product.s, grocery.unit),
-          onSale: product.o ? true : false,
-          regularPrice: product.o || undefined,
-          link: product.l
-        });
+        products.forEach((product) => {
+          prices.push({
+            supermarketName: supermarketCode.toUpperCase(),
+            price: product.p,
+            productName: product.n,  // Include the actual product name
+            size: product.s,         // Include the size information
+            unitPrice: calculateUnitPrice(product.p, product.s, grocery.unit),
+            onSale: product.o ? true : false,
+            regularPrice: product.o || undefined,
+            link: product.l
+          });
+        })
       }
     });
-    
     return prices;
-  } catch (error) {
-    console.error('Error fetching prices:', error);
-    return [];
   }
+  return [];
 };
 
 // Helper function to calculate unit price

@@ -98,7 +98,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
   };
 
   useEffect(() => {
-    const fetchPrices = async () => {
+    const fetchPrices = () => {
       const updatedGroceries: GroceryWithPrices[] = [];
       
       // Process each grocery item that doesn't have prices yet
@@ -112,7 +112,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
           setLoading(prev => ({ ...prev, [grocery.id]: true }));
           
           try {
-            const prices = await fetchPricesForGrocery(grocery);
+            const prices = fetchPricesForGrocery(grocery);
             updatedGroceries.unshift({ ...grocery, prices });
           } catch (error) {
             console.error(`Error fetching prices for ${grocery.name}:`, error);
@@ -174,10 +174,10 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
     if (groceriesWithPrices.length === 0) return [];
 
     // Get all unique supermarket names from all grocery prices
-    const supermarketNames = new Set<string>();
+    const supermarketNames: string[] = [];
     groceriesWithPrices.forEach(grocery => {
       grocery.prices.forEach(price => {
-        supermarketNames.add(price.supermarketName);
+        supermarketNames.push(price.supermarketName);
       });
     });
 
@@ -279,16 +279,6 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                       </Typography>
                     )}
                   </Box>
-
-                  {/* Supermarket & Price Info */}
-                  {loading[grocery.id] && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
-                      <CircularProgress size={16} sx={{ mr: 1 }} />
-                      <Typography variant="body2" color="text.secondary">
-                        Loading...
-                      </Typography>
-                    </Box>
-                  )}
                   {lowestPriceSupermarket && (
                     <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
                       <Avatar 
@@ -354,7 +344,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                           <TableRow 
                             key={price.supermarketName}
                             sx={{
-                              backgroundColor: lowestPriceSupermarket?.supermarketName === price.supermarketName 
+                              backgroundColor: lowestPriceSupermarket?.price === price.price 
                                 ? 'success.light' 
                                 : 'inherit'
                             }}

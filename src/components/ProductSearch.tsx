@@ -113,7 +113,8 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
           name: cheapestProduct.n,
           unit: unit,
           quantity: quantity,
-          variant: cheapestProduct.supermarketName
+          variant: cheapestProduct.supermarketName,
+          searchKeyword: searchTerm,
         };
         onAddGrocery(grocery);
         setSearchTerm('');
