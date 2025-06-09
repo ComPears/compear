@@ -116,6 +116,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
           variant: cheapestProduct.supermarketName
         };
         onAddGrocery(grocery);
+        setSearchTerm('');
         }
       } catch (error) {
         // Ignore aborted requests
