@@ -54,7 +54,7 @@ const OptimalShoppingStrategy: React.FC<OptimalShoppingStrategyProps> = ({ groce
 
   // Format currency values
   const formatCurrency = (amount: number) => {
-    return `€${amount.toFixed(2)}`;
+    return `€${amount}`;
   };
 
   // Calculate the optimal shopping strategy

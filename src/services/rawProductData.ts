@@ -1,4 +1,4 @@
-import supermarketsData from '../data/supermarkets_merged.json';
+import supermarketsData from '../data/supermarkets.json';
 
 export interface SupermarketProduct {
   n: string;

@@ -144,7 +144,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
   };
 
   const formatCurrency = (amount: number) => {
-    return `€${amount.toFixed(2)}`;
+    return `€${amount}`;
   };
 
   const getLowestPriceSupermarket = (prices: SupermarketPrice[]) => {
