@@ -432,6 +432,12 @@ const supermarkets: Supermarket[] = [
         "p": "8.71",
         "s": "online10% pakketkorting"
       },
+      {
+        "n": "Fullvolle Melk",
+        "o": null,
+        "p": "1.99",
+        "s": "1 L"
+      },
     ]
   }, {
     "n": "Dirk",
@@ -503,6 +509,12 @@ const supermarkets: Supermarket[] = [
         "o": null,
         "p": "0.89",
         "s": "100 g"
+      },
+      {
+        "n": "Dirk Yoghurt Naturel",
+        "o": null,
+        "p": "0.29",
+        "s": "1 L"
       },
       {
         "n": "Dirk Biologische Wortelen",
@@ -847,9 +859,9 @@ export const findProductInSupermarkets = (term: string): Record<string, any[]> =
   // Search through each supermarket
   supermarketValidItems.forEach(supermarket => {
     // Improved matching: search for individual terms when multiple words are entered
-    const searchTerms = term.split(/\s+/);
+    // const searchTerms = term.split(/\s+/);
 
-    console.log("Search terms ", searchTerms);
+    // console.log("Search terms ", searchTerms);
     
     const matchingProducts = supermarket.d.filter(product => {
       const productName = product.n.toLowerCase();
@@ -857,11 +869,6 @@ export const findProductInSupermarkets = (term: string): Record<string, any[]> =
       // Match exact phrase first
       if (productName.includes(term)) {
         return true;
-      }
-      
-      // For multi-word searches, check if ANY of the terms match
-      if (searchTerms.length > 1) {
-        return searchTerms.some(searchTerm => productName.includes(searchTerm));
       }
       
       // For single terms, also try partial matching for terms longer than 3 chars
