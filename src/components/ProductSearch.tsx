@@ -54,7 +54,6 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
       
       // Search in supermarkets.json data
       setLoading(true);
-      console.log(`Searching for: ${searchTerm}`);
       
       try {
         const results = await findProductInSupermarkets(searchTerm);
@@ -62,13 +61,10 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
         // Check if the search was aborted
         if (abortControllerRef.current.signal.aborted) return;
         
-        console.log('Search results:', results);
-        
         const flatResults: SupermarketProduct[] = [];
         
         // Convert the results to a flat array with supermarket names
         Object.entries(results).forEach(([supermarketCode, products]) => {
-          console.log(`Processing ${products.length} products from ${supermarketCode}`);
           
           const supermarket = supermarketCode.toUpperCase();
           products.forEach(product => {

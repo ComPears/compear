@@ -847,7 +847,6 @@ export const filterValidItems = () => {
 }
 
 export const findProductInSupermarkets = (term: string): Record<string, any[]> => {
-  console.log("Finding products in supermarkets for:", term);
   if (!term || term.trim().length === 0) return {};
   
   term = term.toLowerCase().trim();
@@ -858,10 +857,6 @@ export const findProductInSupermarkets = (term: string): Record<string, any[]> =
   
   // Search through each supermarket
   supermarketValidItems.forEach(supermarket => {
-    // Improved matching: search for individual terms when multiple words are entered
-    // const searchTerms = term.split(/\s+/);
-
-    // console.log("Search terms ", searchTerms);
     
     const matchingProducts = supermarket.d.filter(product => {
       const productName = product.n.toLowerCase();
@@ -882,7 +877,6 @@ export const findProductInSupermarkets = (term: string): Record<string, any[]> =
     });
     
     if (matchingProducts.length > 0) {
-      console.log(`Found ${matchingProducts.length} matches in ${supermarket.n}`);
       // Use the supermarket's code (n) as the key
       results[supermarket.n.toLowerCase()] = matchingProducts.map(product => ({
         n: product.n,
@@ -893,8 +887,6 @@ export const findProductInSupermarkets = (term: string): Record<string, any[]> =
       }));
     }
   });
-  
-  console.log("Search results:", results);
   // Simulate async behavior to match the expected interface
   return results;
 };

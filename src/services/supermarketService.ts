@@ -37,12 +37,9 @@ export const fetchPricesForGrocery = (grocery: Grocery): SupermarketPrice[] => {
   // Search for the product in all supermarkets
   if (grocery?.searchKeyword) {
     const searchResults = findProductInSupermarkets(grocery?.searchKeyword);
-
-    // console.log("Search result ", grocery?.searchKeyword, searchResults);
     
     // Convert the search results to SupermarketPrice format
     Object.entries(searchResults).forEach(([supermarketCode, products]) => {
-      console.log("Data ", supermarketCode, products);
       if (products && products.length > 0) {
         products.forEach((product) => {
           prices.push({
