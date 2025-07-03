@@ -24,7 +24,6 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import ShareIcon from '@mui/icons-material/Share';
 import { GroceryWithPrices, SupermarketPrice } from '../types';
 import { supermarkets } from '../services/supermarketService';
-import { useLanguage } from '../context/LanguageContext';
 import { useCountry } from '../context/CountryContext';
 
 
@@ -44,7 +43,6 @@ interface SupermarketSummary {
 }
 
 const CheapestDialog: React.FC<CheapestDialogProps> = ({ open, onClose, groceries }) => {
-  const { t } = useLanguage();
   const { country } = useCountry();
 
 
