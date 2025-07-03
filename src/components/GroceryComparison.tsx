@@ -159,15 +159,16 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
     if (groceriesWithPrices.length === 0) return [];
 
     // Get all unique supermarket names from all grocery prices
-    const supermarketNames: string[] = [];
+    const supermarketNamesSet = new Set<string>();
+    console.log("Groceries with prices ", groceriesWithPrices);
     groceriesWithPrices.forEach(grocery => {
       grocery.prices.forEach(price => {
-        supermarketNames.push(price.supermarketName);
+        supermarketNamesSet.add(price.supermarketName);
       });
     });
 
-    // Initialize summaries for each supermarket
-    const summaries: SupermarketSummary[] = Array.from(supermarketNames).map(name => ({
+    // Initialize summaries for each unique supermarket
+    const summaries: SupermarketSummary[] = Array.from(supermarketNamesSet).map(name => ({
       supermarketName: name,
       totalPrice: 0,
       productCount: 0,
@@ -178,21 +179,26 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
     
     // Calculate totals for each supermarket
     groceriesWithPrices.forEach(grocery => {
-      // For each supermarket, find the price for this grocery
+      // For each supermarket, find the cheapest price for this grocery
       summaries.forEach(summary => {
-        const priceEntry = grocery.prices.find(p => p.supermarketName === summary.supermarketName);
+        const supermarketPrices = grocery.prices.filter(p => p.supermarketName === summary.supermarketName);
         
-        if (priceEntry) {
-          summary.totalPrice += priceEntry.price;
+        if (supermarketPrices.length > 0) {
+          // Find the cheapest price among multiple products from the same supermarket
+          const cheapestPrice = supermarketPrices.reduce((min, current) => 
+            current.price < min.price ? current : min
+          );
+          
+          summary.totalPrice += cheapestPrice.price;
           summary.productCount++;
           
-          // Store the product in the summary for reference
-          summary.products[grocery.id] = priceEntry;
+          // Store the cheapest product in the summary for reference
+          summary.products[grocery.id] = cheapestPrice;
           
           // Check if the item is on sale
-          if (priceEntry.onSale) {
+          if (cheapestPrice.onSale) {
             summary.saleCount++;
-            summary.totalSavings += calculateSavings(priceEntry);
+            summary.totalSavings += calculateSavings(cheapestPrice);
           }
         }
       });
@@ -206,7 +212,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
 
     // Sort summaries by total price (cheapest first)
     return validSummaries.sort((a, b) => a.totalPrice - b.totalPrice);
-  }, [groceriesWithPrices]);
+}, [groceriesWithPrices]);
 
   const cheapestSupermarket = useMemo(() => {
     return supermarketSummaries.length > 0 ? supermarketSummaries[0] : null;
@@ -467,10 +473,25 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                           {summary.productCount}/{groceriesWithPrices.length}
                         </TableCell>
                         <TableCell align="right">
-                          {Object.keys(summary.products).map(productId => {
+                          {Object.entries(summary.products).map(([productId, priceData], index) => {
                             const grocery = groceriesWithPrices.find(g => g.id === productId);
-                            return grocery ? grocery.name + ", " : "";
-                          }).join("").replace(/, $/, "")}
+                            const productName = priceData.productName || grocery?.name || 'Unknown';
+                            return (
+                              <Typography
+                                key={productId}
+                                variant="caption"
+                                component="div"
+                                sx={{ 
+                                  // fontSize: '0.75rem',
+                                  // color: 'text.secondary',
+                                  lineHeight: 1.2,
+                                  mb: index < Object.keys(summary.products).length - 1 ? 0.5 : 0
+                                }}
+                              >
+                                {productName}
+                              </Typography>
+                            );
+                          })}
                         </TableCell>
                         <TableCell align="right">
                           {summary.saleCount > 0 ? (
