@@ -452,7 +452,7 @@ const supermarkets: Supermarket[] = [
       },
       {
         "n": "Fullvolle Melk",
-        "o": null,
+        "o": "25% KORTINGvanaf dinsdag",
         "p": "0.99",
         "s": "1 L"
       },

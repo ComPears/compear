@@ -17,7 +17,6 @@ import {
   Avatar,
   Tabs,
   Tab,
-  Alert,
   Accordion,
   AccordionSummary,
   AccordionDetails
@@ -38,6 +37,7 @@ import { useCountry } from '../context/CountryContext';
 interface GroceryComparisonProps {
   groceries: Grocery[];
   onRemoveGrocery: (id: string) => void;
+  onGroceriesWithPricesChange?: (groceriesWithPrices: GroceryWithPrices[]) => void;
 }
 
 interface TabPanelProps {
@@ -76,7 +76,7 @@ interface SupermarketSummary {
   products: Record<string, SupermarketPrice>; // Map of product IDs to their prices
 }
 
-const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemoveGrocery }) => {
+const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemoveGrocery, onGroceriesWithPricesChange }) => {
   const [groceriesWithPrices, setGroceriesWithPrices] = useState<GroceryWithPrices[]>([]);
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [tabValue, setTabValue] = useState(0);
@@ -127,7 +127,14 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
     };
     
     fetchPrices();
-  }, [groceries]);
+  }, [groceries, groceriesWithPrices]);
+
+  // Notify parent component when groceries with prices change
+  useEffect(() => {
+    if (onGroceriesWithPricesChange) {
+      onGroceriesWithPricesChange(groceriesWithPrices);
+    }
+  }, [groceriesWithPrices, onGroceriesWithPricesChange]);
 
   // Find the logo URL for a supermarket by name
   const getSupermarketLogo = (name: string): string | undefined => {
@@ -143,8 +150,10 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
     return 0;
   };
 
-  const formatCurrency = (amount: number) => {
-    return `€${amount.toFixed(2)}`;
+  const formatCurrency = (amount: number | string | undefined | null) => {
+    const num = typeof amount === 'number' ? amount : Number(amount);
+    if (isNaN(num)) return '-';
+    return `€${num.toFixed(2)}`;
   };
 
   const getLowestPriceSupermarket = (prices: SupermarketPrice[]) => {
@@ -204,19 +213,27 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
       });
     });
 
-    // Filter summaries to include only those with all products
-    // Only include supermarkets that have all the products in the grocery list
-    const validSummaries = summaries.filter(summary => 
-      summary.productCount === groceriesWithPrices.length
-    );
-
-    // Sort summaries by total price (cheapest first)
-    return validSummaries.sort((a, b) => a.totalPrice - b.totalPrice);
+    // Sort summaries: first by completeness (all products first), then by price
+    return summaries.sort((a, b) => {
+      // First, sort by completeness (supermarkets with all products come first)
+      const aHasAllProducts = a.productCount === groceriesWithPrices.length;
+      const bHasAllProducts = b.productCount === groceriesWithPrices.length;
+      
+      if (aHasAllProducts && !bHasAllProducts) return -1;
+      if (!aHasAllProducts && bHasAllProducts) return 1;
+      
+      // If both have same completeness, sort by price (cheapest first)
+      return a.totalPrice - b.totalPrice;
+    });
 }, [groceriesWithPrices]);
 
+  // Get the cheapest supermarket that has all products
   const cheapestSupermarket = useMemo(() => {
-    return supermarketSummaries.length > 0 ? supermarketSummaries[0] : null;
-  }, [supermarketSummaries]);
+    const supermarketsWithAllProducts = supermarketSummaries.filter(summary => 
+      summary.productCount === groceriesWithPrices.length
+    );
+    return supermarketsWithAllProducts.length > 0 ? supermarketsWithAllProducts[0] : null;
+  }, [supermarketSummaries, groceriesWithPrices]);
 
   return (
     <Box>
@@ -404,7 +421,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
       </TabPanel>
 
       <TabPanel value={tabValue} index={1}>
-        {/* Total Summary Card */}
+        {/* All Supermarkets Comparison */}
         {groceriesWithPrices.length > 0 && supermarketSummaries.length > 0 && (
           <Card sx={{ mb: 4 }}>
             <CardContent>
@@ -457,7 +474,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                             />
                             <Box sx={{ display: 'flex', alignItems: 'center' }}>
                               {summary.supermarketName}
-                              {summary === cheapestSupermarket && (
+                              {summary === cheapestSupermarket && summary.productCount === groceriesWithPrices.length && (
                                 <Chip 
                                   label="Cheapest" 
                                   size="small" 
