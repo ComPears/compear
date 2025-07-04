@@ -69,7 +69,7 @@ const en: Translations = {
   
   // Search Component
   'search.title': 'Search for Products',
-  'search.placeholder': 'Search for products (e.g., milk, bread, popcorn)',
+  'search.placeholder': 'Search for products (e.g., "vrije uitloop" for free-range eggs, "melk" for milk)',
   'search.searching': 'Searching supermarkets...',
   'search.resultsFound': 'Found {count} products. Click on one to add to your list.',
   'search.productDatabase': 'Product Database Results',
@@ -84,6 +84,11 @@ const en: Translations = {
   'search.noProductsFound': 'No products found for "{term}". Check if supermarkets.json is loaded correctly.',
   'search.showDebug': 'Show Debug',
   'search.hideDebug': 'Hide Debug',
+  
+  // Error messages
+  'error.noProductsFound': 'No products found for "{searchTerm}". Please try a different search term.',
+  'error.searchFailed': 'Search failed. Please try again.',
+  'error.minCharacters': 'Please enter at least 3 characters to search.',
   
   // Optimal Strategy
   'optimal.title': 'Optimal Shopping Strategy',
@@ -183,7 +188,7 @@ const nl: Translations = {
   
   // Search Component
   'search.title': 'Zoek Producten',
-  'search.placeholder': 'Zoek naar producten (bijv. melk, brood, popcorn)',
+  'search.placeholder': 'Zoek naar producten (bijv. "vrije uitloop" voor scharreleieren, "melk" voor melk)',
   'search.searching': 'Supermarkten doorzoeken...',
   'search.resultsFound': '{count} producten gevonden. Klik op een product om het aan je lijst toe te voegen.',
   'search.productDatabase': 'Resultaten Productdatabase',
@@ -198,6 +203,11 @@ const nl: Translations = {
   'search.noProductsFound': 'Geen producten gevonden voor "{term}". Controleer of supermarkets.json correct is geladen.',
   'search.showDebug': 'Debug Tonen',
   'search.hideDebug': 'Debug Verbergen',
+  
+  // Error messages
+  'error.noProductsFound': 'Geen producten gevonden voor "{searchTerm}". Probeer een andere zoekterm.',
+  'error.searchFailed': 'Zoeken mislukt. Probeer het opnieuw.',
+  'error.minCharacters': 'Voer minimaal 3 tekens in om te zoeken.',
   
   // Optimal Strategy
   'optimal.title': 'Optimale Winkelstrategie',
@@ -256,7 +266,7 @@ const de: Translations = {
   
   // Search Component
   'search.title': 'Produkte Suchen',
-  'search.placeholder': 'Nach Produkten suchen (z.B. Milch, Brot, Popcorn)',
+  'search.placeholder': 'Nach Produkten suchen (z.B. "vrije uitloop" für Freilandeier, "melk" für Milch)',
   'search.searching': 'Supermärkte werden durchsucht...',
   'search.resultsFound': '{count} Produkte gefunden. Klicken Sie auf eines, um es Ihrer Liste hinzuzufügen.',
   'search.productDatabase': 'Ergebnisse der Produktdatenbank',

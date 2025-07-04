@@ -3,12 +3,10 @@ import {
   TextField,
   Box,
   Typography,
-  Button,
-  InputAdornment,
-  IconButton,
   CircularProgress,
-  Alert,
-  Collapse
+  IconButton,
+  InputAdornment,
+  Alert
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { Grocery } from '../types';
@@ -32,7 +30,6 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showDebug, setShowDebug] = useState(false);
   const { t } = useLanguage();
   
   // Refs
@@ -186,27 +183,10 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
         
         {/* Error message */}
         {error && (
-          <Alert severity="warning" sx={{ mt: 2 }} action={
-            <Button color="inherit" size="small" onClick={() => setShowDebug(!showDebug)}>
-              {showDebug ? 'Hide Debug' : 'Show Debug'}
-            </Button>
-          }>
+          <Alert severity="warning" sx={{ mt: 2 }}>
             {error}
           </Alert>
         )}
-        
-        {/* Debug info */}
-        <Collapse in={showDebug}>
-          <Box sx={{ mt: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
-            <Typography variant="subtitle2">Debug Information:</Typography>
-            <Typography variant="body2">
-              1. Check browser console for detailed logs<br />
-              2. Verify that supermarkets.json exists in the public folder<br />
-              3. Ensure supermarkets.json has the correct format (array of objects with p, c, u, i properties)<br />
-              4. Each supermarket should have a "p" array with product objects (n, l, p, s properties)
-            </Typography>
-          </Box>
-        </Collapse>
       </Box>
     </>
   );

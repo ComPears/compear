@@ -179,7 +179,6 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
 
     // Get all unique supermarket names from all grocery prices
     const supermarketNamesSet = new Set<string>();
-    console.log("Groceries with prices ", groceriesWithPrices);
     groceriesWithPrices.forEach(grocery => {
       grocery.prices.forEach(price => {
         supermarketNamesSet.add(price.supermarketName);
