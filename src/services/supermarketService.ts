@@ -1,5 +1,3 @@
-// Update your fetchPricesForGrocery function in supermarketService.ts
-
 import { Grocery, SupermarketPrice } from '../types';
 import { findProductInSupermarkets } from './rawProductData';
 

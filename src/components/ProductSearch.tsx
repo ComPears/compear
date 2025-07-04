@@ -147,6 +147,10 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
           {t('search.title')}
         </Typography>
         
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontStyle: 'italic' }}>
+          💡 Product names are shown in Dutch as they appear in Dutch supermarkets. The interface language can be changed using the language switcher.
+        </Typography>
+        
         <TextField
           label={t('search.placeholder')}
           variant="outlined"

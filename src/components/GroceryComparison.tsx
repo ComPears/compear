@@ -98,12 +98,12 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
   };
 
   useEffect(() => {
-    const fetchPrices = () => {
+    setGroceriesWithPrices(prevGroceriesWithPrices => {
       const updatedGroceries: GroceryWithPrices[] = [];
       
       // Process each grocery item that doesn't have prices yet
       for (const grocery of groceries) {
-        const existingWithPrices = groceriesWithPrices.find(g => g.id === grocery.id);
+        const existingWithPrices = prevGroceriesWithPrices.find(g => g.id === grocery.id);
         
         if (existingWithPrices) {
           updatedGroceries.unshift(existingWithPrices);
@@ -123,11 +123,9 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
         }
       }
       
-      setGroceriesWithPrices(updatedGroceries);
-    };
-    
-    fetchPrices();
-  }, [groceries, groceriesWithPrices]);
+      return updatedGroceries;
+    });
+  }, [groceries]);
 
   // Notify parent component when groceries with prices change
   useEffect(() => {
@@ -337,8 +335,8 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                       <TableHead>
                         <TableRow>
                           <TableCell>{t('table.supermarket')}</TableCell>
-                          <TableCell>{t('table.price')}</TableCell>
-                          <TableCell align="right">{t('table.unitPrice')}</TableCell>
+                          <TableCell>{t('table.product')}</TableCell>
+                          <TableCell align="right">{t('table.price')}</TableCell>
                           <TableCell align="right">{t('table.size')}</TableCell>
                         </TableRow>
                       </TableHead>
@@ -373,9 +371,28 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                               </Box>
                             </TableCell>
                             <TableCell>
-                              <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
-                                {price.productName || grocery.name}
-                              </Typography>
+                              {price.link ? (
+                                <Typography 
+                                  variant="body2" 
+                                  sx={{ 
+                                    fontStyle: 'italic',
+                                    color: 'primary.main',
+                                    textDecoration: 'underline',
+                                    cursor: 'pointer',
+                                    '&:hover': {
+                                      color: 'primary.dark',
+                                      textDecoration: 'underline'
+                                    }
+                                  }}
+                                  onClick={() => window.open(price.link, '_blank', 'noopener,noreferrer')}
+                                >
+                                  {price.productName || grocery.name}
+                                </Typography>
+                              ) : (
+                                <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
+                                  {price.productName || grocery.name}
+                                </Typography>
+                              )}
                             </TableCell>
                             <TableCell align="right">
                               {price.onSale ? (
