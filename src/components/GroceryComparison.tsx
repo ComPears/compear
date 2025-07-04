@@ -344,7 +344,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                             </TableRow>
                           </TableHead>
                           <TableBody>
-                            {grocery.prices.sort((a, b) => a.price - b.price).map((price) => (
+                            {grocery.prices.slice().sort((a, b) => a.price - b.price).map((price) => (
                               <TableRow 
                                 key={price.supermarketName}
                                 sx={{
@@ -362,9 +362,9 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                                     />
                                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                       {price.supermarketName}
-                                      {price === lowestPriceSupermarket && (
+                                      {lowestPriceSupermarket?.price === price.price && (
                                         <Chip 
-                                          label="Lowest" 
+                                          label="Cheapest" 
                                           size="small" 
                                           color="success" 
                                           sx={{ ml: 1 }}
@@ -438,7 +438,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                     {/* Mobile Card View */}
                     <Box sx={{ display: { xs: 'block', md: 'none' } }}>
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                        {grocery.prices.sort((a, b) => a.price - b.price).map((price) => (
+                        {grocery.prices.slice().sort((a, b) => a.price - b.price).map((price) => (
                           <Card 
                             key={price.supermarketName}
                             variant="outlined"
@@ -466,9 +466,9 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                                     <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
                                       {price.supermarketName}
                                     </Typography>
-                                    {price === lowestPriceSupermarket && (
+                                    {lowestPriceSupermarket?.price === price.price && (
                                       <Chip 
-                                        label="Lowest" 
+                                        label="Cheapest" 
                                         size="small" 
                                         color="success" 
                                         sx={{ mt: 0.5 }}
