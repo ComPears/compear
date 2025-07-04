@@ -77,7 +77,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
         
         // Check if no results were found
         if (flatResults.length === 0) {
-          setError(`No products found for "${searchTerm}". Please try a different search term.`);
+          setError(t('error.noProductsFound').replace('{searchTerm}', searchTerm));
         } else {
         const cheapestProduct = flatResults.reduce((cheapest, current) => {
           return current.p < cheapest.p ? current : cheapest;
@@ -120,7 +120,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
         if (abortControllerRef.current?.signal.aborted) return;
         
         console.error('Error searching for products:', error);
-        setError('An error occurred while searching. Please try again.');
+        setError(t('error.searchFailed'));
       } finally {
         // Update loading state only if not aborted
         if (!abortControllerRef.current?.signal.aborted) {
@@ -128,7 +128,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
         }
       }
     } else if (searchTerm.trim().length > 0 && searchTerm.trim().length <= 2) {
-      setError("Please enter at least 3 characters to search");
+      setError(t('error.minCharacters'));
     }
   }, [onAddGrocery, searchTerm]);
 
@@ -179,7 +179,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
           <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
             <CircularProgress size={16} sx={{ mr: 1 }} />
             <Typography variant="caption" color="text.secondary">
-              Searching supermarkets...
+              {t('search.searching')}
             </Typography>
           </Box>
         )}

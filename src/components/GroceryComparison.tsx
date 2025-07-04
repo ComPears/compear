@@ -330,106 +330,215 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                     <CircularProgress />
                   </Box>
                 ) : grocery.prices.length >= 1 && (
-                  <TableContainer component={Paper} variant="outlined">
-                    <Table size="small">
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>{t('table.supermarket')}</TableCell>
-                          <TableCell>{t('table.product')}</TableCell>
-                          <TableCell align="right">{t('table.price')}</TableCell>
-                          <TableCell align="right">{t('table.size')}</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
+                  <>
+                    {/* Desktop Table View */}
+                    <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+                      <TableContainer component={Paper} variant="outlined">
+                        <Table size="small">
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>{t('table.supermarket')}</TableCell>
+                              <TableCell>{t('table.product')}</TableCell>
+                              <TableCell align="right">{t('table.price')}</TableCell>
+                              <TableCell align="right">{t('table.size')}</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {grocery.prices.sort((a, b) => a.price - b.price).map((price) => (
+                              <TableRow 
+                                key={price.supermarketName}
+                                sx={{
+                                  backgroundColor: lowestPriceSupermarket?.price === price.price 
+                                    ? 'success.light' 
+                                    : 'inherit'
+                                }}
+                              >
+                                <TableCell component="th" scope="row">
+                                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                    <Avatar 
+                                      src={getSupermarketLogo(price.supermarketName)} 
+                                      alt={price.supermarketName}
+                                      sx={{ width: 24, height: 24, mr: 1 }}
+                                    />
+                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                      {price.supermarketName}
+                                      {price === lowestPriceSupermarket && (
+                                        <Chip 
+                                          label="Lowest" 
+                                          size="small" 
+                                          color="success" 
+                                          sx={{ ml: 1 }}
+                                        />
+                                      )}
+                                    </Box>
+                                  </Box>
+                                </TableCell>
+                                <TableCell>
+                                  {price.link ? (
+                                    <Typography 
+                                      variant="body2" 
+                                      sx={{ 
+                                        fontStyle: 'italic',
+                                        color: 'primary.main',
+                                        textDecoration: 'underline',
+                                        cursor: 'pointer',
+                                        '&:hover': {
+                                          color: 'primary.dark',
+                                          textDecoration: 'underline'
+                                        }
+                                      }}
+                                      onClick={() => window.open(price.link, '_blank', 'noopener,noreferrer')}
+                                    >
+                                      {price.productName || grocery.name}
+                                    </Typography>
+                                  ) : (
+                                    <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
+                                      {price.productName || grocery.name}
+                                    </Typography>
+                                  )}
+                                </TableCell>
+                                <TableCell align="right">
+                                  {price.onSale ? (
+                                    <Box>
+                                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                                        {formatCurrency(price.price)}
+                                        <Chip 
+                                          icon={<LocalOfferIcon />} 
+                                          label="Sale" 
+                                          size="small" 
+                                          color="secondary" 
+                                          sx={{ ml: 1 }}
+                                        />
+                                      </Box>
+                                      <Typography 
+                                        variant="caption" 
+                                        sx={{ 
+                                          textDecoration: 'line-through', 
+                                          color: 'text.secondary',
+                                          display: 'block'
+                                        }}
+                                      >
+                                        {price.regularPrice && formatCurrency(price.regularPrice)}
+                                      </Typography>
+                                    </Box>
+                                  ) : (
+                                    formatCurrency(price.price)
+                                  )}
+                                </TableCell>
+                                <TableCell align="right">
+                                  {price.size}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </Box>
+
+                    {/* Mobile Card View */}
+                    <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                         {grocery.prices.sort((a, b) => a.price - b.price).map((price) => (
-                          <TableRow 
+                          <Card 
                             key={price.supermarketName}
+                            variant="outlined"
                             sx={{
                               backgroundColor: lowestPriceSupermarket?.price === price.price 
                                 ? 'success.light' 
-                                : 'inherit'
+                                : 'inherit',
+                              border: lowestPriceSupermarket?.price === price.price 
+                                ? '2px solid' 
+                                : '1px solid',
+                              borderColor: lowestPriceSupermarket?.price === price.price 
+                                ? 'success.main' 
+                                : 'divider'
                             }}
                           >
-                            <TableCell component="th" scope="row">
-                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                <Avatar 
-                                  src={getSupermarketLogo(price.supermarketName)} 
-                                  alt={price.supermarketName}
-                                  sx={{ width: 24, height: 24, mr: 1 }}
-                                />
-                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                  {price.supermarketName}
-                                  {price === lowestPriceSupermarket && (
-                                    <Chip 
-                                      label="Lowest" 
-                                      size="small" 
-                                      color="success" 
-                                      sx={{ ml: 1 }}
-                                    />
-                                  )}
+                            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
+                                  <Avatar 
+                                    src={getSupermarketLogo(price.supermarketName)} 
+                                    alt={price.supermarketName}
+                                    sx={{ width: 32, height: 32, mr: 1, flexShrink: 0 }}
+                                  />
+                                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                                      {price.supermarketName}
+                                    </Typography>
+                                    {price === lowestPriceSupermarket && (
+                                      <Chip 
+                                        label="Lowest" 
+                                        size="small" 
+                                        color="success" 
+                                        sx={{ mt: 0.5 }}
+                                      />
+                                    )}
+                                  </Box>
                                 </Box>
-                              </Box>
-                            </TableCell>
-                            <TableCell>
-                              {price.link ? (
-                                <Typography 
-                                  variant="body2" 
-                                  sx={{ 
-                                    fontStyle: 'italic',
-                                    color: 'primary.main',
-                                    textDecoration: 'underline',
-                                    cursor: 'pointer',
-                                    '&:hover': {
-                                      color: 'primary.dark',
-                                      textDecoration: 'underline'
-                                    }
-                                  }}
-                                  onClick={() => window.open(price.link, '_blank', 'noopener,noreferrer')}
-                                >
-                                  {price.productName || grocery.name}
-                                </Typography>
-                              ) : (
-                                <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
-                                  {price.productName || grocery.name}
-                                </Typography>
-                              )}
-                            </TableCell>
-                            <TableCell align="right">
-                              {price.onSale ? (
-                                <Box>
-                                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                                <Box sx={{ textAlign: 'right', flexShrink: 0 }}>
+                                  <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'success.main' }}>
                                     {formatCurrency(price.price)}
+                                  </Typography>
+                                  {price.onSale && (
                                     <Chip 
                                       icon={<LocalOfferIcon />} 
                                       label="Sale" 
                                       size="small" 
                                       color="secondary" 
-                                      sx={{ ml: 1 }}
+                                      sx={{ mt: 0.5 }}
                                     />
-                                  </Box>
+                                  )}
+                                </Box>
+                              </Box>
+                              
+                              <Box sx={{ mb: 1 }}>
+                                {price.link ? (
+                                  <Typography 
+                                    variant="body2" 
+                                    sx={{ 
+                                      fontStyle: 'italic',
+                                      color: 'primary.main',
+                                      textDecoration: 'underline',
+                                      cursor: 'pointer',
+                                      '&:hover': {
+                                        color: 'primary.dark',
+                                        textDecoration: 'underline'
+                                      }
+                                    }}
+                                    onClick={() => window.open(price.link, '_blank', 'noopener,noreferrer')}
+                                  >
+                                    {price.productName || grocery.name}
+                                  </Typography>
+                                ) : (
+                                  <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
+                                    {price.productName || grocery.name}
+                                  </Typography>
+                                )}
+                              </Box>
+
+                              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Typography variant="caption" color="text.secondary">
+                                  {price.size}
+                                </Typography>
+                                {price.onSale && price.regularPrice && (
                                   <Typography 
                                     variant="caption" 
                                     sx={{ 
                                       textDecoration: 'line-through', 
-                                      color: 'text.secondary',
-                                      display: 'block'
+                                      color: 'text.secondary'
                                     }}
                                   >
-                                    {price.regularPrice && formatCurrency(price.regularPrice)}
+                                    {formatCurrency(price.regularPrice)}
                                   </Typography>
-                                </Box>
-                              ) : (
-                                formatCurrency(price.price)
-                              )}
-                            </TableCell>
-                            <TableCell align="right">
-                              {price.size}
-                            </TableCell>
-                          </TableRow>
+                                )}
+                              </Box>
+                            </CardContent>
+                          </Card>
                         ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
+                      </Box>
+                    </Box>
+                  </>
                 )}
               </AccordionDetails>
             </Accordion>
@@ -455,93 +564,200 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                   .replace('{country}', country.name)}
               </Typography>
               
-              <TableContainer 
-                component={Paper} 
-                variant="outlined" 
-                sx={{ 
-                  mt: 2,
-                  maxHeight: 500, 
-                  overflowY: 'auto'
-                }}
-              >
-                <Table size="small" stickyHeader>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell sx={{ fontWeight: 'bold', width: '25%' }}>{t('table.supermarket')}</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>{t('table.totalPrice')}</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>{t('table.itemsFound')}</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>{t('table.product')}</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>{t('table.onSale')}</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {supermarketSummaries.map((summary) => (
-                      <TableRow 
-                        key={summary.supermarketName}
-                        sx={{
-                          backgroundColor: summary === cheapestSupermarket ? 'success.light' : 'inherit'
-                        }}
-                      >
-                        <TableCell component="th" scope="row">
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              {/* Desktop Table View */}
+              <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+                <TableContainer 
+                  component={Paper} 
+                  variant="outlined" 
+                  sx={{ 
+                    mt: 2,
+                    maxHeight: 500, 
+                    overflowY: 'auto'
+                  }}
+                >
+                  <Table size="small" stickyHeader>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 'bold', width: '25%' }}>{t('table.supermarket')}</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 'bold' }}>{t('table.totalPrice')}</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 'bold' }}>{t('table.itemsFound')}</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 'bold' }}>{t('table.product')}</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 'bold' }}>{t('table.onSale')}</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {supermarketSummaries.map((summary) => (
+                        <TableRow 
+                          key={summary.supermarketName}
+                          sx={{
+                            backgroundColor: summary === cheapestSupermarket ? 'success.light' : 'inherit'
+                          }}
+                        >
+                          <TableCell component="th" scope="row">
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <Avatar 
+                                src={getSupermarketLogo(summary.supermarketName)} 
+                                alt={summary.supermarketName}
+                                sx={{ width: 24, height: 24, mr: 1 }}
+                              />
+                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                {summary.supermarketName}
+                                {summary === cheapestSupermarket && summary.productCount === groceriesWithPrices.length && (
+                                  <Chip 
+                                    label="Cheapest" 
+                                    size="small" 
+                                    color="success" 
+                                    sx={{ ml: 1 }}
+                                  />
+                                )}
+                              </Box>
+                            </Box>
+                          </TableCell>
+                          <TableCell align="right">{formatCurrency(summary.totalPrice)}</TableCell>
+                          <TableCell align="right">
+                            {summary.productCount}/{groceriesWithPrices.length}
+                          </TableCell>
+                          <TableCell align="right">
+                            {Object.entries(summary.products).map(([productId, priceData], index) => {
+                              const grocery = groceriesWithPrices.find(g => g.id === productId);
+                              const productName = priceData.productName || grocery?.name || 'Unknown';
+                              return (
+                                <Typography
+                                  key={productId}
+                                  variant="caption"
+                                  component="div"
+                                  sx={{ 
+                                    lineHeight: 1.2,
+                                    mb: index < Object.keys(summary.products).length - 1 ? 0.5 : 0
+                                  }}
+                                >
+                                  {productName}
+                                </Typography>
+                              );
+                            })}
+                          </TableCell>
+                          <TableCell align="right">
+                            {summary.saleCount > 0 ? (
+                              <Chip 
+                                icon={<LocalOfferIcon />} 
+                                label={`${summary.saleCount} items`} 
+                                size="small" 
+                                color="secondary" 
+                              />
+                            ) : "None"}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Box>
+
+              {/* Mobile Card View */}
+              <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+                  {supermarketSummaries.map((summary) => (
+                    <Card 
+                      key={summary.supermarketName}
+                      variant="outlined"
+                      sx={{
+                        backgroundColor: summary === cheapestSupermarket ? 'success.light' : 'inherit',
+                        border: summary === cheapestSupermarket ? '2px solid' : '1px solid',
+                        borderColor: summary === cheapestSupermarket ? 'success.main' : 'divider'
+                      }}
+                    >
+                      <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                        {/* Header with supermarket info and total price */}
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
                             <Avatar 
                               src={getSupermarketLogo(summary.supermarketName)} 
                               alt={summary.supermarketName}
-                              sx={{ width: 24, height: 24, mr: 1 }}
+                              sx={{ width: 40, height: 40, mr: 1.5, flexShrink: 0 }}
                             />
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                              {summary.supermarketName}
+                            <Box sx={{ minWidth: 0, flex: 1 }}>
+                              <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                                {summary.supermarketName}
+                              </Typography>
                               {summary === cheapestSupermarket && summary.productCount === groceriesWithPrices.length && (
                                 <Chip 
                                   label="Cheapest" 
                                   size="small" 
                                   color="success" 
-                                  sx={{ ml: 1 }}
+                                  sx={{ mt: 0.5 }}
                                 />
                               )}
                             </Box>
                           </Box>
-                        </TableCell>
-                        <TableCell align="right">{formatCurrency(summary.totalPrice)}</TableCell>
-                        <TableCell align="right">
-                          {summary.productCount}/{groceriesWithPrices.length}
-                        </TableCell>
-                        <TableCell align="right">
-                          {Object.entries(summary.products).map(([productId, priceData], index) => {
-                            const grocery = groceriesWithPrices.find(g => g.id === productId);
-                            const productName = priceData.productName || grocery?.name || 'Unknown';
-                            return (
-                              <Typography
-                                key={productId}
-                                variant="caption"
-                                component="div"
-                                sx={{ 
-                                  // fontSize: '0.75rem',
-                                  // color: 'text.secondary',
-                                  lineHeight: 1.2,
-                                  mb: index < Object.keys(summary.products).length - 1 ? 0.5 : 0
-                                }}
-                              >
-                                {productName}
-                              </Typography>
-                            );
-                          })}
-                        </TableCell>
-                        <TableCell align="right">
-                          {summary.saleCount > 0 ? (
+                          <Box sx={{ textAlign: 'right', flexShrink: 0 }}>
+                            <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'success.main' }}>
+                              {formatCurrency(summary.totalPrice)}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {summary.productCount}/{groceriesWithPrices.length} items
+                            </Typography>
+                          </Box>
+                        </Box>
+
+                        {/* Sale information */}
+                        {summary.saleCount > 0 && (
+                          <Box sx={{ mb: 2 }}>
                             <Chip 
                               icon={<LocalOfferIcon />} 
-                              label={`${summary.saleCount} items`} 
+                              label={`${summary.saleCount} items on sale`} 
                               size="small" 
                               color="secondary" 
                             />
-                          ) : "None"}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                          </Box>
+                        )}
+
+                        {/* Product list */}
+                        <Box>
+                          <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
+                            Products:
+                          </Typography>
+                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                            {Object.entries(summary.products).map(([productId, priceData]) => {
+                              const grocery = groceriesWithPrices.find(g => g.id === productId);
+                              const productName = priceData.productName || grocery?.name || 'Unknown';
+                              return (
+                                <Box 
+                                  key={productId}
+                                  sx={{ 
+                                    display: 'flex', 
+                                    justifyContent: 'space-between', 
+                                    alignItems: 'center',
+                                    p: 1,
+                                    borderRadius: 1,
+                                    backgroundColor: 'background.paper'
+                                  }}
+                                >
+                                  <Typography variant="body2" sx={{ flex: 1, mr: 1 }}>
+                                    {productName}
+                                  </Typography>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                                      {formatCurrency(priceData.price)}
+                                    </Typography>
+                                    {priceData.onSale && (
+                                      <Chip 
+                                        icon={<LocalOfferIcon />} 
+                                        label="Sale" 
+                                        size="small" 
+                                        color="secondary" 
+                                      />
+                                    )}
+                                  </Box>
+                                </Box>
+                              );
+                            })}
+                          </Box>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </Box>
+              </Box>
             </CardContent>
           </Card>
         )}
