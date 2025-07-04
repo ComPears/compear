@@ -1,32 +1,31 @@
-import { Grocery, SupermarketPrice } from '../types';
+import { Grocery, SupermarketPrice, Supermarket } from '../types';
 import { findProductInSupermarkets } from './rawProductData';
 
 // Your existing supermarkets array with logos
-export const supermarkets = [
-  // ... your existing supermarkets data
+export const supermarkets: Supermarket[] = [
   {
     name: 'AH',
     logo: 'https://www.ah.nl/favicon.ico',
-    url: 'https://www.ah.nl',
     id: '1',
+    hasAPI: true,
   },
   {
     name: 'DIRK',
     logo: 'https://www.dirk.nl/favicon.ico',
-    url: 'https://www.dirk.nl',
     id: '2',
+    hasAPI: true,
   },
   {
     name: 'ALDI',
     logo: 'https://www.aldi.nl/favicon.ico',
-    url: 'https://www.aldi.nl',
     id: '3',
+    hasAPI: true,
   },
   {
     name: 'LIDL',
     logo: 'https://www.lidl.nl/favicon.ico',
-    url: 'https://www.lidl.nl',
     id: '4',
+    hasAPI: true,
   },
 ];
 
