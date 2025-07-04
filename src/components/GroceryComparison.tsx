@@ -161,6 +161,18 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
     return prices.find(p => p.price === lowestPrice);
   };
 
+  // Memoized sorted prices for each grocery to avoid repeated sorting
+  const getSortedPrices = useMemo(() => {
+    const sortedPricesMap = new Map<string, SupermarketPrice[]>();
+    
+    groceriesWithPrices.forEach(grocery => {
+      const sortedPrices = [...grocery.prices].sort((a, b) => a.price - b.price);
+      sortedPricesMap.set(grocery.id, sortedPrices);
+    });
+    
+    return sortedPricesMap;
+  }, [groceriesWithPrices]);
+
   // Calculate summary of prices across all supermarkets
   const supermarketSummaries = useMemo(() => {
     if (groceriesWithPrices.length === 0) return [];
@@ -344,7 +356,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                             </TableRow>
                           </TableHead>
                           <TableBody>
-                            {grocery.prices.slice().sort((a, b) => a.price - b.price).map((price) => (
+                            {getSortedPrices.get(grocery.id)?.map((price) => (
                               <TableRow 
                                 key={price.supermarketName}
                                 sx={{
@@ -375,22 +387,22 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                                 </TableCell>
                                 <TableCell>
                                   {price.link ? (
-                                    <Typography 
-                                      variant="body2" 
-                                      sx={{ 
+                                    <a 
+                                      href={price.link} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer" 
+                                      style={{ 
                                         fontStyle: 'italic',
-                                        color: 'primary.main',
+                                        color: 'var(--mui-primary-main)',
                                         textDecoration: 'underline',
                                         cursor: 'pointer',
-                                        '&:hover': {
-                                          color: 'primary.dark',
-                                          textDecoration: 'underline'
-                                        }
+                                        textDecorationColor: 'var(--mui-primary-main)'
                                       }}
-                                      onClick={() => window.open(price.link, '_blank', 'noopener,noreferrer')}
+                                      onMouseOver={(e) => (e.target as HTMLElement).style.color = 'var(--mui-primary-dark)'}
+                                      onMouseOut={(e) => (e.target as HTMLElement).style.color = 'var(--mui-primary-main)'}
                                     >
                                       {price.productName || grocery.name}
-                                    </Typography>
+                                    </a>
                                   ) : (
                                     <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
                                       {price.productName || grocery.name}
@@ -438,7 +450,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                     {/* Mobile Card View */}
                     <Box sx={{ display: { xs: 'block', md: 'none' } }}>
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                        {grocery.prices.slice().sort((a, b) => a.price - b.price).map((price) => (
+                        {getSortedPrices.get(grocery.id)?.map((price) => (
                           <Card 
                             key={price.supermarketName}
                             variant="outlined"
@@ -494,22 +506,22 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                               
                               <Box sx={{ mb: 1 }}>
                                 {price.link ? (
-                                  <Typography 
-                                    variant="body2" 
-                                    sx={{ 
+                                  <a 
+                                    href={price.link} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    style={{ 
                                       fontStyle: 'italic',
-                                      color: 'primary.main',
+                                      color: 'var(--mui-primary-main)',
                                       textDecoration: 'underline',
                                       cursor: 'pointer',
-                                      '&:hover': {
-                                        color: 'primary.dark',
-                                        textDecoration: 'underline'
-                                      }
+                                      textDecorationColor: 'var(--mui-primary-main)'
                                     }}
-                                    onClick={() => window.open(price.link, '_blank', 'noopener,noreferrer')}
+                                    onMouseOver={(e) => (e.target as HTMLElement).style.color = 'var(--mui-primary-dark)'}
+                                    onMouseOut={(e) => (e.target as HTMLElement).style.color = 'var(--mui-primary-main)'}
                                   >
                                     {price.productName || grocery.name}
-                                  </Typography>
+                                  </a>
                                 ) : (
                                   <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
                                     {price.productName || grocery.name}
