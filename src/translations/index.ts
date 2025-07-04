@@ -69,7 +69,7 @@ const en: Translations = {
   
   // Search Component
   'search.title': 'Search for Products',
-  'search.placeholder': 'Search for products (e.g., "vrije uitloop" for free-range eggs, "melk" for milk)',
+  'search.placeholder': 'Search for products (e.g., vrije uitloop for free-range eggs, halfvolle melk for semi-skimmed milk)',
   'search.searching': 'Searching supermarkets...',
   'search.resultsFound': 'Found {count} products. Click on one to add to your list.',
   'search.productDatabase': 'Product Database Results',
@@ -188,7 +188,7 @@ const nl: Translations = {
   
   // Search Component
   'search.title': 'Zoek Producten',
-  'search.placeholder': 'Zoek naar producten (bijv. "vrije uitloop" voor scharreleieren, "melk" voor melk)',
+  'search.placeholder': 'Zoek naar producten (bijv. vrije uitloop voor scharreleieren, halfvolle melk)',
   'search.searching': 'Supermarkten doorzoeken...',
   'search.resultsFound': '{count} producten gevonden. Klik op een product om het aan je lijst toe te voegen.',
   'search.productDatabase': 'Resultaten Productdatabase',
@@ -266,7 +266,7 @@ const de: Translations = {
   
   // Search Component
   'search.title': 'Produkte Suchen',
-  'search.placeholder': 'Nach Produkten suchen (z.B. "vrije uitloop" für Freilandeier, "melk" für Milch)',
+  'search.placeholder': 'Nach Produkten suchen (z.B. vrije uitloop für Freilandeier, halfvolle melk für halbvolle Milch)',
   'search.searching': 'Supermärkte werden durchsucht...',
   'search.resultsFound': '{count} Produkte gefunden. Klicken Sie auf eines, um es Ihrer Liste hinzuzufügen.',
   'search.productDatabase': 'Ergebnisse der Produktdatenbank',
