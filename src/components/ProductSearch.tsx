@@ -130,7 +130,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
     } else if (searchTerm.trim().length > 0 && searchTerm.trim().length <= 2) {
       setError(t('error.minCharacters'));
     }
-  }, [onAddGrocery, searchTerm]);
+  }, [onAddGrocery, searchTerm, t]);
 
   // Handle search when user presses Enter
   const handleSearchSubmit = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
