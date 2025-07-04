@@ -25,12 +25,10 @@ let supermarketDataCache: Record<string, SupermarketData> | null = null;
  */
 export const loadSupermarketData = async (): Promise<Record<string, SupermarketData>> => {
   if (supermarketDataCache) {
-    console.log('Using cached supermarket data');
     return supermarketDataCache;
   }
 
   try {
-    console.log('Attempting to load supermarkets.json from public folder...');
     
     // Fixed path to the supermarkets.json file in the public folder
     const response = await fetch('/supermarkets.json');
@@ -41,20 +39,16 @@ export const loadSupermarketData = async (): Promise<Record<string, SupermarketD
     }
     
     const data = await response.json();
-    console.log('Successfully loaded supermarket data:', data);
     
     if (!Array.isArray(data)) {
       console.error('Loaded data is not an array:', data);
       return {};
     }
     
-    console.log(`Loaded supermarket data: ${data.length} supermarkets`);
-    
     // Convert array to map for easier access
     const dataMap: Record<string, SupermarketData> = {};
     data.forEach((item: SupermarketData) => {
       dataMap[item.c] = item;
-      console.log(`Added supermarket ${item.c} with ${item.p?.length || 0} products`);
     });
     
     supermarketDataCache = dataMap;
@@ -72,14 +66,11 @@ export const findProductInSupermarkets = async (
   searchTerm: string
 ): Promise<Record<string, SupermarketPriceData[]>> => {
   try {
-    console.log(`Starting search for: "${searchTerm}"`);
     const data = await loadSupermarketData();
     const results: Record<string, SupermarketPriceData[]> = {};
     
-    console.log(`Searching supermarkets for "${searchTerm}" in ${Object.keys(data).length} supermarkets`);
     
     if (Object.keys(data).length === 0) {
-      console.warn('No supermarket data available. Make sure supermarkets.json is in the public folder.');
       return results;
     }
 
@@ -92,7 +83,6 @@ export const findProductInSupermarkets = async (
       
       // Check if products exist
       if (!supermarketData.p || !Array.isArray(supermarketData.p)) {
-        console.warn(`No products found for supermarket ${supermarketCode}`);
         return;
       }
       
@@ -118,11 +108,6 @@ export const findProductInSupermarkets = async (
         
         // Make product name lowercase for comparison
         const productName = product.n.toLowerCase();
-        
-        // Debug sample products
-        if (supermarketCode === 'ah' && searchTerm === 'milk') {
-          console.log(`Debug sample product: ${JSON.stringify(product)}`);
-        }
         
         // Check for exact match first
         if (productName.includes(normalizedSearchTerm)) {
@@ -153,18 +138,13 @@ export const findProductInSupermarkets = async (
       });
       
       if (matchingProducts.length > 0) {
-        console.log(`Found ${matchingProducts.length} matches in ${supermarketCode} out of ${totalProducts} products`);
         results[supermarketCode] = matchingProducts;
       } else {
         console.log(`No matches in ${supermarketCode} out of ${totalProducts} products`);
       }
     });
 
-    // Output sample products for debugging
-    console.log('Sample products from supermarkets:', JSON.stringify(sampleProducts, null, 2));
-    
     const totalResults = Object.values(results).reduce((sum, arr) => sum + arr.length, 0);
-    console.log(`Total results from supermarkets.json: ${totalResults}`);
     
     // If no results, log a message but don't add dummy data
     if (totalResults === 0) {
@@ -211,16 +191,16 @@ export const getRealPricesForGrocery = async (grocery: Grocery): Promise<Superma
     }
 
     // Find the supermarket info from our database
-    const supermarket = supermarkets.find(s => s.id.toLowerCase() === supermarketId.toLowerCase());
+    const supermarket = supermarkets.find(s => s.id?.toLowerCase() === supermarketId.toLowerCase());
     if (!supermarket) continue;
 
     // Create a standard price object
     const price: SupermarketPrice = {
       supermarketName: supermarket.name,
       price: bestMatch.p,
-      isEstimated: false,
-      priceDate: new Date().toISOString(),
-      url: `${supermarketData[supermarketId].u}${bestMatch.l}`,
+      // isEstimated: false,
+      // priceDate: new Date().toISOString(),
+      // url: `${supermarketData[supermarketId].u}${bestMatch.l}`,
     };
 
     // Check if it's a sale price (implement logic to detect sales)

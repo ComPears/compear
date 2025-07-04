@@ -7,7 +7,7 @@ import {
   Toolbar, 
   Paper, 
   Button, 
-  Badge, 
+  Badge,
   MenuItem,
   Select,
   FormControl,
@@ -25,7 +25,8 @@ import GroceryComparison from './components/GroceryComparison';
 import ProductSearch from './components/ProductSearch';
 import Footer from './components/Footer';
 import SuggestionDialog from './components/SuggestionDialog';
-import { Grocery } from './types';
+import CheapestDialog from './components/CheapestDialog';
+import { Grocery, GroceryWithPrices } from './types';
 import { useCountry, CountryCode, countries } from './context/CountryContext';
 import { useLanguage, LanguageCode } from './context/LanguageContext';
 import { useTheme, useMediaQuery } from '@mui/material';
@@ -36,6 +37,7 @@ const App: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md')); // Use 'md' for better mobile experience
   const [groceries, setGroceries] = useState<Grocery[]>([]);
+  const [groceriesWithPrices, setGroceriesWithPrices] = useState<GroceryWithPrices[]>([]);
   const [triggerCheapestDialog, setTriggerCheapestDialog] = useState(false);
   const [suggestionDialogOpen, setSuggestionDialogOpen] = useState(false);
 
@@ -85,6 +87,10 @@ const App: React.FC = () => {
 
   const handleSuggestionDialogClose = () => {
     setSuggestionDialogOpen(false);
+  };
+
+  const handleGroceriesWithPricesChange = (newGroceriesWithPrices: GroceryWithPrices[]) => {
+    setGroceriesWithPrices(newGroceriesWithPrices);
   };
 
   return (
@@ -249,8 +255,7 @@ const App: React.FC = () => {
             <GroceryComparison 
               groceries={groceries} 
               onRemoveGrocery={handleRemoveGrocery}
-              openCheapestDialog={triggerCheapestDialog}
-              onCheapestDialogHandled={handleCheapestDialogHandled}
+              onGroceriesWithPricesChange={handleGroceriesWithPricesChange}
             />
           </>
         )}
@@ -261,6 +266,12 @@ const App: React.FC = () => {
       <SuggestionDialog 
         open={suggestionDialogOpen}
         onClose={handleSuggestionDialogClose}
+      />
+      
+      <CheapestDialog
+        open={triggerCheapestDialog}
+        onClose={handleCheapestDialogHandled}
+        groceries={groceriesWithPrices}
       />
     </Box>
   );

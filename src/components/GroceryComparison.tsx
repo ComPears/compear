@@ -14,33 +14,20 @@ import {
   Chip,
   CircularProgress,
   IconButton,
-  Tooltip,
   Avatar,
   Tabs,
   Tab,
-  Button,
-  List,
-  ListItem,
-  ListItemText,
-  Divider,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Accordion,
   AccordionSummary,
   AccordionDetails
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import InfoIcon from '@mui/icons-material/Info';
+import { useTheme, useMediaQuery } from '@mui/material';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import RouteIcon from '@mui/icons-material/Route';
 import CompareIcon from '@mui/icons-material/Compare';
-import ShareIcon from '@mui/icons-material/Share';
-import CloseIcon from '@mui/icons-material/Close';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { useTheme, useMediaQuery } from '@mui/material';
 import { Grocery, GroceryWithPrices, SupermarketPrice } from '../types';
 import { fetchPricesForGrocery, supermarkets } from '../services/supermarketService';
 import OptimalShoppingStrategy from './OptimalShoppingStrategy';
@@ -50,16 +37,7 @@ import { useCountry } from '../context/CountryContext';
 interface GroceryComparisonProps {
   groceries: Grocery[];
   onRemoveGrocery: (id: string) => void;
-  /** 
-   * When true, triggers the cheapest supermarket dialog to open automatically.
-   * Used to open the dialog from external components (e.g., cart icon click).
-   */
-  openCheapestDialog?: boolean;
-  /** 
-   * Callback function called after the cheapest dialog trigger has been handled.
-   * Should be used to reset the openCheapestDialog state in the parent component.
-   */
-  onCheapestDialogHandled?: () => void;
+  onGroceriesWithPricesChange?: (groceriesWithPrices: GroceryWithPrices[]) => void;
 }
 
 interface TabPanelProps {
@@ -78,14 +56,9 @@ function TabPanel(props: TabPanelProps) {
       id={`simple-tabpanel-${index}`}
       aria-labelledby={`simple-tab-${index}`}
       {...other}
-      style={{ width: '100%' }} // Ensure full width
     >
       {value === index && (
-        <Box sx={{ 
-          pt: { xs: 2, sm: 3 }, // Less top padding on mobile
-          px: { xs: 0, sm: 0 }, // Consistent padding
-          width: '100%'
-        }}>
+        <Box sx={{ pt: 3 }}>
           {children}
         </Box>
       )}
@@ -97,79 +70,69 @@ function TabPanel(props: TabPanelProps) {
 interface SupermarketSummary {
   supermarketName: string;
   totalPrice: number;
-  estimatedCount: number;
-  apiCount: number;
-  unavailableCount: number;
   productCount: number;
   saleCount: number; // Count of items on sale
   totalSavings: number; // Total amount saved from sales
+  products: Record<string, SupermarketPrice>; // Map of product IDs to their prices
 }
 
-const GroceryComparison: React.FC<GroceryComparisonProps> = ({ 
-  groceries, 
-  onRemoveGrocery, 
-  openCheapestDialog = false,
-  onCheapestDialogHandled 
-}) => {
-  const { t } = useLanguage();
-  const { country } = useCountry();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemoveGrocery, onGroceriesWithPricesChange }) => {
   const [groceriesWithPrices, setGroceriesWithPrices] = useState<GroceryWithPrices[]>([]);
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [tabValue, setTabValue] = useState(0);
-  const [selectedSupermarket, setSelectedSupermarket] = useState<SupermarketSummary | null>(null);
-  const [productDialogOpen, setProductDialogOpen] = useState(false);
+  const theme = useTheme();
+  const { t } = useLanguage();
+  const { country } = useCountry();
+  const [expandedAccordions, setExpandedAccordions] = useState<Record<string, boolean>>({});
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
+  const handleAccordionChange = (groceryId: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
+    setExpandedAccordions(prev => ({
+      ...prev,
+      [groceryId]: isExpanded
+    }));
+  };
+
   useEffect(() => {
-    const fetchPrices = async () => {
-      // Use a functional update that doesn't depend on the current groceriesWithPrices value
-      setGroceriesWithPrices(prevGroceriesWithPrices => {
-        const updatedGroceries: GroceryWithPrices[] = [];
+    setGroceriesWithPrices(prevGroceriesWithPrices => {
+      const updatedGroceries: GroceryWithPrices[] = [];
+      
+      // Process each grocery item that doesn't have prices yet
+      for (const grocery of groceries) {
+        const existingWithPrices = prevGroceriesWithPrices.find(g => g.id === grocery.id);
         
-        // Process each grocery item
-        for (const grocery of groceries) {
-          // Check if this grocery already exists in the previous state
-          const existingWithPrices = prevGroceriesWithPrices.find(g => g.id === grocery.id);
+        if (existingWithPrices) {
+          updatedGroceries.unshift(existingWithPrices);
+        } else {
+          // Set loading state for this grocery item
+          setLoading(prev => ({ ...prev, [grocery.id]: true }));
           
-          if (existingWithPrices) {
-            // Reuse existing data
-            updatedGroceries.push(existingWithPrices);
-          } else {
-            // This is a new grocery, fetch prices asynchronously
-            // Set loading state for this grocery item
-            setLoading(prev => ({ ...prev, [grocery.id]: true }));
-            
-            // Add a placeholder immediately - we'll update it when data arrives
-            updatedGroceries.push({ ...grocery, prices: [] });
-            
-            // Fetch prices in the background
-            fetchPricesForGrocery(grocery)
-              .then(prices => {
-                // Update this specific grocery with its prices
-                setGroceriesWithPrices(current => 
-                  current.map(g => g.id === grocery.id ? { ...g, prices } : g)
-                );
-              })
-              .catch(error => {
-                console.error(`Error fetching prices for ${grocery.name}:`, error);
-              })
-              .finally(() => {
-                setLoading(prev => ({ ...prev, [grocery.id]: false }));
-              });
+          try {
+            const prices = fetchPricesForGrocery(grocery);
+            updatedGroceries.unshift({ ...grocery, prices });
+          } catch (error) {
+            console.error(`Error fetching prices for ${grocery.name}:`, error);
+            updatedGroceries.unshift({ ...grocery, prices: [] });
+          } finally {
+            setLoading(prev => ({ ...prev, [grocery.id]: false }));
           }
         }
-        
-        return updatedGroceries;
-      });
-    };
-    
-    fetchPrices();
-  }, [groceries]); // groceriesWithPrices is no longer a dependency
+      }
+      
+      return updatedGroceries;
+    });
+  }, [groceries]);
+
+  // Notify parent component when groceries with prices change
+  useEffect(() => {
+    if (onGroceriesWithPricesChange) {
+      onGroceriesWithPricesChange(groceriesWithPrices);
+    }
+  }, [groceriesWithPrices, onGroceriesWithPricesChange]);
 
   // Find the logo URL for a supermarket by name
   const getSupermarketLogo = (name: string): string | undefined => {
@@ -185,8 +148,10 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({
     return 0;
   };
 
-  const formatCurrency = (amount: number) => {
-    return `€${amount.toFixed(2)}`;
+  const formatCurrency = (amount: number | string | undefined | null) => {
+    const num = typeof amount === 'number' ? amount : Number(amount);
+    if (isNaN(num)) return '-';
+    return `€${num.toFixed(2)}`;
   };
 
   const getLowestPriceSupermarket = (prices: SupermarketPrice[]) => {
@@ -196,190 +161,77 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({
     return prices.find(p => p.price === lowestPrice);
   };
 
-  const formatUnitLabel = (grocery: Grocery) => {
-    switch(grocery.unit) {
-      case 'kg':
-        return 'kg';
-      case 'gram':
-        return 'g';
-      case 'liter':
-        return 'L';
-      case 'ml':
-        return 'ml';
-      default:
-        return '';
-    }
-  };
-
-  const displayUnitPrice = (price: SupermarketPrice, grocery: Grocery) => {
-    if (!price.unitPrice) return null;
-    
-    let unitDisplay = '';
-    if (grocery.unit === 'kg' || grocery.unit === 'gram') {
-      unitDisplay = '€/kg';
-    } else if (grocery.unit === 'liter' || grocery.unit === 'ml') {
-      unitDisplay = '€/L';
-    } else {
-      return null;
-    }
-    
-    return `${price.unitPrice.toFixed(2)} ${unitDisplay}`;
-  };
-
   // Calculate summary of prices across all supermarkets
   const supermarketSummaries = useMemo(() => {
     if (groceriesWithPrices.length === 0) return [];
 
     // Get all unique supermarket names from all grocery prices
-    const supermarketNames = new Set<string>();
+    const supermarketNamesSet = new Set<string>();
+    console.log("Groceries with prices ", groceriesWithPrices);
     groceriesWithPrices.forEach(grocery => {
       grocery.prices.forEach(price => {
-        supermarketNames.add(price.supermarketName);
+        supermarketNamesSet.add(price.supermarketName);
       });
     });
 
-    // Initialize summaries for each supermarket
-    const summaries: SupermarketSummary[] = Array.from(supermarketNames).map(name => ({
+    // Initialize summaries for each unique supermarket
+    const summaries: SupermarketSummary[] = Array.from(supermarketNamesSet).map(name => ({
       supermarketName: name,
       totalPrice: 0,
-      estimatedCount: 0,
-      apiCount: 0,
-      unavailableCount: 0,
       productCount: 0,
       saleCount: 0,
-      totalSavings: 0
+      totalSavings: 0,
+      products: {}
     }));
     
     // Calculate totals for each supermarket
     groceriesWithPrices.forEach(grocery => {
-      // For each supermarket, find the price for this grocery
+      // For each supermarket, find the cheapest price for this grocery
       summaries.forEach(summary => {
-        const priceEntry = grocery.prices.find(p => p.supermarketName === summary.supermarketName);
+        const supermarketPrices = grocery.prices.filter(p => p.supermarketName === summary.supermarketName);
         
-        if (priceEntry) {
-          summary.totalPrice += priceEntry.price;
+        if (supermarketPrices.length > 0) {
+          // Find the cheapest price among multiple products from the same supermarket
+          const cheapestPrice = supermarketPrices.reduce((min, current) => 
+            current.price < min.price ? current : min
+          );
+          
+          summary.totalPrice += cheapestPrice.price;
           summary.productCount++;
           
-          if (priceEntry.isEstimated) {
-            summary.estimatedCount++;
-          } else {
-            summary.apiCount++;
-          }
+          // Store the cheapest product in the summary for reference
+          summary.products[grocery.id] = cheapestPrice;
           
           // Check if the item is on sale
-          if (priceEntry.onSale) {
+          if (cheapestPrice.onSale) {
             summary.saleCount++;
-            summary.totalSavings += calculateSavings(priceEntry);
+            summary.totalSavings += calculateSavings(cheapestPrice);
           }
-        } else {
-          summary.unavailableCount++;
         }
       });
     });
 
-    // Sort summaries by total price (cheapest first)
-    return summaries.sort((a, b) => a.totalPrice - b.totalPrice);
-  }, [groceriesWithPrices]);
+    // Sort summaries: first by completeness (all products first), then by price
+    return summaries.sort((a, b) => {
+      // First, sort by completeness (supermarkets with all products come first)
+      const aHasAllProducts = a.productCount === groceriesWithPrices.length;
+      const bHasAllProducts = b.productCount === groceriesWithPrices.length;
+      
+      if (aHasAllProducts && !bHasAllProducts) return -1;
+      if (!aHasAllProducts && bHasAllProducts) return 1;
+      
+      // If both have same completeness, sort by price (cheapest first)
+      return a.totalPrice - b.totalPrice;
+    });
+}, [groceriesWithPrices]);
 
+  // Get the cheapest supermarket that has all products
   const cheapestSupermarket = useMemo(() => {
-    return supermarketSummaries.length > 0 ? supermarketSummaries[0] : null;
-  }, [supermarketSummaries]);
-
-  // Handle sharing the shopping list for a specific supermarket
-  const handleShareSupermarketList = () => {
-    if (!selectedSupermarket || groceriesWithPrices.length === 0) return;
-
-    // Create text to share
-    let shareText = `🛒 My ComPear Shopping List for ${selectedSupermarket.supermarketName} 🛒\n\n`;
-    
-    // Get all items available at this supermarket
-    const items = groceriesWithPrices
-      .map(grocery => {
-        const price = grocery.prices.find(p => p.supermarketName === selectedSupermarket.supermarketName);
-        if (price) {
-          return {
-            name: grocery.name,
-            price: price.price,
-            onSale: price.onSale,
-            regularPrice: price.regularPrice
-          };
-        }
-        return null;
-      })
-      .filter(item => item !== null);
-
-    // List all items to buy at this supermarket
-    items.forEach(item => {
-      if (item) {
-        shareText += `- ${item.name}: ${formatCurrency(item.price)}`;
-        if (item.onSale) {
-          shareText += ` (ON SALE! Regular: ${formatCurrency(item.regularPrice || 0)})`;
-        }
-        shareText += '\n';
-      }
-    });
-    
-    shareText += `\nTotal: ${formatCurrency(selectedSupermarket.totalPrice)}\n`;
-    if (selectedSupermarket.saleCount > 0) {
-      shareText += `You save: ${formatCurrency(selectedSupermarket.totalSavings)} on ${selectedSupermarket.saleCount} items\n`;
-    }
-    shareText += "\nMade with ComPear - Compare grocery prices across Dutch supermarkets!";
-    
-    // Share using the Web Share API if available
-    if (navigator.share) {
-      navigator.share({
-        title: `My ComPear Shopping List for ${selectedSupermarket.supermarketName}`,
-        text: shareText,
-      }).catch(err => {
-        // Fallback - copy to clipboard
-        copyToClipboard(shareText);
-      });
-    } else {
-      // Fallback - copy to clipboard
-      copyToClipboard(shareText);
-    }
-  };
-
-  // Helper function to copy text to clipboard
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-      .then(() => {
-        alert(t('clipboard.copied'));
-      })
-      .catch(err => {
-        console.error('Failed to copy text: ', err);
-        alert(t('clipboard.failed'));
-      });
-  };
-
-  const handleOpenProductDialog = (summary: SupermarketSummary) => {
-    setSelectedSupermarket(summary);
-    setProductDialogOpen(true);
-  };
-
-  const handleCloseProductDialog = () => {
-    setProductDialogOpen(false);
-  };
-
-  // Handle opening cheapest supermarket dialog from external trigger
-  useEffect(() => {
-    if (openCheapestDialog && cheapestSupermarket && groceriesWithPrices.length > 0) {
-      handleOpenProductDialog(cheapestSupermarket);
-      onCheapestDialogHandled?.();
-    }
-  }, [openCheapestDialog, cheapestSupermarket, groceriesWithPrices.length, onCheapestDialogHandled]);
-
-  if (groceries.length === 0) {
-    return (
-      <Card>
-        <CardContent>
-          <Typography variant="subtitle1" align="center">
-            {t('individual.addItemsPrompt')}
-          </Typography>
-        </CardContent>
-      </Card>
+    const supermarketsWithAllProducts = supermarketSummaries.filter(summary => 
+      summary.productCount === groceriesWithPrices.length
     );
-  }
+    return supermarketsWithAllProducts.length > 0 ? supermarketsWithAllProducts[0] : null;
+  }, [supermarketSummaries, groceriesWithPrices]);
 
   return (
     <Box>
@@ -389,137 +241,111 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({
             value={tabValue} 
             onChange={handleTabChange} 
             aria-label="view modes"
-            variant="fullWidth"
-            sx={{
-              // Mobile responsive styling
-              '& .MuiTab-root': {
-                minHeight: { xs: 60, sm: 48 }, // Taller on mobile for better touch targets
-                fontSize: { xs: '0.75rem', sm: '0.875rem' }, // Smaller text on mobile
-                px: { xs: 0.5, sm: 2 }, // Less padding on mobile
-                '&.Mui-selected': {
-                  backgroundColor: { xs: 'action.selected', sm: 'transparent' }, // Highlight selected tab on mobile
-                  fontWeight: 'bold'
-                }
-              },
-              '& .MuiTab-iconWrapper': {
-                mb: { xs: 0.5, sm: 1 },
-              },
-              // Enhanced tab indicator
-              '& .MuiTabs-indicator': {
-                height: { xs: 3, sm: 2 }, // Thicker indicator on mobile
-                backgroundColor: 'primary.main'
-              }
-            }}
+            centered
           >
-            <Tab 
-              icon={<ShoppingCartIcon />} 
-              label={isMobile ? t('tabs.individualItemsShort') : t('tabs.individualItems')}
+            <Tab icon={<ShoppingCartIcon />} label={isMobile ? t('tabs.individualItemsShort') : t('tabs.individualItems')} />
+            <Tab icon={<CompareIcon />} label={isMobile ? t('tabs.compareAllStoresShort') : t('tabs.compareAllStores')} />
+            <Tab icon={<RouteIcon />} label={isMobile ? t('tabs.optimalStrategyShort') : t('tabs.optimalStrategy')}
               sx={{
                 '& .MuiTab-labelContainer': {
                   fontSize: { xs: '0.7rem', sm: '0.875rem' }
                 }
-              }}
-            />
-            <Tab 
-              icon={<CompareIcon />} 
-              label={isMobile ? t('tabs.compareAllStoresShort') : t('tabs.compareAllStores')}
-              sx={{
-                '& .MuiTab-labelContainer': {
-                  fontSize: { xs: '0.7rem', sm: '0.875rem' }
-                }
-              }}
-            />
-            <Tab 
-              icon={<RouteIcon />} 
-              label={isMobile ? t('tabs.optimalStrategyShort') : t('tabs.optimalStrategy')}
-              sx={{
-                '& .MuiTab-labelContainer': {
-                  fontSize: { xs: '0.7rem', sm: '0.875rem' }
-                }
-              }}
-            />
+              }} />
           </Tabs>
         </Box>
       )}
-      
+
       <TabPanel value={tabValue} index={0}>
-        {/* Individual Grocery Cards */}
-        {groceriesWithPrices.some(grocery => grocery.prices.some(price => price.isEstimated)) && (
-          <Box sx={{ p: 2, bgcolor: 'info.light', borderRadius: 1, mb: 3, display: 'flex', alignItems: 'center' }}>
-            <InfoIcon sx={{ mr: 1 }} color="info" />
-            <Typography variant="body2">
-              {t('individual.estimatedText')}
-            </Typography>
-          </Box>
-        )}
+        {/* Individual Grocery Accordions */}
         {groceriesWithPrices.map((grocery) => {
           const lowestPriceSupermarket = getLowestPriceSupermarket(grocery.prices);
+          const isExpanded = expandedAccordions[grocery.id] || false;
           
           return (
-            <Accordion key={grocery.id} sx={{ mb: 2 }}>
-              <Box sx={{ display: 'flex', width: '100%', alignItems: 'center' }}>
-                <AccordionSummary 
-                  expandIcon={<ExpandMoreIcon />}
-                  aria-controls={`panel-${grocery.id}-content`}
-                  id={`panel-${grocery.id}-header`}
-                  sx={{ flex: 1, '&.Mui-expanded': { minHeight: 48 } }}
-                >
-                  <Box display="flex" justifyContent="space-between" alignItems="center" width="100%" pr={2}>
-                    <Typography variant="h6" component="div">
-                      {grocery.name} {grocery.quantity > 1 && `(${grocery.quantity} ${formatUnitLabel(grocery)})`}
+            <Accordion 
+              key={grocery.id} 
+              expanded={isExpanded}
+              onChange={handleAccordionChange(grocery.id)}
+              sx={{ mb: 1 }}
+            >
+              <AccordionSummary 
+                expandIcon={<ExpandMoreIcon />}
+                aria-controls={`panel-${grocery.id}-content`}
+                id={`panel-${grocery.id}-header`}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', pr: 2 }}>
+                  {/* Searched Item */}
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 'medium' }}>
+                      {grocery.name}
                     </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      {lowestPriceSupermarket && (
-                        <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
-                          <Avatar 
-                            src={getSupermarketLogo(lowestPriceSupermarket.supermarketName)} 
-                            alt={lowestPriceSupermarket.supermarketName}
-                            sx={{ width: 24, height: 24, mr: 1 }}
-                          />
-                          <Typography variant="body1">
-                            {formatCurrency(lowestPriceSupermarket.price)}
-                          </Typography>
-                          <Chip 
-                            label={t('label.lowest')} 
-                            size="small" 
-                            color="success" 
-                            sx={{ ml: 1 }}
-                          />
-                        </Box>
+                  </Box>
+                  {lowestPriceSupermarket && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
+                      <Avatar 
+                        src={getSupermarketLogo(lowestPriceSupermarket.supermarketName)} 
+                        alt={lowestPriceSupermarket.supermarketName}
+                        sx={{ width: 20, height: 20, mr: 1 }}
+                      />
+                      <Typography variant="body2" sx={{ mr: 1 }}>
+                        {lowestPriceSupermarket.supermarketName}
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'success.main' }}>
+                        {formatCurrency(lowestPriceSupermarket.price)}
+                      </Typography>
+                      {lowestPriceSupermarket.onSale && (
+                        <Chip 
+                          icon={<LocalOfferIcon />} 
+                          label="Sale" 
+                          size="small" 
+                          color="secondary" 
+                          sx={{ ml: 0.5, height: 20 }}
+                        />
                       )}
                     </Box>
-                  </Box>
-                </AccordionSummary>
-                <IconButton 
-                  onClick={() => onRemoveGrocery(grocery.id)} 
-                  size="small"
-                  sx={{ mr: 2 }}
-                >
-                  <DeleteIcon />
-                </IconButton>
-              </Box>
+                  )}
+
+                  {/* Delete Button */}
+                  <IconButton 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemoveGrocery(grocery.id);
+                    }} 
+                    size="small"
+                    sx={{ 
+                      '&:hover': { 
+                        backgroundColor: 'error.light',
+                        color: 'error.contrastText'
+                      }
+                    }}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Box>
+              </AccordionSummary>
+              
               <AccordionDetails>
                 {loading[grocery.id] ? (
                   <Box display="flex" justifyContent="center" p={3}>
                     <CircularProgress />
                   </Box>
-                ) : (
+                ) : grocery.prices.length >= 1 && (
                   <TableContainer component={Paper} variant="outlined">
                     <Table size="small">
                       <TableHead>
                         <TableRow>
                           <TableCell>{t('table.supermarket')}</TableCell>
+                          <TableCell>{t('table.product')}</TableCell>
                           <TableCell align="right">{t('table.price')}</TableCell>
-                          <TableCell align="right">{t('table.unitPrice')}</TableCell>
-                          <TableCell align="right">{t('table.estPrices')}</TableCell>
+                          <TableCell align="right">{t('table.size')}</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {grocery.prices.sort((a, b) => a.price - b.price).map((price, index) => (
+                        {grocery.prices.sort((a, b) => a.price - b.price).map((price) => (
                           <TableRow 
                             key={price.supermarketName}
                             sx={{
-                              backgroundColor: lowestPriceSupermarket?.supermarketName === price.supermarketName 
+                              backgroundColor: lowestPriceSupermarket?.price === price.price 
                                 ? 'success.light' 
                                 : 'inherit'
                             }}
@@ -535,7 +361,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({
                                   {price.supermarketName}
                                   {price === lowestPriceSupermarket && (
                                     <Chip 
-                                      label={t('label.lowest')} 
+                                      label="Lowest" 
                                       size="small" 
                                       color="success" 
                                       sx={{ ml: 1 }}
@@ -544,6 +370,30 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({
                                 </Box>
                               </Box>
                             </TableCell>
+                            <TableCell>
+                              {price.link ? (
+                                <Typography 
+                                  variant="body2" 
+                                  sx={{ 
+                                    fontStyle: 'italic',
+                                    color: 'primary.main',
+                                    textDecoration: 'underline',
+                                    cursor: 'pointer',
+                                    '&:hover': {
+                                      color: 'primary.dark',
+                                      textDecoration: 'underline'
+                                    }
+                                  }}
+                                  onClick={() => window.open(price.link, '_blank', 'noopener,noreferrer')}
+                                >
+                                  {price.productName || grocery.name}
+                                </Typography>
+                              ) : (
+                                <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
+                                  {price.productName || grocery.name}
+                                </Typography>
+                              )}
+                            </TableCell>
                             <TableCell align="right">
                               {price.onSale ? (
                                 <Box>
@@ -551,7 +401,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({
                                     {formatCurrency(price.price)}
                                     <Chip 
                                       icon={<LocalOfferIcon />} 
-                                      label={t('label.sale')} 
+                                      label="Sale" 
                                       size="small" 
                                       color="secondary" 
                                       sx={{ ml: 1 }}
@@ -573,16 +423,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({
                               )}
                             </TableCell>
                             <TableCell align="right">
-                              {displayUnitPrice(price, grocery)}
-                            </TableCell>
-                            <TableCell align="right">
-                              {price.isEstimated ? (
-                                <Tooltip title={t('info.estimatedPrices')}>
-                                  <span>
-                                    <Chip icon={<InfoIcon />} label={t('label.estimated')} size="small" color="info" />
-                                  </span>
-                                </Tooltip>
-                              ) : null}
+                              {price.size}
                             </TableCell>
                           </TableRow>
                         ))}
@@ -595,9 +436,9 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({
           );
         })}
       </TabPanel>
-      
+
       <TabPanel value={tabValue} index={1}>
-        {/* Total Summary Card */}
+        {/* All Supermarkets Comparison */}
         {groceriesWithPrices.length > 0 && supermarketSummaries.length > 0 && (
           <Card sx={{ mb: 4 }}>
             <CardContent>
@@ -614,19 +455,12 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({
                   .replace('{country}', country.name)}
               </Typography>
               
-              {/* Info box - always visible above the table */}
-              <Box sx={{ p: 2, bgcolor: 'info.light', borderRadius: 1, mt: 2, mb: 2, display: 'flex', alignItems: 'center' }}>
-                <InfoIcon sx={{ mr: 1 }} color="info" />
-                <Typography variant="body2">
-                  {t('info.estimatedPrices')}
-                </Typography>
-              </Box>
-              
               <TableContainer 
                 component={Paper} 
                 variant="outlined" 
                 sx={{ 
-                  maxHeight: 500, // Make the table scrollable
+                  mt: 2,
+                  maxHeight: 500, 
                   overflowY: 'auto'
                 }}
               >
@@ -636,7 +470,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({
                       <TableCell sx={{ fontWeight: 'bold', width: '25%' }}>{t('table.supermarket')}</TableCell>
                       <TableCell align="right" sx={{ fontWeight: 'bold' }}>{t('table.totalPrice')}</TableCell>
                       <TableCell align="right" sx={{ fontWeight: 'bold' }}>{t('table.itemsFound')}</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>{t('table.estPrices')}</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>{t('table.product')}</TableCell>
                       <TableCell align="right" sx={{ fontWeight: 'bold' }}>{t('table.onSale')}</TableCell>
                     </TableRow>
                   </TableHead>
@@ -645,13 +479,8 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({
                       <TableRow 
                         key={summary.supermarketName}
                         sx={{
-                          backgroundColor: summary === cheapestSupermarket ? 'success.light' : 'inherit',
-                          cursor: 'pointer',
-                          '&:hover': {
-                            backgroundColor: summary === cheapestSupermarket ? 'success.main' : 'action.hover',
-                          }
+                          backgroundColor: summary === cheapestSupermarket ? 'success.light' : 'inherit'
                         }}
-                        onClick={() => handleOpenProductDialog(summary)}
                       >
                         <TableCell component="th" scope="row">
                           <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -662,9 +491,9 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({
                             />
                             <Box sx={{ display: 'flex', alignItems: 'center' }}>
                               {summary.supermarketName}
-                              {summary === cheapestSupermarket && (
+                              {summary === cheapestSupermarket && summary.productCount === groceriesWithPrices.length && (
                                 <Chip 
-                                  label={t('label.cheapest')} 
+                                  label="Cheapest" 
                                   size="small" 
                                   color="success" 
                                   sx={{ ml: 1 }}
@@ -678,30 +507,35 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({
                           {summary.productCount}/{groceriesWithPrices.length}
                         </TableCell>
                         <TableCell align="right">
-                          {summary.estimatedCount > 0 ? (
-                            <>
-                              <Tooltip title={t('info.estimatedPrices')}>
-                                <span>
-                                  <Chip 
-                                    icon={<InfoIcon />} 
-                                    label={`${summary.estimatedCount}`} 
-                                    size="small" 
-                                    color="info" 
-                                  />
-                                </span>
-                              </Tooltip>
-                            </>
-                          ) : t('label.none')}
+                          {Object.entries(summary.products).map(([productId, priceData], index) => {
+                            const grocery = groceriesWithPrices.find(g => g.id === productId);
+                            const productName = priceData.productName || grocery?.name || 'Unknown';
+                            return (
+                              <Typography
+                                key={productId}
+                                variant="caption"
+                                component="div"
+                                sx={{ 
+                                  // fontSize: '0.75rem',
+                                  // color: 'text.secondary',
+                                  lineHeight: 1.2,
+                                  mb: index < Object.keys(summary.products).length - 1 ? 0.5 : 0
+                                }}
+                              >
+                                {productName}
+                              </Typography>
+                            );
+                          })}
                         </TableCell>
                         <TableCell align="right">
                           {summary.saleCount > 0 ? (
                             <Chip 
                               icon={<LocalOfferIcon />} 
-                              label={`${summary.saleCount} ${t('label.items')}`} 
+                              label={`${summary.saleCount} items`} 
                               size="small" 
                               color="secondary" 
                             />
-                          ) : t('label.none')}
+                          ) : "None"}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -716,146 +550,8 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({
       <TabPanel value={tabValue} index={2}>
         <OptimalShoppingStrategy groceriesWithPrices={groceriesWithPrices} />
       </TabPanel>
-
-      {/* Product List Dialog */}
-      <Dialog
-        open={productDialogOpen}
-        onClose={handleCloseProductDialog}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              {selectedSupermarket && (
-                <>
-                  <Avatar 
-                    src={getSupermarketLogo(selectedSupermarket.supermarketName)} 
-                    alt={selectedSupermarket.supermarketName}
-                    sx={{ width: 32, height: 32, mr: 1.5 }}
-                  />
-                  {t('dialog.productsInSupermarket').replace('{supermarket}', selectedSupermarket?.supermarketName || '')}
-                </>
-              )}
-            </Box>
-            <Box>
-              <IconButton color="inherit" onClick={handleShareSupermarketList} size="small">
-                <Tooltip title={t('info.shareList')}>
-                  <span>
-                    <ShareIcon />
-                  </span>
-                </Tooltip>
-              </IconButton>
-              <IconButton onClick={handleCloseProductDialog} size="small">
-                <CloseIcon />
-              </IconButton>
-            </Box>
-          </Box>
-        </DialogTitle>
-        <DialogContent dividers>
-          {selectedSupermarket && (
-            <Box>
-              {/* Supermarket stats */}
-              <Box sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-                <Chip 
-                  label={t('dialog.total').replace('{amount}', formatCurrency(selectedSupermarket.totalPrice))} 
-                  color="primary" 
-                  variant="outlined" 
-                />
-                
-                {selectedSupermarket.saleCount > 0 && (
-                  <Chip 
-                    icon={<LocalOfferIcon />}
-                    label={t('dialog.saleItems').replace('{count}', selectedSupermarket.saleCount.toString())}
-                    color="secondary"
-                    variant="outlined"
-                  />
-                )}
-                
-                {selectedSupermarket.estimatedCount > 0 && (
-                  <Tooltip title={t('info.estimatedPrices')}>
-                    <span>
-                      <Chip 
-                        icon={<InfoIcon />}
-                        label={t('dialog.estimatedPrices').replace('{count}', selectedSupermarket.estimatedCount.toString())}
-                        color="info"
-                        variant="outlined"
-                      />
-                    </span>
-                  </Tooltip>
-                )}
-              </Box>
-              
-              <Divider sx={{ mb: 2 }} />
-              
-              {/* List of products */}
-              <List>
-                {groceriesWithPrices.map(grocery => {
-                  const price = grocery.prices.find(p => p.supermarketName === selectedSupermarket.supermarketName);
-                  if (!price) return null;
-                  
-                  return (
-                    <ListItem key={grocery.id} divider>
-                      <ListItemText 
-                        primary={
-                          <Typography variant="body1">
-                            {grocery.name}
-                            {grocery.quantity > 1 && ` (${grocery.quantity} ${formatUnitLabel(grocery)})`}
-                          </Typography>
-                        }
-                      />
-                      <Box sx={{ ml: 2, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                        {price.isEstimated && (
-                          <Box sx={{ mb: 1 }}>
-                            <Tooltip title={t('info.estimatedPrices')}>
-                              <span>
-                                <Chip icon={<InfoIcon />} label={t('label.estimated')} size="small" color="info" />
-                              </span>
-                            </Tooltip>
-                          </Box>
-                        )}
-                        
-                        {price.onSale ? (
-                          <>
-                            <Typography variant="body1" sx={{ fontWeight: 'bold', color: 'secondary.main' }}>
-                              {formatCurrency(price.price)} <LocalOfferIcon fontSize="small" />
-                            </Typography>
-                            <Typography variant="caption" sx={{ textDecoration: 'line-through', display: 'block' }}>
-                              {price.regularPrice && formatCurrency(price.regularPrice)}
-                            </Typography>
-                          </>
-                        ) : (
-                          <Typography variant="body1">
-                            {formatCurrency(price.price)}
-                          </Typography>
-                        )}
-                        
-                        {price.unitPrice && (
-                          <Typography variant="caption" color="text.secondary">
-                            {displayUnitPrice(price, grocery)}
-                          </Typography>
-                        )}
-                      </Box>
-                    </ListItem>
-                  );
-                })}
-              </List>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseProductDialog}>{t('dialog.close')}</Button>
-          <Button 
-            startIcon={<ShareIcon />} 
-            onClick={handleShareSupermarketList} 
-            variant="contained"
-          >
-            {t('dialog.share')}
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 };
 
-export default GroceryComparison; 
+export default GroceryComparison;

@@ -53,8 +53,10 @@ const OptimalShoppingStrategy: React.FC<OptimalShoppingStrategyProps> = ({ groce
   };
 
   // Format currency values
-  const formatCurrency = (amount: number) => {
-    return `€${amount.toFixed(2)}`;
+  const formatCurrency = (amount: number | string | undefined | null) => {
+    const num = typeof amount === 'number' ? amount : Number(amount);
+    if (isNaN(num)) return '-';
+    return `€${num.toFixed(2)}`;
   };
 
   // Calculate the optimal shopping strategy
