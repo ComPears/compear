@@ -24,7 +24,6 @@ export interface SupermarketPrice {
 
 export interface GroceryWithPrices extends Grocery {
   prices: SupermarketPrice[];
-  fromAI?: boolean; // Indicates if prices were fetched via AI
 }
 
 export interface Supermarket {

@@ -9,8 +9,7 @@ import {
   SelectChangeEvent,
   Typography,
 } from '@mui/material';
-import { ProductCategory, CATEGORIES, getCategoryIcon } from '../services/categoryService';
-import { DEAL_CATEGORY_LABELS } from '../utils/productGrouping';
+import { ProductCategory, CATEGORIES, getCategoryIcon, DEAL_CATEGORY_LABELS } from '../services/categoryService';
 
 interface CategoryFilterProps {
   selectedCategory: ProductCategory | 'All';

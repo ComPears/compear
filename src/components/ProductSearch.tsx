@@ -1,13 +1,10 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Box, Typography, CircularProgress, Alert, Chip } from '@mui/material';
 import { Grocery } from '../types';
-import { findProductInSupermarkets } from '../services/rawProductData';
 import { fetchProducts, Product } from '../api/client';
-import { SearchResultProduct } from '../utils/productMapper';
 import { useLanguage } from '../context/LanguageContext';
-import { useCountry } from '../context/CountryContext';
 import CategoryFilter from './CategoryFilter';
-import { ProductCategory } from '../services/categoryService';
+import { ProductCategory, filterByCategory } from '../services/categoryService';
 import { ProductSearchBar } from './ProductSearchBar';
 import { ProductSortBar } from './ProductSortBar';
 import { FilterChipBar } from './FilterChipBar';
@@ -15,12 +12,10 @@ import { ProductGroupList } from './ProductGroupList';
 import {
   SortMode,
   buildSuggestions,
-  extractFilterChips,
-  filterByCategory,
-  filterByChip,
   groupProducts,
   sortGroups,
 } from '../utils/productGrouping';
+import { extractFilterChips, filterByChip } from '../utils/filterChips';
 
 interface ProductSearchProps {
   onAddGrocery: (grocery: Grocery) => void;
@@ -54,11 +49,9 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
-  const [legacyResults, setLegacyResults] = useState<SearchResultProduct[]>([]);
   const [sort, setSort] = useState<SortMode>('relevance');
   const [activeChips, setActiveChips] = useState<string[]>([]);
   const { t } = useLanguage();
-  const { country } = useCountry();
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const resolveSearchQuery = useCallback((): { search?: string; category?: string } | null => {
@@ -94,67 +87,34 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
     setActiveChips([]);
 
     try {
-      if (country.code === 'nl') {
-        try {
-          const fetched = await fetchProducts(query);
-          if (abortControllerRef.current.signal.aborted) return;
-          let list = fetched;
-          if (selectedCategory !== 'All' && query.search) {
-            list = filterByCategory(list, selectedCategory);
-          }
-          setProducts(list);
-          setLegacyResults([]);
-          setError(
-            list.length === 0
-              ? t('error.noProductsFound').replace(
-                  '{searchTerm}',
-                  searchTerm.trim() || selectedCategory
-                )
-              : null
-          );
-        } catch (backendError) {
-          console.warn('Backend search failed, falling back to static data:', backendError);
-          setProducts([]);
-          await loadLegacyResults(query.search ?? query.category ?? '');
-        }
-      } else {
-        setProducts([]);
-        await loadLegacyResults(query.search ?? query.category ?? '');
+      const fetched = await fetchProducts(query);
+      if (abortControllerRef.current.signal.aborted) return;
+
+      let list = fetched;
+      if (selectedCategory !== 'All' && query.search) {
+        list = filterByCategory(list, selectedCategory);
       }
+
+      setProducts(list);
+      setError(
+        list.length === 0
+          ? t('error.noProductsFound').replace(
+              '{searchTerm}',
+              searchTerm.trim() || selectedCategory
+            )
+          : null
+      );
     } catch (searchError) {
       if (abortControllerRef.current?.signal.aborted) return;
       console.error('Error searching for products:', searchError);
+      setProducts([]);
       setError(t('error.searchFailed'));
     } finally {
       if (!abortControllerRef.current?.signal.aborted) {
         setLoading(false);
       }
     }
-
-    async function loadLegacyResults(legacyQuery: string) {
-      const flatResults: SearchResultProduct[] = [];
-      const results = await findProductInSupermarkets(legacyQuery);
-      if (abortControllerRef.current?.signal.aborted) return;
-
-      Object.entries(results).forEach(([supermarketCode, legacyProducts]) => {
-        const supermarket = supermarketCode.toUpperCase();
-        legacyProducts.forEach((product) => {
-          flatResults.push({
-            ...product,
-            supermarketName: supermarket,
-          });
-        });
-      });
-
-      if (flatResults.length === 0) {
-        setError(t('error.noProductsFound').replace('{searchTerm}', legacyQuery));
-        setLegacyResults([]);
-      } else {
-        setLegacyResults(flatResults.sort((a, b) => a.p - b.p));
-        setError(null);
-      }
-    }
-  }, [resolveSearchQuery, country.code, searchTerm, selectedCategory, t]);
+  }, [resolveSearchQuery, searchTerm, selectedCategory, t]);
 
   const filteredProducts = useMemo(() => {
     let list = products;
@@ -178,31 +138,6 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
       setProducts([]);
       setSearchTerm('');
       setActiveChips([]);
-    },
-    [onAddGrocery]
-  );
-
-  const handleAddLegacy = useCallback(
-    (product: SearchResultProduct) => {
-      let unit: Grocery['unit'] = 'piece';
-      const sizeStr = product.s.toLowerCase();
-      if (sizeStr.includes('kg')) unit = 'kg';
-      else if (sizeStr.includes('g')) unit = 'gram';
-      else if (sizeStr.includes('l') && !sizeStr.includes('ml')) unit = 'liter';
-      else if (sizeStr.includes('ml')) unit = 'ml';
-      const match = sizeStr.match(/(\d+(?:\.\d+)?)/);
-      const quantity = match ? parseFloat(match[1]) : 1;
-
-      onAddGrocery({
-        id: `supermarket-${Date.now()}-${Math.random()}`,
-        name: product.n,
-        unit,
-        quantity,
-        variant: product.supermarketName,
-        searchKeyword: product.n,
-      });
-      setLegacyResults([]);
-      setSearchTerm('');
     },
     [onAddGrocery]
   );
@@ -236,7 +171,6 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
             setTimeout(() => performSearch(), 100);
           } else {
             setProducts([]);
-            setLegacyResults([]);
           }
         }}
         variant="chips"
@@ -281,48 +215,6 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
             onAddProduct={handleAddProduct}
             addButtonLabel="Toevoegen"
           />
-        </Box>
-      )}
-
-      {legacyResults.length > 0 && (
-        <Box sx={{ mt: 3 }}>
-          <Typography variant="subtitle1" sx={{ fontWeight: 'medium', mb: 2 }}>
-            Search Results ({legacyResults.length} found):
-          </Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            {legacyResults.slice(0, 20).map((product, index) => (
-              <Box
-                key={`${product.n}-${product.supermarketName}-${index}`}
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  p: 1.5,
-                  border: 1,
-                  borderColor: 'divider',
-                  borderRadius: 1,
-                }}
-              >
-                <Box>
-                  <Typography variant="subtitle2">{product.n}</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {product.supermarketName} · {product.s}
-                  </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography fontWeight={700} color="primary.main">
-                    €{product.p.toFixed(2)}
-                  </Typography>
-                  <Chip
-                    size="small"
-                    color="primary"
-                    label="Add"
-                    onClick={() => handleAddLegacy(product)}
-                  />
-                </Box>
-              </Box>
-            ))}
-          </Box>
         </Box>
       )}
     </Box>

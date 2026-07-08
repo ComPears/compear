@@ -1,6 +1,5 @@
 import { Grocery, SupermarketPrice, Supermarket } from '../types';
 import { fetchProducts } from '../api/client';
-import { findProductInSupermarkets } from './rawProductData';
 import { productToSupermarketPrice } from '../utils/productMapper';
 
 export const supermarkets: Supermarket[] = [
@@ -48,64 +47,25 @@ export const supermarkets: Supermarket[] = [
   },
 ];
 
-function mapStaticPrices(grocery: Grocery, searchKeyword: string): SupermarketPrice[] {
-  const prices: SupermarketPrice[] = [];
-  const searchResults = findProductInSupermarkets(searchKeyword);
-
-  Object.entries(searchResults).forEach(([supermarketCode, products]) => {
-    if (products && products.length > 0) {
-      products.forEach((product) => {
-        prices.push({
-          supermarketName: supermarketCode.toUpperCase(),
-          price: product.p,
-          productName: product.n,
-          size: product.s,
-          unitPrice: calculateUnitPrice(product.p, product.s, grocery.unit),
-          onSale: product.o ? true : false,
-          regularPrice: product.o || undefined,
-          link: product.l,
-        });
-      });
-    }
-  });
-
-  return prices;
-}
-
-/**
- * Fetch prices for a grocery item from the backend API.
- * Falls back to static JSON data when the backend is unavailable.
- */
+/** Fetch prices for a grocery item from the backend API. */
 export const fetchPricesForGrocery = async (
   grocery: Grocery,
   countryCode: string = 'nl'
 ): Promise<SupermarketPrice[]> => {
-  if (!grocery?.searchKeyword) {
+  if (!grocery?.searchKeyword || countryCode !== 'nl') {
     return [];
   }
 
-  if (countryCode !== 'nl') {
-    return mapStaticPrices(grocery, grocery.searchKeyword);
-  }
-
-  try {
-    const products = await fetchProducts({ search: grocery.searchKeyword });
-    if (products.length > 0) {
-      return products.map((product) => {
-        const mapped = productToSupermarketPrice(product, grocery.unit);
-        return {
-          ...mapped,
-          unitPrice:
-            calculateUnitPrice(product.effectivePrice, product.packageSize, grocery.unit) ??
-            mapped.unitPrice,
-        };
-      });
-    }
-  } catch (error) {
-    console.warn('Backend price fetch failed, falling back to static data:', error);
-  }
-
-  return mapStaticPrices(grocery, grocery.searchKeyword);
+  const products = await fetchProducts({ search: grocery.searchKeyword });
+  return products.map((product) => {
+    const mapped = productToSupermarketPrice(product, grocery.unit);
+    return {
+      ...mapped,
+      unitPrice:
+        calculateUnitPrice(product.effectivePrice, product.packageSize, grocery.unit) ??
+        mapped.unitPrice,
+    };
+  });
 };
 
 function calculateUnitPrice(

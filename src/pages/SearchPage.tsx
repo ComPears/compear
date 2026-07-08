@@ -23,12 +23,11 @@ import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import {
   SortMode,
   buildSuggestions,
-  extractFilterChips,
-  filterByChip,
   filterBySearch,
   groupProducts,
   sortGroups,
 } from '../utils/productGrouping';
+import { extractFilterChips, filterByChip } from '../utils/filterChips';
 
 export const SearchPage: React.FC = () => {
   const { country } = useCountry();

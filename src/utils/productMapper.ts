@@ -38,21 +38,3 @@ export function productToSupermarketPrice(
   };
 }
 
-export interface SearchResultProduct {
-  n: string;
-  l: string;
-  p: number;
-  s: string;
-  supermarketName: string;
-  category?: string;
-}
-
-export function productToSearchResult(product: Product): SearchResultProduct {
-  return {
-    n: product.productName,
-    l: sanitizeProductLink(product.productUrl) ?? '',
-    p: product.effectivePrice,
-    s: product.packageSize,
-    supermarketName: toSupermarketShortName(product.store),
-  };
-}

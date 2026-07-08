@@ -18,19 +18,16 @@ import { ProductSortBar } from '../components/ProductSortBar';
 import { FilterChipBar } from '../components/FilterChipBar';
 import { ProductGroupList } from '../components/ProductGroupList';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
-import { ProductCategory, CATEGORIES } from '../services/categoryService';
+import { ProductCategory, CATEGORIES, DEAL_CATEGORY_LABELS, filterByCategory } from '../services/categoryService';
 import {
   SortMode,
-  DEAL_CATEGORY_LABELS,
   buildSuggestions,
   dedupeDealsByProduct,
-  extractFilterChips,
-  filterByCategory,
-  filterByChip,
   filterBySearch,
   groupProducts,
   sortGroups,
 } from '../utils/productGrouping';
+import { extractFilterChips, filterByChip } from '../utils/filterChips';
 
 export const DealsPage: React.FC = () => {
   const { country } = useCountry();

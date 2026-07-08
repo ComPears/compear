@@ -7,7 +7,7 @@ ComPear is a React application that helps users compare grocery prices across di
 - **Multi-Country Support**: Netherlands (available), UK and Germany (coming soon). App is built for Europe with paths like **compears.shop/nl**, **compears.shop/de**, **compears.shop/uk**.
 - **Dynamic Content**: Headings and descriptions change based on selected country
 - **Multi-Language**: English, Dutch, and German translations
-- **AI-Powered Price Fetching**: Real-time price extraction from supermarket websites using OpenAI
+- **Product Search & Deals**: Compare grocery prices across Dutch supermarkets via the backend API
 - **Product Categorization**: Automatic product categorization for easy browsing and filtering
 - **Price Comparison**: Compare grocery prices across multiple supermarkets
 - **Optimal Shopping Strategy**: Find the best stores to shop at for maximum savings
@@ -45,7 +45,7 @@ The app can use a local backend for product data (search, deals, compare, basket
 1. In `backend/`: `npm install`, `cp .env.example .env`, `npm run seed` (to load data from `compears-data-wrangling`), then `npm run dev`.
 2. In `compear/`: set `REACT_APP_API_URL=http://localhost:4000` in `.env` (or leave unset to use the default).
 
-Then open the app; Search, Aanbiedingen, and Basket pages will use the backend. The home page still supports the existing AI/static price flow.
+Then open the app; all product search and price comparison uses the backend API.
 
 ### Test end-to-end
 
@@ -77,7 +77,7 @@ From the **project root** (folder that contains `compear` and `backend`):
    Browser opens at http://localhost:3000 (redirects to /nl).
 
 4. **In the app**
-   - **Home** – Add a grocery and compare (uses AI/static; works without backend).
+   - **Home** – Add a grocery and compare prices across stores (backend API).
    - **Zoek** – Search e.g. “melk” or “eieren”; filter by store; click a result → product page.
    - **Aanbiedingen** – List of deals (if any in seeded data).
    - **Product page** – Compare prices per store; click “In mandje”.
@@ -114,10 +114,6 @@ REACT_APP_EMAILJS_PUBLIC_KEY=your_public_key
 
 # Optional: Admin Email (where suggestions are sent)
 REACT_APP_ADMIN_EMAIL=admin@compears.shop
-
-# OpenAI API Key (for local development only)
-# In production, this should be set in Netlify environment variables
-OPENAI_API_KEY=your_openai_api_key_here
 ```
 
 ### 2. EmailJS Setup
@@ -194,12 +190,8 @@ The app is configured for deployment to Netlify via GitHub Actions. The deployme
    - `EMAILJS_SERVICE_ID`
    - `EMAILJS_TEMPLATE_ID`
    - `EMAILJS_PUBLIC_KEY`
-   - `OPENAI_API_KEY` - Your OpenAI API key for AI-powered price fetching
 
-2. **Netlify Environment Variables**: Set these in Netlify dashboard (Site settings > Environment variables):
-   - `OPENAI_API_KEY` - Your OpenAI API key (required for production)
-
-3. **Environment Variables**: The pipeline will automatically inject EmailJS credentials during build and set OpenAI API key in Netlify.
+2. **Environment Variables**: The pipeline injects EmailJS credentials during build.
 
 ## 🌐 Country & Language Support
 
@@ -217,10 +209,6 @@ The app automatically:
 - EmailJS credentials are public by design (client-side usage)
 - Secure your EmailJS account with domain restrictions
 - Environment variables with `REACT_APP_` prefix are publicly visible in the built bundle
-- **OpenAI API Key**: Never commit your OpenAI API key to the repository. It should only be set in:
-  - Local `.env` file (for development, already in `.gitignore`)
-  - Netlify environment variables (for production)
-  - GitHub Secrets (for CI/CD pipeline)
 
 ## 📁 Project Structure
 

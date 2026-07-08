@@ -32,11 +32,40 @@ export const CATEGORIES: ProductCategory[] = [
   'Other',
 ];
 
+export const DEAL_CATEGORY_LABELS: Record<ProductCategory | 'All', string> = {
+  All: 'Alle',
+  'Fruits & Vegetables': 'Groente & fruit',
+  'Dairy & Eggs': 'Zuivel',
+  'Meat & Seafood': 'Vlees & vis',
+  Beverages: 'Dranken',
+  Bakery: 'Bakkerij',
+  Snacks: 'Snacks',
+  'Frozen Foods': 'Diepvries',
+  Pantry: 'Voorraadkast',
+  'Personal Care': 'Drogisterij',
+  Household: 'Huishouden',
+  Other: 'Overig',
+};
+
+export function getProductCategory(product: { category?: ProductCategory | string }): ProductCategory {
+  if (product.category && CATEGORIES.includes(product.category as ProductCategory)) {
+    return normalizeCategory(product.category);
+  }
+  return 'Other';
+}
+
+export function getCategoryLabel(category: ProductCategory | 'All'): string {
+  return DEAL_CATEGORY_LABELS[category];
+}
+
 /**
  * Get display name for a category
  */
 export const getCategoryDisplayName = (category: string | undefined): string => {
-  if (!category) return 'Other';
+  if (!category) return DEAL_CATEGORY_LABELS.Other;
+  if (category in DEAL_CATEGORY_LABELS) {
+    return DEAL_CATEGORY_LABELS[category as ProductCategory];
+  }
   return category;
 };
 

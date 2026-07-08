@@ -81,7 +81,7 @@ const en: Translations = {
   'search.quantity': 'Quantity',
   'search.cancel': 'Cancel',
   'search.addToListButton': 'Add to List',
-  'search.noProductsFound': 'No products found for "{term}". Check if supermarkets.json is loaded correctly.',
+  'search.noProductsFound': 'No products found for "{term}".',
   'search.showDebug': 'Show Debug',
   'search.hideDebug': 'Hide Debug',
   
@@ -200,7 +200,7 @@ const nl: Translations = {
   'search.quantity': 'Hoeveelheid',
   'search.cancel': 'Annuleren',
   'search.addToListButton': 'Aan Lijst Toevoegen',
-  'search.noProductsFound': 'Geen producten gevonden voor "{term}". Controleer of supermarkets.json correct is geladen.',
+  'search.noProductsFound': 'Geen producten gevonden voor "{term}".',
   'search.showDebug': 'Debug Tonen',
   'search.hideDebug': 'Debug Verbergen',
   

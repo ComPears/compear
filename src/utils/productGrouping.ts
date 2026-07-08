@@ -1,5 +1,4 @@
 import { Product } from '../api/client';
-import { ProductCategory, CATEGORIES, normalizeCategory } from '../services/categoryService';
 
 export type SortMode = 'relevance' | 'price' | 'unitPrice' | 'discount';
 
@@ -11,42 +10,6 @@ export interface ProductGroup {
   cheapest: Product;
   bestDeal?: Product;
 }
-
-const FILTER_TERMS = [
-  'halfvol',
-  'magere',
-  'chocolade',
-  'havermelk',
-  'sojamelk',
-  'kokosmelk',
-  'amandelmelk',
-  'biologisch',
-  'lactosevrij',
-  'plantaardig',
-  'geraspt',
-  'light',
-  'zero',
-  '1l',
-  '2l',
-  '500ml',
-  '1kg',
-  '500g',
-];
-
-export const DEAL_CATEGORY_LABELS: Record<ProductCategory | 'All', string> = {
-  All: 'Alle',
-  'Fruits & Vegetables': 'Groente & fruit',
-  'Dairy & Eggs': 'Zuivel',
-  'Meat & Seafood': 'Vlees & vis',
-  Beverages: 'Dranken',
-  Bakery: 'Bakkerij',
-  Snacks: 'Snacks',
-  'Frozen Foods': 'Diepvries',
-  Pantry: 'Voorraadkast',
-  'Personal Care': 'Drogisterij',
-  Household: 'Huishouden',
-  Other: 'Overig',
-};
 
 function tokenize(text: string): string[] {
   return text
@@ -93,64 +56,6 @@ export function filterBySearch(products: Product[], query: string): Product[] {
     .filter((x) => x.score > 0)
     .sort((a, b) => b.score - a.score || a.p.effectivePrice - b.p.effectivePrice)
     .map((x) => x.p);
-}
-
-function productTokens(product: Product): string[] {
-  return tokenize(
-    [product.productName, product.canonicalName, product.brand ?? ''].join(' ')
-  );
-}
-
-function tokenMatchesKeyword(token: string, keyword: string): boolean {
-  if (token === keyword) return true;
-  if (keyword.length >= 4) return token.startsWith(keyword);
-  return false;
-}
-
-export function filterByChip(products: Product[], chip: string): Product[] {
-  if (!chip) return products;
-  const term = chip.toLowerCase();
-  return products.filter((p) => {
-    const name = p.productName.toLowerCase();
-    if (term.length >= 5) return name.includes(term);
-    return productTokens(p).some((token) => tokenMatchesKeyword(token, term));
-  });
-}
-
-export function extractFilterChips(products: Product[]): string[] {
-  const counts = new Map<string, number>();
-  for (const product of products) {
-    const name = product.productName.toLowerCase();
-    for (const term of FILTER_TERMS) {
-      const matches =
-        term.length >= 5
-          ? name.includes(term)
-          : productTokens(product).some((token) => tokenMatchesKeyword(token, term));
-      if (matches) {
-        counts.set(term, (counts.get(term) ?? 0) + 1);
-      }
-    }
-  }
-  return Array.from(counts.entries())
-    .filter(([, count]) => count >= 2)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 10)
-    .map(([term]) => term);
-}
-
-export function getProductCategory(product: Product): ProductCategory {
-  if (product.category && CATEGORIES.includes(product.category)) {
-    return normalizeCategory(product.category);
-  }
-  return 'Other';
-}
-
-export function filterByCategory(
-  products: Product[],
-  category: ProductCategory | 'All'
-): Product[] {
-  if (category === 'All') return products;
-  return products.filter((p) => getProductCategory(p) === category);
 }
 
 export function groupKey(product: Product): string {
