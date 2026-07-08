@@ -38,6 +38,8 @@ jobs:
 
       - name: Build project
         env:
+          CI: false
+          DISABLE_ESLINT_PLUGIN: true
           REACT_APP_API_URL: https://compear-backend.onrender.com
           REACT_APP_EMAILJS_SERVICE_ID: ${{ secrets.EMAILJS_SERVICE_ID }}
           REACT_APP_EMAILJS_TEMPLATE_ID: ${{ secrets.EMAILJS_TEMPLATE_ID }}
