@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { ProductCategory } from '../services/categoryService';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:4000';
 
@@ -26,6 +27,7 @@ export interface Product {
   promoValidUntil: string | null;
   productUrl: string | null;
   scrapedAt: string;
+  category?: ProductCategory;
 }
 
 export interface StoreInfo {
@@ -36,7 +38,11 @@ export interface StoreInfo {
   productCount?: number;
 }
 
-export async function fetchProducts(params?: { search?: string; store?: string }): Promise<Product[]> {
+export async function fetchProducts(params?: {
+  search?: string;
+  store?: string;
+  category?: string;
+}): Promise<Product[]> {
   const { data } = await api.get<Product[]>('/products', { params });
   return data;
 }

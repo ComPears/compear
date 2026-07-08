@@ -15,7 +15,6 @@ import { ProductGroupList } from './ProductGroupList';
 import {
   SortMode,
   buildSuggestions,
-  CATEGORY_SEARCH_SEEDS,
   extractFilterChips,
   filterByCategory,
   filterByChip,
@@ -62,10 +61,17 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
   const { country } = useCountry();
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const resolveSearchQuery = useCallback((): string | null => {
+  const resolveSearchQuery = useCallback((): { search?: string; category?: string } | null => {
     const term = searchTerm.trim();
-    if (term.length >= 2) return term;
-    if (selectedCategory !== 'All') return CATEGORY_SEARCH_SEEDS[selectedCategory];
+    if (term.length >= 2) {
+      return {
+        search: term,
+        category: selectedCategory !== 'All' ? selectedCategory : undefined,
+      };
+    }
+    if (selectedCategory !== 'All') {
+      return { category: selectedCategory };
+    }
     return null;
   }, [searchTerm, selectedCategory]);
 
@@ -90,27 +96,30 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
     try {
       if (country.code === 'nl') {
         try {
-          const fetched = await fetchProducts({ search: query });
+          const fetched = await fetchProducts(query);
           if (abortControllerRef.current.signal.aborted) return;
           let list = fetched;
-          if (selectedCategory !== 'All') {
+          if (selectedCategory !== 'All' && query.search) {
             list = filterByCategory(list, selectedCategory);
           }
           setProducts(list);
           setLegacyResults([]);
           setError(
             list.length === 0
-              ? t('error.noProductsFound').replace('{searchTerm}', searchTerm.trim() || query)
+              ? t('error.noProductsFound').replace(
+                  '{searchTerm}',
+                  searchTerm.trim() || selectedCategory
+                )
               : null
           );
         } catch (backendError) {
           console.warn('Backend search failed, falling back to static data:', backendError);
           setProducts([]);
-          await loadLegacyResults(query);
+          await loadLegacyResults(query.search ?? query.category ?? '');
         }
       } else {
         setProducts([]);
-        await loadLegacyResults(query);
+        await loadLegacyResults(query.search ?? query.category ?? '');
       }
     } catch (searchError) {
       if (abortControllerRef.current?.signal.aborted) return;

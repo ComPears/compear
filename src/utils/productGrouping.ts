@@ -1,5 +1,5 @@
 import { Product } from '../api/client';
-import { ProductCategory } from '../services/categoryService';
+import { ProductCategory, CATEGORIES, normalizeCategory } from '../services/categoryService';
 
 export type SortMode = 'relevance' | 'price' | 'unitPrice' | 'discount';
 
@@ -32,70 +32,6 @@ const FILTER_TERMS = [
   '1kg',
   '500g',
 ];
-
-/** Check categories in this order — specific/non-grocery before broad food groups. */
-const CATEGORY_PRIORITY: ProductCategory[] = [
-  'Personal Care',
-  'Household',
-  'Frozen Foods',
-  'Dairy & Eggs',
-  'Meat & Seafood',
-  'Fruits & Vegetables',
-  'Beverages',
-  'Bakery',
-  'Snacks',
-  'Pantry',
-];
-
-const CATEGORY_KEYWORDS: Record<ProductCategory, string[]> = {
-  'Fruits & Vegetables': [
-    'appel', 'appels', 'banaan', 'bananen', 'tomaat', 'tomaten', 'sla', 'aardappel',
-    'aardappelen', 'paprika', 'fruit', 'groente', 'groenten', 'komkommer', 'avocado',
-    'peer', 'peren', 'druif', 'druiven', 'citroen', 'sinaasappel',
-  ],
-  'Dairy & Eggs': [
-    'melk', 'kaas', 'yoghurt', 'yogurt', 'kwark', 'eieren', 'eier', 'boter', 'room',
-    'zuivel', 'skyr', 'margarine',
-  ],
-  'Meat & Seafood': [
-    'vlees', 'kip', 'kippen', 'gehakt', 'worst', 'worsten', 'salami', 'spek',
-    'biefstuk', 'ribeye', 'zalm', 'tonijn', 'garnalen', 'visfilet', 'vissticks',
-  ],
-  Beverages: [
-    'cola', 'water', 'frisdrank', 'sap', 'sappen', 'bier', 'wijn', 'koffie', 'thee',
-    'limonade', 'energy', 'drank', 'chocomel',
-  ],
-  Bakery: ['brood', 'bol', 'bolletje', 'croissant', 'beschuit', 'cracker', 'crackers', 'bakkerij', 'bagel'],
-  Snacks: ['chips', 'koek', 'koeken', 'snoep', 'chocola', 'chocolade', 'repen', 'noten', 'popcorn'],
-  'Frozen Foods': ['diepvries', 'pizza', 'ijs', 'ijsje', 'bevroren'],
-  Pantry: ['pasta', 'rijst', 'saus', 'olie', 'conserven', 'soep', 'maaltijd', 'noedels', 'couscous'],
-  'Personal Care': [
-    'shampoo', 'tandpasta', 'zeep', 'deodorant', 'crème', 'creme', 'lotion', 'douchegel',
-    'douche', 'zonnebrand', 'zonbescherming', 'aftersun', 'spf', 'sunscreen', 'gezichtsverzorging',
-    'make-up', 'makeup', 'scheergel', 'scheercrème', 'mondwater', 'tampons', 'maandverband',
-    'wattenschijf', 'tissues', 'parfum', 'verzorging',
-  ],
-  Household: [
-    'wasmiddel', 'afwasmiddel', 'schoonmaak', 'toiletpapier', 'keukenrol', 'vaatwastablet',
-    'vaatwastabs', 'allesreiniger', 'bleek', 'luiers', 'vuilniszak',
-  ],
-  Other: [],
-};
-
-/** Dutch seed terms for browsing a category on the homepage without a typed query. */
-export const CATEGORY_SEARCH_SEEDS: Record<ProductCategory, string> = {
-  'Fruits & Vegetables': 'appel',
-  'Dairy & Eggs': 'melk',
-  'Meat & Seafood': 'vlees',
-  Beverages: 'water',
-  Bakery: 'brood',
-  Snacks: 'chips',
-  'Frozen Foods': 'diepvries',
-  Pantry: 'pasta',
-  'Personal Care': 'shampoo',
-  Household: 'wasmiddel',
-  Other: 'product',
-};
 
 export const DEAL_CATEGORY_LABELS: Record<ProductCategory | 'All', string> = {
   All: 'Alle',
@@ -171,23 +107,6 @@ function tokenMatchesKeyword(token: string, keyword: string): boolean {
   return false;
 }
 
-function productMatchesCategory(product: Product, keywords: string[]): boolean {
-  const tokens = productTokens(product);
-  const haystack = [
-    product.productName,
-    product.canonicalName,
-    product.brand ?? '',
-  ]
-    .join(' ')
-    .toLowerCase();
-
-  return keywords.some(
-    (keyword) =>
-      tokens.some((token) => tokenMatchesKeyword(token, keyword)) ||
-      (keyword.length >= 5 && haystack.includes(keyword))
-  );
-}
-
 export function filterByChip(products: Product[], chip: string): Product[] {
   if (!chip) return products;
   const term = chip.toLowerCase();
@@ -219,24 +138,9 @@ export function extractFilterChips(products: Product[]): string[] {
     .map(([term]) => term);
 }
 
-export function inferProductCategory(product: Product): ProductCategory {
-  const haystack = [
-    product.productName,
-    product.canonicalName,
-    product.brand ?? '',
-  ]
-    .join(' ')
-    .toLowerCase();
-
-  if (/\bspf\d*/.test(haystack) || haystack.includes('zonnebrand') || haystack.includes('sun protection')) {
-    return 'Personal Care';
-  }
-
-  for (const category of CATEGORY_PRIORITY) {
-    const keywords = CATEGORY_KEYWORDS[category];
-    if (keywords.length > 0 && productMatchesCategory(product, keywords)) {
-      return category;
-    }
+export function getProductCategory(product: Product): ProductCategory {
+  if (product.category && CATEGORIES.includes(product.category)) {
+    return normalizeCategory(product.category);
   }
   return 'Other';
 }
@@ -246,7 +150,7 @@ export function filterByCategory(
   category: ProductCategory | 'All'
 ): Product[] {
   if (category === 'All') return products;
-  return products.filter((p) => inferProductCategory(p) === category);
+  return products.filter((p) => getProductCategory(p) === category);
 }
 
 export function groupKey(product: Product): string {
