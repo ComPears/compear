@@ -89,3 +89,116 @@ export async function fetchCompare(canonicalName: string): Promise<Product[]> {
   const { data } = await api.get<Product[]>(`/compare/${encodeURIComponent(canonicalName)}`);
   return data;
 }
+
+export interface ReceiptLineMatch {
+  rawName: string;
+  quantity: number;
+  paidUnitPrice: number;
+  paidLineTotal: number;
+  matchedProduct: Product | null;
+  alternatives: Product[];
+  cheapestAlternative: Product | null;
+  lineSavings: number;
+}
+
+export interface ReceiptAnalysis {
+  parsed: {
+    store: string | null;
+    purchaseDate: string | null;
+    currency: string;
+    items: Array<{
+      rawName: string;
+      quantity: number;
+      unitPrice: number | null;
+      lineTotal: number;
+    }>;
+    receiptTotal: number | null;
+  };
+  storeDetected: string | null;
+  purchaseDate: string | null;
+  lines: ReceiptLineMatch[];
+  actualTotal: number;
+  cheapestPossibleTotal: number;
+  potentialSavings: number;
+  shoppingPlan: {
+    stores: Array<{
+      store: string;
+      items: Array<{ name: string; price: number }>;
+      totalPrice: number;
+    }>;
+    grandTotal: number;
+    savingsVsSingleStore: number;
+    storeCount: number;
+  } | null;
+  unmatchedCount: number;
+}
+
+export interface SavedReceipt {
+  id: string;
+  userId: string;
+  uploadedAt: string;
+  imageMimeType: string | null;
+  analysis: ReceiptAnalysis;
+}
+
+export interface ReceiptAnalytics {
+  receiptCount: number;
+  totalSpent: number;
+  totalCouldHaveSaved: number;
+  averageSavingsPerReceipt: number;
+  byStore: Array<{
+    store: string;
+    receiptCount: number;
+    totalSpent: number;
+    totalCouldHaveSaved: number;
+  }>;
+  byMonth: Array<{
+    month: string;
+    totalSpent: number;
+    totalCouldHaveSaved: number;
+    receiptCount: number;
+  }>;
+  topItems: Array<{
+    name: string;
+    purchaseCount: number;
+    totalSpent: number;
+    totalCouldHaveSaved: number;
+  }>;
+}
+
+function userHeaders(userId: string) {
+  return { 'x-compear-user-id': userId };
+}
+
+export async function uploadReceipt(file: File, userId: string): Promise<SavedReceipt> {
+  const form = new FormData();
+  form.append('receipt', file);
+  const { data } = await api.post<SavedReceipt>('/receipts/parse', form, {
+    headers: {
+      ...userHeaders(userId),
+      'Content-Type': 'multipart/form-data',
+    },
+    timeout: 120000,
+  });
+  return data;
+}
+
+export async function fetchReceipts(userId: string): Promise<SavedReceipt[]> {
+  const { data } = await api.get<SavedReceipt[]>('/receipts', {
+    headers: userHeaders(userId),
+  });
+  return data;
+}
+
+export async function fetchReceiptAnalytics(userId: string): Promise<ReceiptAnalytics> {
+  const { data } = await api.get<ReceiptAnalytics>('/receipts/analytics', {
+    headers: userHeaders(userId),
+  });
+  return data;
+}
+
+export async function deleteReceipt(receiptId: string, userId: string): Promise<void> {
+  await api.delete(`/receipts/${encodeURIComponent(receiptId)}`, {
+    headers: userHeaders(userId),
+  });
+}

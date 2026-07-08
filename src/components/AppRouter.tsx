@@ -7,6 +7,7 @@ import { SearchPage } from '../pages/SearchPage';
 import { ProductPage } from '../pages/ProductPage';
 import { DealsPage } from '../pages/DealsPage';
 import { BasketPage } from '../pages/BasketPage';
+import { ReceiptPage } from '../pages/ReceiptPage';
 
 const AppRouter: React.FC = () => {
   return (
@@ -19,6 +20,7 @@ const AppRouter: React.FC = () => {
           <Route path="product/:id" element={<ProductPage />} />
           <Route path="deals" element={<DealsPage />} />
           <Route path="basket" element={<BasketPage />} />
+          <Route path="receipts" element={<ReceiptPage />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

@@ -4,6 +4,7 @@ import { AppBar, Toolbar, Typography, Button, IconButton, Badge } from '@mui/mat
 import SearchIcon from '@mui/icons-material/Search';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import HomeIcon from '@mui/icons-material/Home';
 import { useCountry } from '../context/CountryContext';
 import { useBasketStore } from '../store/basketStore';
@@ -28,6 +29,9 @@ export const PagesNavBar: React.FC = () => {
         </Button>
         <Button color="inherit" startIcon={<LocalOfferIcon />} onClick={() => navigate(`${base}/deals`)}>
           Aanbiedingen
+        </Button>
+        <Button color="inherit" startIcon={<ReceiptLongIcon />} onClick={() => navigate(`${base}/receipts`)}>
+          Bonnen
         </Button>
         <IconButton color="inherit" onClick={() => navigate(`${base}/basket`)}>
           <Badge badgeContent={basketCount} color="secondary">
