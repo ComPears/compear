@@ -15,7 +15,9 @@ import { ProductGroupList } from './ProductGroupList';
 import {
   SortMode,
   buildSuggestions,
+  CATEGORY_SEARCH_SEEDS,
   extractFilterChips,
+  filterByCategory,
   filterByChip,
   groupProducts,
   sortGroups,
@@ -60,15 +62,11 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
   const { country } = useCountry();
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const buildSearchQuery = useCallback((): string => {
+  const resolveSearchQuery = useCallback((): string | null => {
     const term = searchTerm.trim();
-    if (selectedCategory !== 'All' && term) {
-      return `${term} ${selectedCategory}`;
-    }
-    if (selectedCategory !== 'All') {
-      return selectedCategory;
-    }
-    return term;
+    if (term.length >= 2) return term;
+    if (selectedCategory !== 'All') return CATEGORY_SEARCH_SEEDS[selectedCategory];
+    return null;
   }, [searchTerm, selectedCategory]);
 
   const performSearch = useCallback(async () => {
@@ -76,10 +74,8 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
       abortControllerRef.current.abort();
     }
 
-    const query = buildSearchQuery();
-    const hasSearch = query.length > 2;
-
-    if (!hasSearch) {
+    const query = resolveSearchQuery();
+    if (!query) {
       if (searchTerm.trim().length > 0 && searchTerm.trim().length <= 2) {
         setError(t('error.minCharacters'));
       }
@@ -96,9 +92,17 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
         try {
           const fetched = await fetchProducts({ search: query });
           if (abortControllerRef.current.signal.aborted) return;
-          setProducts(fetched);
+          let list = fetched;
+          if (selectedCategory !== 'All') {
+            list = filterByCategory(list, selectedCategory);
+          }
+          setProducts(list);
           setLegacyResults([]);
-          setError(fetched.length === 0 ? t('error.noProductsFound').replace('{searchTerm}', query) : null);
+          setError(
+            list.length === 0
+              ? t('error.noProductsFound').replace('{searchTerm}', searchTerm.trim() || query)
+              : null
+          );
         } catch (backendError) {
           console.warn('Backend search failed, falling back to static data:', backendError);
           setProducts([]);
@@ -118,9 +122,9 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
       }
     }
 
-    async function loadLegacyResults(query: string) {
+    async function loadLegacyResults(legacyQuery: string) {
       const flatResults: SearchResultProduct[] = [];
-      const results = await findProductInSupermarkets(query);
+      const results = await findProductInSupermarkets(legacyQuery);
       if (abortControllerRef.current?.signal.aborted) return;
 
       Object.entries(results).forEach(([supermarketCode, legacyProducts]) => {
@@ -134,14 +138,14 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
       });
 
       if (flatResults.length === 0) {
-        setError(t('error.noProductsFound').replace('{searchTerm}', query));
+        setError(t('error.noProductsFound').replace('{searchTerm}', legacyQuery));
         setLegacyResults([]);
       } else {
         setLegacyResults(flatResults.sort((a, b) => a.p - b.p));
         setError(null);
       }
     }
-  }, [buildSearchQuery, country.code, searchTerm, t]);
+  }, [resolveSearchQuery, country.code, searchTerm, selectedCategory, t]);
 
   const filteredProducts = useMemo(() => {
     let list = products;

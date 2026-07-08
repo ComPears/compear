@@ -10,6 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 import { ProductCategory, CATEGORIES, getCategoryIcon } from '../services/categoryService';
+import { DEAL_CATEGORY_LABELS } from '../utils/productGrouping';
 
 interface CategoryFilterProps {
   selectedCategory: ProductCategory | 'All';
@@ -45,10 +46,10 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
             onCategoryChange(e.target.value as ProductCategory | 'All')
           }
         >
-          <MenuItem value="All">All Categories</MenuItem>
+          <MenuItem value="All">Alle categorieën</MenuItem>
           {categoriesToShow.map((category) => (
             <MenuItem key={category} value={category}>
-              {getCategoryIcon(category)} {category}
+              {getCategoryIcon(category)} {DEAL_CATEGORY_LABELS[category]}
             </MenuItem>
           ))}
         </Select>
@@ -59,11 +60,11 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
   return (
     <Box sx={{ mb: 3 }}>
       <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'medium' }}>
-        Filter by Category:
+        Categorie:
       </Typography>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
         <Chip
-          label="All"
+          label="Alle"
           onClick={() => handleCategoryClick('All')}
           color={selectedCategory === 'All' ? 'primary' : 'default'}
           variant={selectedCategory === 'All' ? 'filled' : 'outlined'}
@@ -72,7 +73,7 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
         {categoriesToShow.map((category) => (
           <Chip
             key={category}
-            label={`${getCategoryIcon(category)} ${category}`}
+            label={`${getCategoryIcon(category)} ${DEAL_CATEGORY_LABELS[category]}`}
             onClick={() => handleCategoryClick(category)}
             color={selectedCategory === category ? 'primary' : 'default'}
             variant={selectedCategory === category ? 'filled' : 'outlined'}
