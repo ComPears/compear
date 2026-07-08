@@ -1,19 +1,42 @@
 import emailjs from '@emailjs/browser';
 import { EMAILJS_CONFIG, isEmailJSConfigured } from '../config/emailjs';
 
-/**
- * Email Service for sending suggestions using EmailJS
- * Configuration is managed through environment variables
- */
-
 interface SuggestionData {
   name: string;
   email: string;
   suggestion: string;
 }
 
-// Get admin email from environment variables
 const ADMIN_EMAIL = process.env.REACT_APP_ADMIN_EMAIL || 'admin@compears.shop';
+const MIN_SUBMIT_INTERVAL_MS = 60_000;
+const MAX_SUGGESTION_LENGTH = 2000;
+const MAX_NAME_LENGTH = 100;
+const MAX_EMAIL_LENGTH = 254;
+
+let lastSubmitAt = 0;
+
+function validateSuggestionData(data: SuggestionData): void {
+  if (!data.suggestion.trim()) {
+    throw new Error('Suggestion is required');
+  }
+  if (data.suggestion.length > MAX_SUGGESTION_LENGTH) {
+    throw new Error('Suggestion is too long');
+  }
+  if (data.name.length > MAX_NAME_LENGTH) {
+    throw new Error('Name is too long');
+  }
+  if (data.email.length > MAX_EMAIL_LENGTH) {
+    throw new Error('Email is too long');
+  }
+}
+
+function assertSubmitAllowed(): void {
+  const now = Date.now();
+  if (now - lastSubmitAt < MIN_SUBMIT_INTERVAL_MS) {
+    throw new Error('Please wait before submitting another suggestion');
+  }
+  lastSubmitAt = now;
+}
 
 export const sendWithEmailJS = async (data: SuggestionData) => {
   if (!isEmailJSConfigured) {
@@ -22,12 +45,15 @@ export const sendWithEmailJS = async (data: SuggestionData) => {
     );
   }
 
+  validateSuggestionData(data);
+  assertSubmitAllowed();
+
   const templateParams = {
-    from_name: data.name || 'Anonymous',
-    from_email: data.email || 'No email provided',
-    message: data.suggestion,
+    from_name: data.name.trim() || 'Anonymous',
+    from_email: data.email.trim() || 'No email provided',
+    message: data.suggestion.trim(),
     to_email: ADMIN_EMAIL,
-    reply_to: data.email || 'noreply@compears.shop'
+    reply_to: data.email.trim() || 'noreply@compears.shop',
   };
 
   try {
@@ -37,18 +63,13 @@ export const sendWithEmailJS = async (data: SuggestionData) => {
       templateParams,
       EMAILJS_CONFIG.PUBLIC_KEY
     );
-    
-    console.log('Email sent successfully:', response);
+
     return response;
   } catch (error) {
     console.error('EmailJS error:', error);
     throw new Error('Failed to send email via EmailJS');
   }
 };
-
-// ========================================
-// MAIN EXPORT: Send suggestion using EmailJS
-// ========================================
 
 export const sendSuggestion = async (data: SuggestionData) => {
   if (!isEmailJSConfigured) {
@@ -57,10 +78,5 @@ export const sendSuggestion = async (data: SuggestionData) => {
     );
   }
 
-  try {
-    return await sendWithEmailJS(data);
-  } catch (error) {
-    console.error('Error sending suggestion:', error);
-    throw error;
-  }
-}; 
+  return sendWithEmailJS(data);
+};

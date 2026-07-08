@@ -1,7 +1,8 @@
 import { Grocery, SupermarketPrice, Supermarket } from '../types';
+import { fetchProducts } from '../api/client';
 import { findProductInSupermarkets } from './rawProductData';
+import { productToSupermarketPrice } from '../utils/productMapper';
 
-// Your existing supermarkets array with logos
 export const supermarkets: Supermarket[] = [
   {
     name: 'AH',
@@ -27,48 +28,96 @@ export const supermarkets: Supermarket[] = [
     id: '4',
     hasAPI: true,
   },
+  {
+    name: 'JUMBO',
+    logo: 'https://www.jumbo.com/favicon.ico',
+    id: '5',
+    hasAPI: true,
+  },
+  {
+    name: 'PLUS',
+    logo: 'https://www.plus.nl/favicon.ico',
+    id: '6',
+    hasAPI: true,
+  },
+  {
+    name: 'COOP',
+    logo: 'https://www.coop.nl/favicon.ico',
+    id: '7',
+    hasAPI: true,
+  },
 ];
 
-export const fetchPricesForGrocery = (grocery: Grocery): SupermarketPrice[] => {
-  let prices: SupermarketPrice[] = [];
-  // Search for the product in all supermarkets
-  if (grocery?.searchKeyword) {
-    const searchResults = findProductInSupermarkets(grocery?.searchKeyword);
-    
-    // Convert the search results to SupermarketPrice format
-    Object.entries(searchResults).forEach(([supermarketCode, products]) => {
-      if (products && products.length > 0) {
-        products.forEach((product) => {
-          prices.push({
-            supermarketName: supermarketCode.toUpperCase(),
-            price: product.p,
-            productName: product.n,  // Include the actual product name
-            size: product.s,         // Include the size information
-            unitPrice: calculateUnitPrice(product.p, product.s, grocery.unit),
-            onSale: product.o ? true : false,
-            regularPrice: product.o || undefined,
-            link: product.l
-          });
-        })
-      }
-    });
-    return prices;
+function mapStaticPrices(grocery: Grocery, searchKeyword: string): SupermarketPrice[] {
+  const prices: SupermarketPrice[] = [];
+  const searchResults = findProductInSupermarkets(searchKeyword);
+
+  Object.entries(searchResults).forEach(([supermarketCode, products]) => {
+    if (products && products.length > 0) {
+      products.forEach((product) => {
+        prices.push({
+          supermarketName: supermarketCode.toUpperCase(),
+          price: product.p,
+          productName: product.n,
+          size: product.s,
+          unitPrice: calculateUnitPrice(product.p, product.s, grocery.unit),
+          onSale: product.o ? true : false,
+          regularPrice: product.o || undefined,
+          link: product.l,
+        });
+      });
+    }
+  });
+
+  return prices;
+}
+
+/**
+ * Fetch prices for a grocery item from the backend API.
+ * Falls back to static JSON data when the backend is unavailable.
+ */
+export const fetchPricesForGrocery = async (
+  grocery: Grocery,
+  countryCode: string = 'nl'
+): Promise<SupermarketPrice[]> => {
+  if (!grocery?.searchKeyword) {
+    return [];
   }
-  return [];
+
+  if (countryCode !== 'nl') {
+    return mapStaticPrices(grocery, grocery.searchKeyword);
+  }
+
+  try {
+    const products = await fetchProducts({ search: grocery.searchKeyword });
+    if (products.length > 0) {
+      return products.map((product) => {
+        const mapped = productToSupermarketPrice(product, grocery.unit);
+        return {
+          ...mapped,
+          unitPrice:
+            calculateUnitPrice(product.effectivePrice, product.packageSize, grocery.unit) ??
+            mapped.unitPrice,
+        };
+      });
+    }
+  } catch (error) {
+    console.warn('Backend price fetch failed, falling back to static data:', error);
+  }
+
+  return mapStaticPrices(grocery, grocery.searchKeyword);
 };
 
-// Helper function to calculate unit price
-function calculateUnitPrice(price: number, sizeString: string, unit: string): number | undefined {
-  // Parse the size string to extract quantity and unit
+function calculateUnitPrice(
+  price: number,
+  sizeString: string,
+  unit: string
+): number | undefined {
   const sizeStr = sizeString.toLowerCase();
-  
-  // Extract numeric value
   const match = sizeStr.match(/(\d+(?:[.,]\d+)?)/);
   if (!match) return undefined;
-  
+
   const quantity = parseFloat(match[1].replace(',', '.'));
-  
-  // Determine the unit from the size string
   let sizeUnit = '';
   if (sizeStr.includes('kg')) {
     sizeUnit = 'kg';
@@ -79,23 +128,22 @@ function calculateUnitPrice(price: number, sizeString: string, unit: string): nu
   } else if (sizeStr.includes('ml')) {
     sizeUnit = 'ml';
   }
-  
-  // Calculate unit price based on the units
+
   if (unit === 'kg' || unit === 'gram') {
-    // Convert to price per kg
     if (sizeUnit === 'kg') {
       return price / quantity;
-    } else if (sizeUnit === 'g') {
+    }
+    if (sizeUnit === 'g') {
       return (price / quantity) * 1000;
     }
   } else if (unit === 'liter' || unit === 'ml') {
-    // Convert to price per liter
     if (sizeUnit === 'l') {
       return price / quantity;
-    } else if (sizeUnit === 'ml') {
+    }
+    if (sizeUnit === 'ml') {
       return (price / quantity) * 1000;
     }
   }
-  
+
   return undefined;
 }

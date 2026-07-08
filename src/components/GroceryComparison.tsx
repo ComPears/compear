@@ -28,11 +28,14 @@ import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import RouteIcon from '@mui/icons-material/Route';
 import CompareIcon from '@mui/icons-material/Compare';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { sanitizeProductLink } from '../utils/safeLink';
 import { Grocery, GroceryWithPrices, SupermarketPrice } from '../types';
 import { fetchPricesForGrocery, supermarkets } from '../services/supermarketService';
 import OptimalShoppingStrategy from './OptimalShoppingStrategy';
 import { useLanguage } from '../context/LanguageContext';
 import { useCountry } from '../context/CountryContext';
+import CategoryFilter from './CategoryFilter';
+import { ProductCategory, extractCategories, filterByCategory, getCategoryIcon } from '../services/categoryService';
 
 interface GroceryComparisonProps {
   groceries: Grocery[];
@@ -80,6 +83,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
   const [groceriesWithPrices, setGroceriesWithPrices] = useState<GroceryWithPrices[]>([]);
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [tabValue, setTabValue] = useState(0);
+  const [selectedCategory, setSelectedCategory] = useState<ProductCategory | 'All'>('All');
   const theme = useTheme();
   const { t } = useLanguage();
   const { country } = useCountry();
@@ -98,34 +102,53 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
   };
 
   useEffect(() => {
-    setGroceriesWithPrices(prevGroceriesWithPrices => {
+    const fetchPrices = async () => {
       const updatedGroceries: GroceryWithPrices[] = [];
+      const groceriesToFetch: Grocery[] = [];
       
-      // Process each grocery item that doesn't have prices yet
-      for (const grocery of groceries) {
-        const existingWithPrices = prevGroceriesWithPrices.find(g => g.id === grocery.id);
-        
-        if (existingWithPrices) {
-          updatedGroceries.unshift(existingWithPrices);
+      // Separate existing groceries from new ones
+      groceries.forEach(grocery => {
+        const existing = groceriesWithPrices.find(g => g.id === grocery.id);
+        if (existing) {
+          updatedGroceries.push(existing);
         } else {
-          // Set loading state for this grocery item
-          setLoading(prev => ({ ...prev, [grocery.id]: true }));
-          
-          try {
-            const prices = fetchPricesForGrocery(grocery);
-            updatedGroceries.unshift({ ...grocery, prices });
-          } catch (error) {
-            console.error(`Error fetching prices for ${grocery.name}:`, error);
-            updatedGroceries.unshift({ ...grocery, prices: [] });
-          } finally {
-            setLoading(prev => ({ ...prev, [grocery.id]: false }));
-          }
+          groceriesToFetch.push(grocery);
         }
-      }
+      });
       
-      return updatedGroceries;
-    });
-  }, [groceries]);
+      // Fetch prices for new groceries
+      const fetchPromises = groceriesToFetch.map(async (grocery) => {
+        setLoading(prev => ({ ...prev, [grocery.id]: true }));
+        
+        try {
+          const prices = await fetchPricesForGrocery(grocery, country.code);
+          // Determine category from prices if not set
+          const category = prices.length > 0 && prices[0].category 
+            ? prices[0].category 
+            : grocery.category;
+          
+          return { 
+            ...grocery, 
+            prices,
+            category,
+          };
+        } catch (error) {
+          console.error(`Error fetching prices for ${grocery.name}:`, error);
+          return { ...grocery, prices: [] };
+        } finally {
+          setLoading(prev => ({ ...prev, [grocery.id]: false }));
+        }
+      });
+      
+      const fetchedGroceries = await Promise.all(fetchPromises);
+      updatedGroceries.push(...fetchedGroceries);
+      
+      setGroceriesWithPrices(updatedGroceries);
+    };
+
+    fetchPrices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groceries, country.code]);
 
   // Notify parent component when groceries with prices change
   useEffect(() => {
@@ -244,6 +267,21 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
     return supermarketsWithAllProducts.length > 0 ? supermarketsWithAllProducts[0] : null;
   }, [supermarketSummaries, groceriesWithPrices]);
 
+  // Extract available categories from groceries
+  const availableCategories = useMemo(() => {
+    const categories = groceriesWithPrices
+      .map(g => g.category)
+      .concat(
+        groceriesWithPrices.flatMap(g => g.prices.map(p => p.category))
+      );
+    return extractCategories(categories);
+  }, [groceriesWithPrices]);
+
+  // Filter groceries by selected category
+  const filteredGroceries = useMemo(() => {
+    return filterByCategory(groceriesWithPrices, selectedCategory);
+  }, [groceriesWithPrices, selectedCategory]);
+
   return (
     <Box>
       {groceriesWithPrices.length > 0 && (
@@ -267,8 +305,18 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
       )}
 
       <TabPanel value={tabValue} index={0}>
+        {/* Category Filter */}
+        {groceriesWithPrices.length > 0 && (
+          <CategoryFilter
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+            availableCategories={availableCategories}
+            variant={isMobile ? 'dropdown' : 'chips'}
+          />
+        )}
+        
         {/* Individual Grocery Accordions */}
-        {groceriesWithPrices.map((grocery) => {
+        {filteredGroceries.map((grocery) => {
           const lowestPriceSupermarket = getLowestPriceSupermarket(grocery.prices);
           const isExpanded = expandedAccordions[grocery.id] || false;
           
@@ -287,9 +335,19 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                 <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', pr: 2 }}>
                   {/* Searched Item */}
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 'medium' }}>
-                      {grocery.name}
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 'medium' }}>
+                        {grocery.name}
+                      </Typography>
+                      {grocery.category && (
+                        <Chip
+                          label={`${getCategoryIcon(grocery.category)} ${grocery.category}`}
+                          size="small"
+                          variant="outlined"
+                          sx={{ fontSize: '0.7rem', height: 20 }}
+                        />
+                      )}
+                    </Box>
                   </Box>
                   {lowestPriceSupermarket && (
                     <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
@@ -385,9 +443,9 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                                   </Box>
                                 </TableCell>
                                 <TableCell>
-                                  {price.link ? (
+                                  {sanitizeProductLink(price.link) ? (
                                     <a 
-                                      href={price.link} 
+                                      href={sanitizeProductLink(price.link)} 
                                       target="_blank" 
                                       rel="noopener noreferrer" 
                                       style={{ 
@@ -504,9 +562,9 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                               </Box>
                               
                               <Box sx={{ mb: 1 }}>
-                                {price.link ? (
+                                {sanitizeProductLink(price.link) ? (
                                   <a 
-                                    href={price.link} 
+                                    href={sanitizeProductLink(price.link)} 
                                     target="_blank" 
                                     rel="noopener noreferrer" 
                                     style={{ 

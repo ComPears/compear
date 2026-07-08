@@ -25,3 +25,9 @@ yarn-error.log*
 
 # Local Netlify folder
 .netlify
+
+# Accidental / redundant tooling artifacts
+deno.lock
+/patches/
+*.orig
+*.patched

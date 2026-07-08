@@ -6,136 +6,156 @@ import {
   CircularProgress,
   IconButton,
   InputAdornment,
-  Alert
+  Alert,
+  Card,
+  CardContent,
+  Button,
+  Chip,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import { Grocery } from '../types';
 import { findProductInSupermarkets } from '../services/rawProductData';
+import { fetchProducts } from '../api/client';
+import { productToSearchResult, SearchResultProduct } from '../utils/productMapper';
 import { useLanguage } from '../context/LanguageContext';
+import { useCountry } from '../context/CountryContext';
+import CategoryFilter from './CategoryFilter';
+import { ProductCategory } from '../services/categoryService';
 
 interface ProductSearchProps {
   onAddGrocery: (grocery: Grocery) => void;
 }
 
-interface SupermarketProduct {
-  n: string; // name
-  l: string; // link
-  p: number; // price
-  s: string; // size/quantity
-  supermarketName: string;
-}
-
 const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
-  // State declarations
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<ProductCategory | 'All'>('All');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchResults, setSearchResults] = useState<SearchResultProduct[]>([]);
   const { t } = useLanguage();
-  
-  // Refs
+  const { country } = useCountry();
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Dedicated search function
+  const buildSearchQuery = useCallback((): string => {
+    const term = searchTerm.trim();
+    if (selectedCategory !== 'All' && term) {
+      return `${term} ${selectedCategory}`;
+    }
+    if (selectedCategory !== 'All') {
+      return selectedCategory;
+    }
+    return term;
+  }, [searchTerm, selectedCategory]);
+
   const performSearch = useCallback(async () => {
-    // Cancel any previous search
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
-    
-    if (searchTerm.trim().length > 2) {
-      // Reset previous errors
-      setError(null);
-      
-      // Create a new AbortController
-      abortControllerRef.current = new AbortController();
-      
-      // Search in supermarkets.json data
-      setLoading(true);
-      
-      try {
-        const results = await findProductInSupermarkets(searchTerm);
-        
-        // Check if the search was aborted
+
+    const query = buildSearchQuery();
+    const hasSearch = query.length > 2;
+
+    if (!hasSearch) {
+      if (searchTerm.trim().length > 0 && searchTerm.trim().length <= 2) {
+        setError(t('error.minCharacters'));
+      }
+      return;
+    }
+
+    setError(null);
+    abortControllerRef.current = new AbortController();
+    setLoading(true);
+
+    try {
+      let flatResults: SearchResultProduct[] = [];
+
+      if (country.code === 'nl') {
+        try {
+          const products = await fetchProducts({ search: query });
+          if (abortControllerRef.current.signal.aborted) return;
+          flatResults = products.map(productToSearchResult);
+        } catch (backendError) {
+          console.warn('Backend search failed, falling back to static data:', backendError);
+        }
+      }
+
+      if (flatResults.length === 0) {
+        const results = await findProductInSupermarkets(query);
         if (abortControllerRef.current.signal.aborted) return;
-        
-        const flatResults: SupermarketProduct[] = [];
-        
-        // Convert the results to a flat array with supermarket names
+
         Object.entries(results).forEach(([supermarketCode, products]) => {
-          
           const supermarket = supermarketCode.toUpperCase();
-          products.forEach(product => {
+          products.forEach((product) => {
             flatResults.push({
               ...product,
-              supermarketName: supermarket
+              supermarketName: supermarket,
             });
           });
         });
-        
-        // Check if no results were found
-        if (flatResults.length === 0) {
-          setError(t('error.noProductsFound').replace('{searchTerm}', searchTerm));
-        } else {
-        const cheapestProduct = flatResults.reduce((cheapest, current) => {
-          return current.p < cheapest.p ? current : cheapest;
-        }, flatResults[0]);
-
-        // Parse size information to determine unit
-        let unit: 'kg' | 'gram' | 'liter' | 'ml' | 'piece' = 'piece';
-        
-        const sizeStr = cheapestProduct.s.toLowerCase();
-        if (sizeStr.includes('kg')) {
-          unit = 'kg';
-        } else if (sizeStr.includes('g')) {
-          unit = 'gram';
-        } else if (sizeStr.includes('l') && !sizeStr.includes('ml')) {
-          unit = 'liter';
-        } else if (sizeStr.includes('ml')) {
-          unit = 'ml';
-        }
-        
-        // Try to extract numeric quantity
-        const match = sizeStr.match(/(\d+(?:\.\d+)?)/);
-        let quantity = 1;
-        if (match) {
-          quantity = parseFloat(match[1]);
-        }
-        
-        const grocery: Grocery = {
-          id: `supermarket-${Date.now()}`,
-          name: cheapestProduct.n,
-          unit: unit,
-          quantity: quantity,
-          variant: cheapestProduct.supermarketName,
-          searchKeyword: searchTerm,
-        };
-        onAddGrocery(grocery);
-        setSearchTerm('');
-        }
-      } catch (error) {
-        // Ignore aborted requests
-        if (abortControllerRef.current?.signal.aborted) return;
-        
-        console.error('Error searching for products:', error);
-        setError(t('error.searchFailed'));
-      } finally {
-        // Update loading state only if not aborted
-        if (!abortControllerRef.current?.signal.aborted) {
-          setLoading(false);
-        }
       }
-    } else if (searchTerm.trim().length > 0 && searchTerm.trim().length <= 2) {
-      setError(t('error.minCharacters'));
-    }
-  }, [onAddGrocery, searchTerm, t]);
 
-  // Handle search when user presses Enter
-  const handleSearchSubmit = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      performSearch();
+      if (flatResults.length === 0) {
+        setError(t('error.noProductsFound').replace('{searchTerm}', query));
+        setSearchResults([]);
+      } else {
+        setSearchResults(flatResults.sort((a, b) => a.p - b.p));
+        setError(null);
+      }
+    } catch (searchError) {
+      if (abortControllerRef.current?.signal.aborted) return;
+      console.error('Error searching for products:', searchError);
+      setError(t('error.searchFailed'));
+    } finally {
+      if (!abortControllerRef.current?.signal.aborted) {
+        setLoading(false);
+      }
     }
-  }, [performSearch]);
+  }, [buildSearchQuery, country.code, searchTerm, t]);
+
+  const handleSearchSubmit = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        performSearch();
+      }
+    },
+    [performSearch]
+  );
+
+  const handleAddProduct = useCallback(
+    (product: SearchResultProduct) => {
+      let unit: 'kg' | 'gram' | 'liter' | 'ml' | 'piece' = 'piece';
+      const sizeStr = product.s.toLowerCase();
+
+      if (sizeStr.includes('kg')) {
+        unit = 'kg';
+      } else if (sizeStr.includes('g')) {
+        unit = 'gram';
+      } else if (sizeStr.includes('l') && !sizeStr.includes('ml')) {
+        unit = 'liter';
+      } else if (sizeStr.includes('ml')) {
+        unit = 'ml';
+      }
+
+      const match = sizeStr.match(/(\d+(?:\.\d+)?)/);
+      const quantity = match ? parseFloat(match[1]) : 1;
+
+      const grocery: Grocery = {
+        id: `supermarket-${Date.now()}-${Math.random()}`,
+        name: product.n,
+        unit,
+        quantity,
+        variant: product.supermarketName,
+        searchKeyword: product.n,
+      };
+
+      onAddGrocery(grocery);
+      setSearchResults([]);
+      setSearchTerm('');
+    },
+    [onAddGrocery]
+  );
 
   return (
     <>
@@ -143,11 +163,29 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
         <Typography variant="h6" sx={{ mb: 2 }}>
           {t('search.title')}
         </Typography>
-        
+
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontStyle: 'italic' }}>
-          💡 Product names are shown in Dutch as they appear in Dutch supermarkets. The interface language can be changed using the language switcher.
+          Product names are shown in Dutch as they appear in Dutch supermarkets. The interface
+          language can be changed using the language switcher.
         </Typography>
-        
+        <Typography variant="body2" color="primary" sx={{ mb: 2 }}>
+          Prices come from ComPears scraped supermarket data. Search by product name or category.
+        </Typography>
+
+        <CategoryFilter
+          selectedCategory={selectedCategory}
+          onCategoryChange={(category) => {
+            setSelectedCategory(category);
+            if (category !== 'All') {
+              setSearchTerm('');
+              setTimeout(() => performSearch(), 100);
+            } else {
+              setSearchResults([]);
+            }
+          }}
+          variant="chips"
+        />
+
         <TextField
           label={t('search.placeholder')}
           variant="outlined"
@@ -159,33 +197,72 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
             endAdornment: (
               <InputAdornment position="end">
                 {loading ? <CircularProgress color="inherit" size={20} /> : null}
-                <IconButton 
-                  onClick={performSearch}
-                  aria-label="search"
-                  disabled={loading}
-                >
+                <IconButton onClick={performSearch} aria-label="search" disabled={loading}>
                   <SearchIcon />
                 </IconButton>
               </InputAdornment>
-            )
+            ),
           }}
         />
-        
-        {/* Loading indicator that doesn't block results */}
+
         {loading && (
-          <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-            <CircularProgress size={16} sx={{ mr: 1 }} />
+          <Box sx={{ display: 'flex', alignItems: 'center', mt: 1, gap: 1 }}>
+            <CircularProgress size={16} />
             <Typography variant="caption" color="text.secondary">
               {t('search.searching')}
             </Typography>
           </Box>
         )}
-        
-        {/* Error message */}
+
         {error && (
           <Alert severity="warning" sx={{ mt: 2 }}>
             {error}
           </Alert>
+        )}
+
+        {searchResults.length > 0 && (
+          <Box sx={{ mt: 3 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 'medium', mb: 2 }}>
+              Search Results ({searchResults.length} found):
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {searchResults.map((product, index) => (
+                <Card key={`${product.n}-${product.supermarketName}-${index}`} variant="outlined">
+                  <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 'medium', mb: 0.5 }}>
+                          {product.n}
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+                          <Chip label={product.supermarketName} size="small" variant="outlined" />
+                          {product.category && (
+                            <Chip label={product.category} size="small" variant="outlined" color="primary" />
+                          )}
+                          <Typography variant="body2" color="text.secondary">
+                            {product.s}
+                          </Typography>
+                        </Box>
+                      </Box>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+                          €{product.p.toFixed(2)}
+                        </Typography>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          startIcon={<AddShoppingCartIcon />}
+                          onClick={() => handleAddProduct(product)}
+                        >
+                          Add
+                        </Button>
+                      </Box>
+                    </Box>
+                  </CardContent>
+                </Card>
+              ))}
+            </Box>
+          </Box>
         )}
       </Box>
     </>

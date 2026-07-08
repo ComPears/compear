@@ -19,27 +19,14 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import RouteIcon from '@mui/icons-material/Route';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import ShareIcon from '@mui/icons-material/Share';
-import { GroceryWithPrices, SupermarketPrice } from '../types';
+import { GroceryWithPrices } from '../types';
 import { supermarkets } from '../services/supermarketService';
 import { useLanguage } from '../context/LanguageContext';
 import { useCountry } from '../context/CountryContext';
+import { optimizeShoppingPlan, DEFAULT_TRIP_PENALTY_EUR } from '../utils/shoppingOptimizer';
 
 interface OptimalShoppingStrategyProps {
   groceriesWithPrices: GroceryWithPrices[];
-}
-
-// Represents one supermarket in the optimal shopping strategy
-interface SupermarketInStrategy {
-  name: string;
-  logo: string;
-  items: {
-    name: string;
-    price: number;
-    onSale: boolean;
-    regularPrice?: number;
-  }[];
-  totalPrice: number;
-  totalSavings: number;
 }
 
 const OptimalShoppingStrategy: React.FC<OptimalShoppingStrategyProps> = ({ groceriesWithPrices }) => {
@@ -63,119 +50,41 @@ const OptimalShoppingStrategy: React.FC<OptimalShoppingStrategyProps> = ({ groce
   const optimalStrategy = useMemo(() => {
     if (groceriesWithPrices.length === 0) return null;
 
-    // Store groceries by their optimal supermarket
-    const groceriesByOptimalStore: Record<string, {
-      grocery: GroceryWithPrices;
-      price: SupermarketPrice;
-    }[]> = {};
-
-    // For each grocery, find the cheapest supermarket
-    groceriesWithPrices.forEach(grocery => {
-      if (grocery.prices.length === 0) return;
-
-      // Find cheapest price for this grocery
-      const sortedPrices = [...grocery.prices].sort((a, b) => a.price - b.price);
-      const cheapestPrice = sortedPrices[0];
-      
-      // Add to the appropriate supermarket group
-      if (!groceriesByOptimalStore[cheapestPrice.supermarketName]) {
-        groceriesByOptimalStore[cheapestPrice.supermarketName] = [];
-      }
-      
-      groceriesByOptimalStore[cheapestPrice.supermarketName].push({
-        grocery,
-        price: cheapestPrice
-      });
-    });
-
-    // Calculate total price and savings for each supermarket
-    const supermarketsInStrategy: SupermarketInStrategy[] = [];
-    
-    Object.keys(groceriesByOptimalStore).forEach(supermarketName => {
-      const items = groceriesByOptimalStore[supermarketName];
-      let totalPrice = 0;
-      let totalSavings = 0;
-      
-      const formattedItems = items.map(item => {
-        const { grocery, price } = item;
-        totalPrice += price.price;
-        
-        // Calculate savings if on sale
-        if (price.onSale && price.regularPrice) {
-          totalSavings += price.regularPrice - price.price;
-        }
-        
-        return {
-          name: grocery.name,
+    const items = groceriesWithPrices
+      .filter((grocery) => grocery.prices.length > 0)
+      .map((grocery) => ({
+        name: grocery.name,
+        options: grocery.prices.map((price) => ({
+          store: price.supermarketName,
           price: price.price,
           onSale: price.onSale || false,
-          regularPrice: price.regularPrice
-        };
-      });
-      
-      supermarketsInStrategy.push({
-        name: supermarketName,
-        logo: getSupermarketLogo(supermarketName),
-        items: formattedItems,
-        totalPrice,
-        totalSavings
-      });
-    });
-    
-    // Sort supermarkets by number of items (most items first)
-    supermarketsInStrategy.sort((a, b) => b.items.length - a.items.length);
-    
-    // Calculate total price of the optimal strategy
-    const totalPrice = supermarketsInStrategy.reduce(
-      (sum, supermarket) => sum + supermarket.totalPrice, 
-      0
-    );
-    
-    const totalSavings = supermarketsInStrategy.reduce(
-      (sum, supermarket) => sum + supermarket.totalSavings, 
-      0
-    );
-    
-    // Calculate the price if buying everything at the cheapest single store
-    let cheapestSingleStorePrice = Infinity;
-    let cheapestSingleStoreName = '';
-    
-    // For each supermarket, calculate total price of all items
-    supermarkets.forEach(supermarket => {
-      let singleStorePrice = 0;
-      let canProvideAllItems = true;
-      
-      groceriesWithPrices.forEach(grocery => {
-        const price = grocery.prices.find(p => p.supermarketName === supermarket.name);
-        if (price) {
-          singleStorePrice += price.price;
-        } else {
-          canProvideAllItems = false;
-        }
-      });
-      
-      if (canProvideAllItems && singleStorePrice < cheapestSingleStorePrice) {
-        cheapestSingleStorePrice = singleStorePrice;
-        cheapestSingleStoreName = supermarket.name;
-      }
-    });
-    
-    // If no single store can provide all items, use the total price as a fallback
-    if (cheapestSingleStorePrice === Infinity) {
-      cheapestSingleStorePrice = totalPrice;
-      cheapestSingleStoreName = 'any single store';
-    }
-    
-    // Calculate savings compared to single store approach
-    const savings = cheapestSingleStorePrice - totalPrice;
-    
+          regularPrice: price.regularPrice,
+        })),
+      }));
+
+    const plan = optimizeShoppingPlan(items, DEFAULT_TRIP_PENALTY_EUR);
+    if (!plan) return null;
+
+    const supermarketsInStrategy = plan.stores
+      .map((storePlan) => ({
+        name: storePlan.store,
+        logo: getSupermarketLogo(storePlan.store),
+        items: storePlan.items,
+        totalPrice: storePlan.totalPrice,
+        totalSavings: storePlan.totalSavings,
+      }))
+      .sort((a, b) => b.items.length - a.items.length);
+
     return {
       supermarkets: supermarketsInStrategy,
-      totalPrice,
-      totalSavings,
-      singleStorePrice: cheapestSingleStorePrice,
-      cheapestSingleStoreName,
-      savings
+      totalPrice: plan.totalPrice,
+      tripPenalty: plan.tripPenalty,
+      grandTotal: plan.grandTotal,
+      totalSavings: supermarketsInStrategy.reduce((sum, s) => sum + s.totalSavings, 0),
+      singleStorePrice: plan.singleStorePrice ?? plan.grandTotal,
+      cheapestSingleStoreName: plan.singleStoreName ?? 'any single store',
+      savings: plan.savingsVsSingleStore,
+      storeCount: plan.storeCount,
     };
   }, [groceriesWithPrices]);
 
@@ -201,7 +110,10 @@ const OptimalShoppingStrategy: React.FC<OptimalShoppingStrategyProps> = ({ groce
       shareText += `${t('optimal.subtotal').replace('{amount}', formatCurrency(supermarket.totalPrice))}\n\n`;
     });
     
-    shareText += `${t('optimal.total').replace('{amount}', formatCurrency(optimalStrategy.totalPrice))}\n`;
+    shareText += `${t('optimal.total').replace('{amount}', formatCurrency(optimalStrategy.grandTotal))}\n`;
+    if (optimalStrategy.tripPenalty > 0) {
+      shareText += `Trip cost (${optimalStrategy.storeCount} stores): ${formatCurrency(optimalStrategy.tripPenalty)}\n`;
+    }
     shareText += t(`optimal.madeWith.${country.code}`) || t('optimal.madeWith').replace('{country}', country.name);
     
     // Share using the Web Share API if available
@@ -326,8 +238,21 @@ const OptimalShoppingStrategy: React.FC<OptimalShoppingStrategyProps> = ({ groce
         
         <Box sx={{ mt: 3, p: 2, bgcolor: 'success.light', borderRadius: 2 }}>
           <Typography variant="subtitle1">
-            {t('optimal.totalCost').replace('{cost}', formatCurrency(optimalStrategy.totalPrice))}
+            Items total: {formatCurrency(optimalStrategy.totalPrice)}
           </Typography>
+          {optimalStrategy.tripPenalty > 0 && (
+            <Typography variant="body2" color="text.secondary">
+              Extra store visits ({optimalStrategy.storeCount} stores): {formatCurrency(optimalStrategy.tripPenalty)}
+            </Typography>
+          )}
+          <Typography variant="subtitle1" sx={{ mt: 1 }}>
+            {t('optimal.totalCost').replace('{cost}', formatCurrency(optimalStrategy.grandTotal))}
+          </Typography>
+          {optimalStrategy.savings > 0 && (
+            <Typography variant="body2" color="primary" sx={{ mt: 1 }}>
+              Saves {formatCurrency(optimalStrategy.savings)} vs buying all at {optimalStrategy.cheapestSingleStoreName}
+            </Typography>
+          )}
         </Box>
       </CardContent>
     </Card>

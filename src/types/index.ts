@@ -7,6 +7,7 @@ export interface Grocery {
   brand?: string;   // Optional brand information
   price?: number;
   searchKeyword?: string;
+  category?: string; // Product category (e.g., 'Fruits & Vegetables', 'Dairy', etc.)
 }
 
 export interface SupermarketPrice {
@@ -18,10 +19,12 @@ export interface SupermarketPrice {
   onSale?: boolean;
   regularPrice?: number;
   link?: string;
+  category?: string; // Product category
 }
 
 export interface GroceryWithPrices extends Grocery {
   prices: SupermarketPrice[];
+  fromAI?: boolean; // Indicates if prices were fetched via AI
 }
 
 export interface Supermarket {
