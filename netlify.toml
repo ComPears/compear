@@ -1,0 +1,23 @@
+[build]
+  command = "npm run build"
+  publish = "build"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[build.environment]
+  NODE_VERSION = "22"
+  REACT_APP_API_URL = "https://compear-backend.onrender.com"
+  ALLOWED_ORIGINS = "http://localhost:3000,http://localhost:8888,https://compears.shop"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' https://*.netlify.app https://api.emailjs.com http://localhost:4000 http://localhost:8888 https://compears.shop https://compear-backend.onrender.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+
+# OPENAI_API_KEY and ALLOWED_ORIGINS should be set in Netlify dashboard under Site settings > Environment variables

@@ -2,10 +2,14 @@ name: Deploy webapp
 
 on:
   push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read
-  pull-requests: write
 
 env:
   BRANCH_NAME: ${{ github.ref_name }}
@@ -13,6 +17,9 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: Repository Checkout
         uses: actions/checkout@v4
@@ -31,6 +38,7 @@ jobs:
 
       - name: Build project
         env:
+          REACT_APP_API_URL: https://compear-backend.onrender.com
           REACT_APP_EMAILJS_SERVICE_ID: ${{ secrets.EMAILJS_SERVICE_ID }}
           REACT_APP_EMAILJS_TEMPLATE_ID: ${{ secrets.EMAILJS_TEMPLATE_ID }}
           REACT_APP_EMAILJS_PUBLIC_KEY: ${{ secrets.EMAILJS_PUBLIC_KEY }}
@@ -41,6 +49,7 @@ jobs:
         run: |
           prod_flag=""
           if [ "$BRANCH_NAME" = "main" ]; then prod_flag="--prod"; fi
+
           netlify deploy \
             --dir build \
             --site ${{ secrets.NETLIFY_SITE_ID }} \
@@ -48,17 +57,17 @@ jobs:
             $prod_flag \
             --json \
             > deploy_output.json
-      
+
       - name: Generate Preview URL
         id: url_preview
-        if: ${{ env.BRANCH_NAME != 'main' }}
+        if: github.event_name == 'pull_request'
         run: |
           NETLIFY_PREVIEW_URL=$(jq -r '.deploy_url' deploy_output.json)
           echo "NETLIFY_PREVIEW_URL=$NETLIFY_PREVIEW_URL" >> "$GITHUB_OUTPUT"
 
       - name: Comment Preview URL on PR
         uses: actions/github-script@v7
-        if: ${{ env.BRANCH_NAME != 'main' }}
+        if: github.event_name == 'pull_request'
         env:
           NETLIFY_PREVIEW_URL: ${{ steps.url_preview.outputs.NETLIFY_PREVIEW_URL }}
         with:
