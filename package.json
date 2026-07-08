@@ -25,7 +25,6 @@
     "axios": "^1.9.0",
     "i18next": "^25.2.0",
     "i18next-browser-languagedetector": "^8.1.0",
-    "netlify-cli": "^23.13.0",
     "openai": "^4.20.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
@@ -41,8 +40,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "deploy": "netlify deploy --dir=build",
-    "deploy:prod": "netlify deploy --prod --dir=build",
+    "deploy": "npx netlify-cli deploy --dir=build",
+    "deploy:prod": "npx netlify-cli deploy --prod --dir=build",
     "postinstall": "node scripts/patch-schema-utils.js && node scripts/patch-fork-ts-checker-logger.js"
   },
   "eslintConfig": {
