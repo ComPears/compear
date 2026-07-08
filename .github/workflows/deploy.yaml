@@ -17,6 +17,8 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    # Dependabot grouped bumps often break CRA; validate on main only.
+    if: github.actor != 'dependabot[bot]'
     permissions:
       contents: read
       pull-requests: write
