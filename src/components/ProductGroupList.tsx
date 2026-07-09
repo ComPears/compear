@@ -32,10 +32,12 @@ function formatPrice(n: number): string {
 function StorePriceChip({
   product,
   isCheapest,
+  showSize,
   onClick,
 }: {
   product: Product;
   isCheapest: boolean;
+  showSize?: boolean;
   onClick: () => void;
 }) {
   const onSale = product.promoType != null && product.effectivePrice < product.originalPrice;
@@ -46,8 +48,13 @@ function StorePriceChip({
       color={isCheapest ? 'primary' : 'default'}
       onClick={onClick}
       label={
-        <Box component="span" sx={{ display: 'inline-flex', gap: 0.5, alignItems: 'center' }}>
+        <Box component="span" sx={{ display: 'inline-flex', gap: 0.5, alignItems: 'center', flexWrap: 'wrap' }}>
           <strong>{toSupermarketShortName(product.store)}</strong>
+          {showSize && product.packageSize && (
+            <Box component="span" sx={{ opacity: 0.85 }}>
+              {product.packageSize}
+            </Box>
+          )}
           <span>{formatPrice(product.effectivePrice)}</span>
           {onSale && (
             <Box component="span" sx={{ opacity: 0.75, textDecoration: 'line-through', ml: 0.25 }}>
@@ -145,8 +152,14 @@ export const ProductGroupList: React.FC<ProductGroupListProps> = ({
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       {groups.map((group) => {
         const isOpen = expanded[group.key] ?? false;
-        const hasMultiple = group.products.length > 1;
+        const offers = group.storeOffers;
+        const hasMultipleStores = offers.length > 1;
+        const hasMultipleSizes =
+          new Set(group.products.map((p) => p.packageSize.trim())).size > 1;
+        const hasExpandableDetails = group.products.length > offers.length;
+        const showExpand = hasMultipleStores && (hasExpandableDetails || hasMultipleSizes);
         const cheapestId = group.cheapest.id;
+        const showSizeOnChips = hasMultipleSizes;
 
         return (
           <Paper key={group.key} variant="outlined" sx={{ overflow: 'hidden' }}>
@@ -160,8 +173,11 @@ export const ProductGroupList: React.FC<ProductGroupListProps> = ({
                     {group.displayName}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {group.packageSize} · vanaf {formatPrice(group.cheapest.effectivePrice)}
-                    {hasMultiple && ` · ${group.products.length} winkels`}
+                    {group.packageSize && `${group.packageSize} · `}
+                    vanaf {formatPrice(group.cheapest.effectivePrice)}
+                    {hasMultipleStores
+                      ? ` · ${offers.length} winkels`
+                      : ` · ${toSupermarketShortName(group.cheapest.store)}`}
                   </Typography>
                 </Box>
                 <Button
@@ -171,7 +187,7 @@ export const ProductGroupList: React.FC<ProductGroupListProps> = ({
                 >
                   {addButtonLabel}
                 </Button>
-                {hasMultiple && (
+                {showExpand && (
                   <IconButton
                     size="small"
                     aria-label={isOpen ? 'Inklappen' : 'Uitklappen'}
@@ -185,11 +201,12 @@ export const ProductGroupList: React.FC<ProductGroupListProps> = ({
               </Box>
 
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 1 }}>
-                {group.products.map((product) => (
+                {offers.map((product) => (
                   <StorePriceChip
                     key={product.id}
                     product={product}
                     isCheapest={product.id === cheapestId}
+                    showSize={showSizeOnChips}
                     onClick={() => navigate(`/${country.code}/product/${product.id}`)}
                   />
                 ))}

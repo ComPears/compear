@@ -7,6 +7,8 @@ export interface ProductGroup {
   displayName: string;
   packageSize: string;
   products: Product[];
+  /** Cheapest offer per store (for chips) */
+  storeOffers: Product[];
   cheapest: Product;
   bestDeal?: Product;
 }
@@ -59,9 +61,69 @@ export function filterBySearch(products: Product[], query: string): Product[] {
 }
 
 export function groupKey(product: Product): string {
+  if (product.barcode) {
+    return `barcode:${product.barcode}`;
+  }
   const base = product.canonicalName?.trim() || product.productName.trim();
-  const size = product.packageSize?.trim() || '';
-  return `${base}::${size}`.toLowerCase();
+  return base.toLowerCase();
+}
+
+function titleCaseName(name: string): string {
+  return name
+    .trim()
+    .split(/\s+/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
+
+export function formatGroupDisplayName(products: Product[]): string {
+  const canonical = products.find((p) => p.canonicalName?.trim())?.canonicalName?.trim();
+  if (canonical) return titleCaseName(canonical);
+  return products[0]?.productName.trim() ?? '';
+}
+
+export function formatGroupSizeLabel(products: Product[]): string {
+  const sizes = Array.from(
+    new Set(products.map((p) => p.packageSize.trim()).filter(Boolean))
+  );
+  if (sizes.length === 0) return '';
+  if (sizes.length === 1) return sizes[0];
+  return sizes.join(' · ');
+}
+
+/** Keep the cheapest listing per supermarket within a group. */
+export function pickStoreOffers(products: Product[]): Product[] {
+  const byStore = new Map<string, Product>();
+  for (const item of products) {
+    const store = item.store;
+    const existing = byStore.get(store);
+    if (!existing || item.effectivePrice < existing.effectivePrice) {
+      byStore.set(store, item);
+    }
+  }
+  return Array.from(byStore.values()).sort(
+    (a, b) => a.effectivePrice - b.effectivePrice
+  );
+}
+
+function buildProductGroup(key: string, items: Product[]): ProductGroup {
+  const storeOffers = pickStoreOffers(items);
+  const sortedAll = [...items].sort((a, b) => a.effectivePrice - b.effectivePrice);
+  const cheapest = storeOffers[0] ?? sortedAll[0];
+  const bestDeal = [...items].sort(
+    (a, b) =>
+      (b.originalPrice - b.effectivePrice) - (a.originalPrice - a.effectivePrice)
+  )[0];
+
+  return {
+    key,
+    displayName: formatGroupDisplayName(items),
+    packageSize: formatGroupSizeLabel(items),
+    products: sortedAll,
+    storeOffers,
+    cheapest,
+    bestDeal,
+  };
 }
 
 export function groupProducts(products: Product[]): ProductGroup[] {
@@ -75,45 +137,14 @@ export function groupProducts(products: Product[]): ProductGroup[] {
   }
 
   return Array.from(map.entries())
-    .map(([key, items]) => {
-      const sorted = [...items].sort((a, b) => a.effectivePrice - b.effectivePrice);
-      const cheapest = sorted[0];
-      const bestDeal = [...items].sort(
-        (a, b) =>
-          (b.originalPrice - b.effectivePrice) - (a.originalPrice - a.effectivePrice)
-      )[0];
-      return {
-        key,
-        displayName: cheapest.productName,
-        packageSize: cheapest.packageSize,
-        products: sorted,
-        cheapest,
-        bestDeal,
-      };
-    })
+    .map(([key, items]) => buildProductGroup(key, items))
     .sort((a, b) => a.cheapest.effectivePrice - b.cheapest.effectivePrice);
 }
 
 /** Group barcode lookup results as one product across stores. */
 export function groupProductsByBarcode(products: Product[]): ProductGroup[] {
   if (products.length === 0) return [];
-
-  const sorted = [...products].sort((a, b) => a.effectivePrice - b.effectivePrice);
-  const cheapest = sorted[0];
-  const bestDeal = [...products].sort(
-    (a, b) => (b.originalPrice - b.effectivePrice) - (a.originalPrice - a.effectivePrice)
-  )[0];
-
-  return [
-    {
-      key: cheapest.barcode ?? 'barcode',
-      displayName: cheapest.productName,
-      packageSize: cheapest.packageSize,
-      products: sorted,
-      cheapest,
-      bestDeal,
-    },
-  ];
+  return [buildProductGroup(products[0].barcode ?? 'barcode', products)];
 }
 
 export function sortProducts(products: Product[], sort: SortMode, query = ''): Product[] {
