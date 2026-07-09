@@ -1,5 +1,5 @@
 import { Grocery, SupermarketPrice, Supermarket } from '../types';
-import { fetchCompare, fetchProducts, Product } from '../api/client';
+import { fetchCompare, fetchProducts, Product, ApiCountry } from '../api/client';
 import { productToSupermarketPrice } from '../utils/productMapper';
 import { filterBySearch } from '../utils/productGrouping';
 
@@ -48,30 +48,33 @@ export const supermarkets: Supermarket[] = [
   },
 ];
 
-async function resolveComparableProducts(grocery: Grocery): Promise<Product[]> {
+async function resolveComparableProducts(
+  grocery: Grocery,
+  country: ApiCountry
+): Promise<Product[]> {
   if (grocery.barcode) {
-    return fetchProducts({ barcode: grocery.barcode });
+    return fetchProducts({ barcode: grocery.barcode }, country);
   }
 
   if (grocery.identityKey) {
-    const compared = await fetchCompare(grocery.canonicalName ?? '', grocery.identityKey);
+    const compared = await fetchCompare(grocery.canonicalName ?? '', grocery.identityKey, country);
     if (compared.length > 0) return compared;
   }
 
   if (grocery.canonicalName) {
-    const compared = await fetchCompare(grocery.canonicalName);
+    const compared = await fetchCompare(grocery.canonicalName, undefined, country);
     if (compared.length > 0) return compared;
   }
 
   if (grocery.searchKeyword) {
-    const results = await fetchProducts({ search: grocery.searchKeyword });
+    const results = await fetchProducts({ search: grocery.searchKeyword }, country);
     const filtered = filterBySearch(results, grocery.searchKeyword);
     if (filtered.length > 0) return filtered;
 
     if (grocery.productId) {
       const picked = results.find((p) => p.id === grocery.productId);
       if (picked?.canonicalName) {
-        return fetchCompare(picked.canonicalName);
+        return fetchCompare(picked.canonicalName, picked.identityKey, country);
       }
       if (picked) return [picked];
     }
@@ -85,11 +88,8 @@ export const fetchPricesForGrocery = async (
   grocery: Grocery,
   countryCode: string = 'nl'
 ): Promise<SupermarketPrice[]> => {
-  if (countryCode !== 'nl') {
-    return [];
-  }
-
-  const products = await resolveComparableProducts(grocery);
+  const country = countryCode as ApiCountry;
+  const products = await resolveComparableProducts(grocery, country);
   return products.map((product) => {
     const mapped = productToSupermarketPrice(product, grocery.unit);
     return {

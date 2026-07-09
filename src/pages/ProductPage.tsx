@@ -28,15 +28,15 @@ export const ProductPage: React.FC = () => {
   useEffect(() => {
     if (!id) return;
     setLoading(true);
-    fetchProduct(id)
+    fetchProduct(id, country.code)
       .then((p) => {
         setProduct(p);
-        return fetchCompare(p.canonicalName);
+        return fetchCompare(p.canonicalName, p.identityKey, country.code);
       })
       .then((list) => setCompareList(list))
       .catch(() => setProduct(null))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, country.code]);
 
   const formatPrice = (n: number) => `€${n.toFixed(2)}`;
 

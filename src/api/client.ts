@@ -3,6 +3,15 @@ import { ProductCategory } from '../services/categoryService';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
+export type ApiCountry = 'nl' | 'de' | 'uk';
+
+function withCountry<T extends Record<string, unknown> | undefined>(
+  params: T,
+  country: ApiCountry = 'nl'
+): Record<string, unknown> {
+  return { ...(params ?? {}), country };
+}
+
 export const api = axios.create({
   baseURL: API_BASE,
   timeout: 15000,
@@ -40,29 +49,34 @@ export interface StoreInfo {
   productCount?: number;
 }
 
-export async function fetchProducts(params?: {
-  search?: string;
-  store?: string;
-  category?: string;
-  barcode?: string;
-  labels?: string;
-}): Promise<Product[]> {
-  const { data } = await api.get<Product[]>('/products', { params });
+export async function fetchProducts(
+  params?: {
+    search?: string;
+    store?: string;
+    category?: string;
+    barcode?: string;
+    labels?: string;
+  },
+  country: ApiCountry = 'nl'
+): Promise<Product[]> {
+  const { data } = await api.get<Product[]>('/products', { params: withCountry(params, country) });
   return data;
 }
 
-export async function fetchProduct(id: string): Promise<Product> {
-  const { data } = await api.get<Product>(`/products/${encodeURIComponent(id)}`);
+export async function fetchProduct(id: string, country: ApiCountry = 'nl'): Promise<Product> {
+  const { data } = await api.get<Product>(`/products/${encodeURIComponent(id)}`, {
+    params: withCountry(undefined, country),
+  });
   return data;
 }
 
-export async function fetchStores(): Promise<StoreInfo[]> {
-  const { data } = await api.get<StoreInfo[]>('/stores');
+export async function fetchStores(country: ApiCountry = 'nl'): Promise<StoreInfo[]> {
+  const { data } = await api.get<StoreInfo[]>('/stores', { params: withCountry(undefined, country) });
   return data;
 }
 
-export async function fetchDeals(): Promise<Product[]> {
-  const { data } = await api.get<Product[]>('/deals');
+export async function fetchDeals(country: ApiCountry = 'nl'): Promise<Product[]> {
+  const { data } = await api.get<Product[]>('/deals', { params: withCountry(undefined, country) });
   return data;
 }
 
@@ -90,16 +104,17 @@ export interface DealsDigest {
   }>;
 }
 
-export async function fetchDealsDigest(): Promise<DealsDigest> {
-  const { data } = await api.get<DealsDigest>('/deals/digest');
+export async function fetchDealsDigest(country: ApiCountry = 'nl'): Promise<DealsDigest> {
+  const { data } = await api.get<DealsDigest>('/deals/digest', { params: withCountry(undefined, country) });
   return data;
 }
 
 export async function fetchCompare(
   canonicalName: string,
-  identityKey?: string | null
+  identityKey?: string | null,
+  country: ApiCountry = 'nl'
 ): Promise<Product[]> {
-  const params = identityKey ? { identityKey } : undefined;
+  const params = withCountry(identityKey ? { identityKey } : undefined, country);
   const { data } = await api.get<Product[]>(
     `/compare/${encodeURIComponent(canonicalName)}`,
     { params }

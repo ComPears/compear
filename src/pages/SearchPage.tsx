@@ -64,13 +64,13 @@ export const SearchPage: React.FC = () => {
 
   useEffect(() => {
     let cancelled = false;
-    fetchStores().then((data) => {
+    fetchStores(country.code).then((data) => {
       if (!cancelled) setStores(data);
     });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [country.code]);
 
   useEffect(() => {
     if (!country.available) return;
@@ -92,7 +92,7 @@ export const SearchPage: React.FC = () => {
     if (storeFilter) params.store = storeFilter;
     if (dietaryLabels.length > 0) params.labels = dietaryLabels.join(',');
 
-    fetchProducts(params)
+    fetchProducts(params, country.code)
       .then((data) => {
         let list = data;
         if (dealsOnly) {
@@ -108,7 +108,7 @@ export const SearchPage: React.FC = () => {
         setSuggestionPool([]);
       })
       .finally(() => setLoading(false));
-  }, [debouncedQuery, storeFilter, dealsOnly, country.available, barcodeQuery, dietaryLabels]);
+  }, [debouncedQuery, storeFilter, dealsOnly, country.available, country.code, barcodeQuery, dietaryLabels]);
 
   const handleBarcodeDetected = useCallback(
     (barcode: string) => {
@@ -123,7 +123,7 @@ export const SearchPage: React.FC = () => {
       if (storeFilter) params.store = storeFilter;
       if (dietaryLabels.length > 0) params.labels = dietaryLabels.join(',');
 
-      fetchProducts(params)
+      fetchProducts(params, country.code)
         .then((data) => {
           let list = data;
           if (dealsOnly) {

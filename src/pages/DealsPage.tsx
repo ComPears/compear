@@ -44,7 +44,11 @@ export const DealsPage: React.FC = () => {
   const debouncedQuery = useDebouncedValue(query, 300);
 
   useEffect(() => {
-    Promise.all([fetchDeals(), fetchDealsDigest()])
+    if (!country.available) {
+      setLoading(false);
+      return;
+    }
+    Promise.all([fetchDeals(country.code), fetchDealsDigest(country.code)])
       .then(([deals, weeklyDigest]) => {
         setAllDeals(deals);
         setDigest(weeklyDigest);
@@ -54,7 +58,7 @@ export const DealsPage: React.FC = () => {
         setDigest(null);
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [country.available, country.code]);
 
   useEffect(() => {
     setActiveChips([]);

@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Typography, CircularProgress, Alert, Chip } from '@mui/material';
 import { Grocery } from '../types';
-import { fetchProducts, Product } from '../api/client';
+import { fetchProducts, Product, ApiCountry } from '../api/client';
 import { useLanguage } from '../context/LanguageContext';
+import { useCountry } from '../context/CountryContext';
 import { productToGrocery } from '../utils/groceryMapper';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { ProductSearchBar } from './ProductSearchBar';
@@ -38,6 +39,8 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
   const [barcodeQuery, setBarcodeQuery] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
   const { t } = useLanguage();
+  const { country } = useCountry();
+  const apiCountry = country.code as ApiCountry;
   const abortControllerRef = useRef<AbortController | null>(null);
   const debouncedQuery = useDebouncedValue(searchTerm, 350);
 
@@ -73,7 +76,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
     setActiveChips([]);
     setError(null);
 
-    fetchProducts({ search: term })
+    fetchProducts({ search: term }, apiCountry)
       .then((fetched) => {
         if (controller.signal.aborted) return;
         const filtered = filterBySearch(fetched, term);
@@ -94,7 +97,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
       });
 
     return () => controller.abort();
-  }, [debouncedQuery, barcodeQuery, t]);
+  }, [debouncedQuery, barcodeQuery, t, apiCountry]);
 
   const handleBarcodeDetected = useCallback(
     (barcode: string) => {
@@ -103,7 +106,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
       setSearched(true);
       setLoading(true);
 
-      fetchProducts({ barcode })
+      fetchProducts({ barcode }, apiCountry)
         .then((data) => {
           setProducts(data);
           setError(
