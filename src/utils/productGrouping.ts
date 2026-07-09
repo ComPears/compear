@@ -94,6 +94,28 @@ export function groupProducts(products: Product[]): ProductGroup[] {
     .sort((a, b) => a.cheapest.effectivePrice - b.cheapest.effectivePrice);
 }
 
+/** Group barcode lookup results as one product across stores. */
+export function groupProductsByBarcode(products: Product[]): ProductGroup[] {
+  if (products.length === 0) return [];
+
+  const sorted = [...products].sort((a, b) => a.effectivePrice - b.effectivePrice);
+  const cheapest = sorted[0];
+  const bestDeal = [...products].sort(
+    (a, b) => (b.originalPrice - b.effectivePrice) - (a.originalPrice - a.effectivePrice)
+  )[0];
+
+  return [
+    {
+      key: cheapest.barcode ?? 'barcode',
+      displayName: cheapest.productName,
+      packageSize: cheapest.packageSize,
+      products: sorted,
+      cheapest,
+      bestDeal,
+    },
+  ];
+}
+
 export function sortProducts(products: Product[], sort: SortMode, query = ''): Product[] {
   const list = [...products];
   switch (sort) {

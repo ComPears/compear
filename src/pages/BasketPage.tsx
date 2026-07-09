@@ -18,7 +18,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { useBasketStore, BasketItem } from '../store/basketStore';
-import { PagesNavBar } from '../components/PagesNavBar';
+import AppNavBar from '../components/AppNavBar';
 
 function formatPrice(n: number) {
   return `€${n.toFixed(2)}`;
@@ -57,7 +57,7 @@ export const BasketPage: React.FC = () => {
   if (items.length === 0) {
     return (
       <>
-        <PagesNavBar />
+        <AppNavBar />
         <Container maxWidth="md" sx={{ py: 4, bgcolor: 'background.default' }}>
           <Typography variant="h5" gutterBottom fontWeight={600}>
             Winkelmand
@@ -70,7 +70,7 @@ export const BasketPage: React.FC = () => {
 
   return (
     <>
-      <PagesNavBar />
+      <AppNavBar />
       <Container maxWidth="md" sx={{ py: 3, bgcolor: 'background.default' }}>
         <Typography variant="h5" gutterBottom fontWeight={600}>
           Winkelmand

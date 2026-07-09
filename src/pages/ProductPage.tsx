@@ -13,7 +13,7 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { fetchProduct, fetchCompare, Product } from '../api/client';
 import { useCountry } from '../context/CountryContext';
-import { PagesNavBar } from '../components/PagesNavBar';
+import AppNavBar from '../components/AppNavBar';
 import { useBasketStore } from '../store/basketStore';
 
 export const ProductPage: React.FC = () => {
@@ -43,7 +43,7 @@ export const ProductPage: React.FC = () => {
   if (loading) {
     return (
       <>
-        <PagesNavBar />
+        <AppNavBar />
         <Container maxWidth="md" sx={{ py: 4, textAlign: 'center' }}>
           <CircularProgress />
         </Container>
@@ -54,7 +54,7 @@ export const ProductPage: React.FC = () => {
   if (!product) {
     return (
       <>
-        <PagesNavBar />
+        <AppNavBar />
         <Container maxWidth="md" sx={{ py: 4 }}>
           <Typography>Product niet gevonden.</Typography>
           <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(`/${country.code}/search`)}>
@@ -70,7 +70,7 @@ export const ProductPage: React.FC = () => {
 
   return (
     <>
-      <PagesNavBar />
+      <AppNavBar />
       <Container maxWidth="md" sx={{ py: 3, bgcolor: 'background.default' }}>
         <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} sx={{ mb: 2 }} size="small">
           Terug

@@ -4,6 +4,7 @@ import { Translations } from '../context/LanguageContext';
 const en: Translations = {
   // App Header
   'app.title': 'ComPear',
+  'app.compareHeading': 'Compare your groceries',
   'app.clearAll': 'Clear All',
   'app.comingSoon': 'Coming Soon',
   'app.weWillBeAvailable': 'We will be available in {country} soon!',
@@ -16,6 +17,17 @@ const en: Translations = {
   'app.description.nl': 'Add grocery items to compare prices across Dutch supermarkets. Prices from supermarkets without APIs are estimated using advanced algorithms.',
   'app.description.uk': 'Add grocery items to compare prices across UK supermarkets. Prices from supermarkets without APIs are estimated using advanced algorithms.',
   'app.description.de': 'Add grocery items to compare prices across German supermarkets. Prices from supermarkets without APIs are estimated using advanced algorithms.',
+
+  // Navigation
+  'nav.home': 'Go to home',
+  'nav.search': 'Search',
+  'nav.deals': 'Deals',
+  'nav.receipts': 'Receipts',
+  'nav.switchToLocal': 'Switch to local language',
+  'nav.switchToEnglish': 'Switch to English',
+  'nav.suggestion': 'Share a suggestion',
+  'nav.openCheapest': 'Open cheapest supermarket dialog',
+  'nav.openBasket': 'Open basket',
   
   // Compare All Stores Tab
   'tabs.compareAllStores': 'Compare All Stores',
@@ -69,6 +81,7 @@ const en: Translations = {
   
   // Search Component
   'search.title': 'Search for Products',
+  'search.placeholderShort': 'Search products (e.g. halfvolle melk, eieren, pasta)',
   'search.placeholder': 'Search for products (e.g., vrije uitloop for free-range eggs, halfvolle melk for semi-skimmed milk)',
   'search.searching': 'Searching supermarkets...',
   'search.resultsFound': 'Found {count} products. Click on one to add to your list.',
@@ -81,6 +94,8 @@ const en: Translations = {
   'search.quantity': 'Quantity',
   'search.cancel': 'Cancel',
   'search.addToListButton': 'Add to List',
+  'search.addButton': 'Add',
+  'search.resultCount': '{groups} product groups · {results} results',
   'search.noProductsFound': 'No products found for "{term}".',
   'search.showDebug': 'Show Debug',
   'search.hideDebug': 'Hide Debug',
@@ -88,7 +103,7 @@ const en: Translations = {
   // Error messages
   'error.noProductsFound': 'No products found for "{searchTerm}". Please try a different search term.',
   'error.searchFailed': 'Search failed. Please try again.',
-  'error.minCharacters': 'Please enter at least 3 characters to search.',
+  'error.minCharacters': 'Please enter at least 2 characters to search.',
   
   // Optimal Strategy
   'optimal.title': 'Optimal Shopping Strategy',
@@ -123,6 +138,7 @@ const en: Translations = {
 const nl: Translations = {
   // App Header
   'app.title': 'ComPear',
+  'app.compareHeading': 'Vergelijk je boodschappen',
   'app.clearAll': 'Alles Wissen',
   'app.comingSoon': 'Binnenkort Beschikbaar',
   'app.weWillBeAvailable': 'We zijn binnenkort beschikbaar in {country}!',
@@ -135,6 +151,17 @@ const nl: Translations = {
   'app.description.nl': 'Voeg boodschappen toe om prijzen te vergelijken tussen verschillende Nederlandse supermarkten. Prijzen van supermarkten zonder API\'s worden geschat met geavanceerde algoritmen.',
   'app.description.uk': 'Voeg boodschappen toe om prijzen te vergelijken tussen verschillende Britse supermarkten. Prijzen van supermarkten zonder API\'s worden geschat met geavanceerde algoritmen.',
   'app.description.de': 'Voeg boodschappen toe om prijzen te vergelijken tussen verschillende Duitse supermarkten. Prijzen van supermarkten zonder API\'s worden geschat met geavanceerde algoritmen.',
+
+  // Navigation
+  'nav.home': 'Naar home',
+  'nav.search': 'Zoek',
+  'nav.deals': 'Aanbiedingen',
+  'nav.receipts': 'Bonnen',
+  'nav.switchToLocal': 'Schakel naar lokale taal',
+  'nav.switchToEnglish': 'Schakel naar Engels',
+  'nav.suggestion': 'Deel een suggestie',
+  'nav.openCheapest': 'Open goedkoopste supermarkt',
+  'nav.openBasket': 'Open mandje',
   
   // Compare All Stores Tab
   'tabs.compareAllStores': 'Vergelijk Alle Winkels',
@@ -188,6 +215,7 @@ const nl: Translations = {
   
   // Search Component
   'search.title': 'Zoek Producten',
+  'search.placeholderShort': 'Zoek producten (bijv. halfvolle melk, eieren, pasta)',
   'search.placeholder': 'Zoek naar producten (bijv. vrije uitloop voor scharreleieren, halfvolle melk)',
   'search.searching': 'Supermarkten doorzoeken...',
   'search.resultsFound': '{count} producten gevonden. Klik op een product om het aan je lijst toe te voegen.',
@@ -200,6 +228,8 @@ const nl: Translations = {
   'search.quantity': 'Hoeveelheid',
   'search.cancel': 'Annuleren',
   'search.addToListButton': 'Aan Lijst Toevoegen',
+  'search.addButton': 'Toevoegen',
+  'search.resultCount': '{groups} productgroepen · {results} resultaten',
   'search.noProductsFound': 'Geen producten gevonden voor "{term}".',
   'search.showDebug': 'Debug Tonen',
   'search.hideDebug': 'Debug Verbergen',
@@ -207,7 +237,7 @@ const nl: Translations = {
   // Error messages
   'error.noProductsFound': 'Geen producten gevonden voor "{searchTerm}". Probeer een andere zoekterm.',
   'error.searchFailed': 'Zoeken mislukt. Probeer het opnieuw.',
-  'error.minCharacters': 'Voer minimaal 3 tekens in om te zoeken.',
+  'error.minCharacters': 'Voer minimaal 2 tekens in om te zoeken.',
   
   // Optimal Strategy
   'optimal.title': 'Optimale Winkelstrategie',
@@ -242,6 +272,7 @@ const nl: Translations = {
 const de: Translations = {
   // App Header
   'app.title': 'ComPear',
+  'app.compareHeading': 'Lebensmittel vergleichen',
   'app.clearAll': 'Alles Löschen',
   'app.comingSoon': 'Demnächst Verfügbar',
   'app.weWillBeAvailable': 'Wir werden bald in {country} verfügbar sein!',
@@ -253,6 +284,17 @@ const de: Translations = {
   'app.description.nl': 'Fügen Sie Lebensmittel hinzu, um Preise in verschiedenen niederländischen Supermärkten zu vergleichen. Preise von Supermärkten ohne APIs werden mit fortschrittlichen Algorithmen geschätzt.',
   'app.description.uk': 'Fügen Sie Lebensmittel hinzu, um Preise in verschiedenen britischen Supermärkten zu vergleichen. Preise von Supermärkten ohne APIs werden mit fortschrittlichen Algorithmen geschätzt.',
   'app.description.de': 'Fügen Sie Lebensmittel hinzu, um Preise in verschiedenen deutschen Supermärkten zu vergleichen. Preise von Supermärkten ohne APIs werden mit fortschrittlichen Algorithmen geschätzt.',
+
+  // Navigation
+  'nav.home': 'Zur Startseite',
+  'nav.search': 'Suchen',
+  'nav.deals': 'Angebote',
+  'nav.receipts': 'Belege',
+  'nav.switchToLocal': 'Zur Landessprache wechseln',
+  'nav.switchToEnglish': 'Zu Englisch wechseln',
+  'nav.suggestion': 'Vorschlag teilen',
+  'nav.openCheapest': 'Günstigsten Supermarkt öffnen',
+  'nav.openBasket': 'Warenkorb öffnen',
   
   // Basic tabs
   'tabs.compareAllStores': 'Alle Geschäfte Vergleichen',
@@ -266,6 +308,7 @@ const de: Translations = {
   
   // Search Component
   'search.title': 'Produkte Suchen',
+  'search.placeholderShort': 'Produkte suchen (z.B. halfvolle melk, Eier, Pasta)',
   'search.placeholder': 'Nach Produkten suchen (z.B. vrije uitloop für Freilandeier, halfvolle melk für halbvolle Milch)',
   'search.searching': 'Supermärkte werden durchsucht...',
   'search.resultsFound': '{count} Produkte gefunden. Klicken Sie auf eines, um es Ihrer Liste hinzuzufügen.',
@@ -273,6 +316,9 @@ const de: Translations = {
   'search.supermarketProducts': 'Supermarkt-Produkte',
   'search.cancel': 'Abbrechen',
   'search.addToListButton': 'Zur Liste Hinzufügen',
+  'search.addButton': 'Hinzufügen',
+  'search.resultCount': '{groups} Produktgruppen · {results} Ergebnisse',
+  'error.minCharacters': 'Bitte mindestens 2 Zeichen eingeben.',
   
   // Optimal Strategy
   'optimal.madeWith': 'Erstellt mit ComPear - Vergleichen Sie Lebensmittelpreise in {country} Supermärkten!',

@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import { fetchDeals, fetchDealsDigest, Product, DealsDigest } from '../api/client';
 import { useCountry } from '../context/CountryContext';
-import { PagesNavBar } from '../components/PagesNavBar';
+import AppNavBar from '../components/AppNavBar';
 import { ProductSearchBar } from '../components/ProductSearchBar';
 import { ProductSortBar } from '../components/ProductSortBar';
 import { FilterChipBar } from '../components/FilterChipBar';
@@ -113,7 +113,7 @@ export const DealsPage: React.FC = () => {
 
   return (
     <>
-      <PagesNavBar />
+      <AppNavBar />
       <Container maxWidth="lg" sx={{ py: 3, bgcolor: 'background.default' }}>
         <Typography variant="h5" gutterBottom fontWeight={600}>
           Aanbiedingen

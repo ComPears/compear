@@ -1,81 +1,40 @@
 import React, { useState, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
   Box,
-  AppBar,
-  Toolbar,
   Paper,
   Button,
-  Badge,
-  MenuItem,
-  Select,
-  FormControl,
-  SelectChangeEvent,
-  Divider,
-  IconButton,
-  Tooltip,
 } from '@mui/material';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
-import LanguageIcon from '@mui/icons-material/Language';
-import TranslateIcon from '@mui/icons-material/Translate';
-import LightbulbIcon from '@mui/icons-material/Lightbulb';
-import SearchIcon from '@mui/icons-material/Search';
-import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import GroceryComparison from './components/GroceryComparison';
 import ProductSearch from './components/ProductSearch';
 import Footer from './components/Footer';
-import SuggestionDialog from './components/SuggestionDialog';
 import CheapestDialog from './components/CheapestDialog';
+import AppNavBar from './components/AppNavBar';
 import { Grocery, GroceryWithPrices } from './types';
-import { useCountry, CountryCode, countries } from './context/CountryContext';
-import { useLanguage, LanguageCode } from './context/LanguageContext';
-import { useTheme, useMediaQuery } from '@mui/material';
-import { useBasketStore } from './store/basketStore';
+import { useCountry } from './context/CountryContext';
+import { useLanguage } from './context/LanguageContext';
 
 const App: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { country, setCountry } = useCountry();
-  const { language, setLanguage, t } = useLanguage();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const basketCount = useBasketStore((s) => s.items.reduce((n, i) => n + i.quantity, 0));
+  const { t } = useLanguage();
   const [groceries, setGroceries] = useState<Grocery[]>([]);
   const [groceriesWithPrices, setGroceriesWithPrices] = useState<GroceryWithPrices[]>([]);
   const [triggerCheapestDialog, setTriggerCheapestDialog] = useState(false);
-  const [suggestionDialogOpen, setSuggestionDialogOpen] = useState(false);
+  const [searchResetKey, setSearchResetKey] = useState(0);
 
   const handleAddGrocery = (newGrocery: Grocery) => {
-    setGroceries(prevGroceries => [...prevGroceries, newGrocery]);
+    setGroceries((prevGroceries) => [...prevGroceries, newGrocery]);
   };
 
   const handleRemoveGrocery = (id: string) => {
-    setGroceries(prevGroceries => prevGroceries.filter(grocery => grocery.id !== id));
+    setGroceries((prevGroceries) => prevGroceries.filter((grocery) => grocery.id !== id));
   };
 
   const handleClearAll = () => {
     setGroceries([]);
-  };
-
-  const handleCountryChange = (event: SelectChangeEvent<string>) => {
-    const newCode = event.target.value as CountryCode;
-    setCountry(newCode);
-    const rest = location.pathname.replace(/^\/[a-z]{2}/, '') || '';
-    navigate(`/${newCode}${rest}`);
-  };
-  
-  const handleLanguageChange = () => {
-    // Toggle between English and the country's native language
-    const newLanguage: LanguageCode = language === 'en' ? 
-      (country.code as LanguageCode) : 'en';
-    
-    // Only switch if the language is supported
-    if (['en', 'nl', 'de'].includes(newLanguage)) {
-      setLanguage(newLanguage);
-    }
   };
 
   const handleCartClick = () => {
@@ -90,13 +49,9 @@ const App: React.FC = () => {
     setTriggerCheapestDialog(false);
   }, []);
 
-  const handleSuggestionClick = () => {
-    setSuggestionDialogOpen(true);
-  };
-
-  const handleSuggestionDialogClose = () => {
-    setSuggestionDialogOpen(false);
-  };
+  const handleHomeReset = useCallback(() => {
+    setSearchResetKey((k) => k + 1);
+  }, []);
 
   const handleGroceriesWithPricesChange = (newGroceriesWithPrices: GroceryWithPrices[]) => {
     setGroceriesWithPrices(newGroceriesWithPrices);
@@ -104,136 +59,13 @@ const App: React.FC = () => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: 'background.default' }}>
-      <AppBar position="static" elevation={0} sx={{ mb: 3, bgcolor: 'primary.main' }}>
-        <Toolbar sx={{ px: { xs: 1.5, sm: 3 }, py: 1, minHeight: { xs: 56, sm: 64 } }}>
-          <Typography
-            variant="h6"
-            component="div"
-            sx={{
-              flexGrow: 1,
-              fontSize: { xs: '1.1rem', sm: '1.35rem' },
-              fontWeight: 700,
-              letterSpacing: '-0.02em',
-              minWidth: 0,
-            }}
-          >
-            {isMobile ? 'ComPear' : t('app.title')}
-          </Typography>
-          {country.available && (
-            <>
-              <Button color="inherit" startIcon={<SearchIcon />} onClick={() => navigate(`/${country.code}/search`)} sx={{ minWidth: 'auto' }}>
-                {isMobile ? '' : 'Zoek'}
-              </Button>
-              <Button color="inherit" startIcon={<LocalOfferIcon />} onClick={() => navigate(`/${country.code}/deals`)} sx={{ minWidth: 'auto' }}>
-                {isMobile ? '' : 'Aanbiedingen'}
-              </Button>
-            </>
-          )}
-          <Box display="flex" alignItems="center" sx={{ gap: { xs: 0.5, sm: 1 } }}>
-            <FormControl sx={{ minWidth: { xs: 80, sm: 120 }, mr: { xs: 1, sm: 2 } }} size="small">
-              <Select
-                value={country.code}
-                onChange={handleCountryChange}
-                displayEmpty
-                sx={{ 
-                  color: 'white',
-                  '.MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.5)' },
-                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
-                  '.MuiSvgIcon-root': { color: 'white' }
-                }}
-                renderValue={(selected) => (
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <LanguageIcon sx={{ mr: { xs: 0.5, sm: 1 } }} />
-                    {isMobile 
-                      ? selected.toUpperCase() // Show country code on mobile (e.g., "NL")
-                      : (countries.find(c => c.code === selected)?.name || 'Country')
-                    }
-                  </Box>
-                )}
-              >
-                {countries.map((option) => (
-                  <MenuItem key={option.code} value={option.code}>
-                    {option.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            
-            <Tooltip title={language === 'en' ? 'Switch to local language' : 'Switch to English'}>
-              <IconButton
-                color="inherit"
-                onClick={handleLanguageChange}
-                sx={{ mr: { xs: 0.5, sm: 2 }, p: { xs: 1, sm: 1 } }}
-                size={isMobile ? "small" : "medium"}
-              >
-                <TranslateIcon fontSize={isMobile ? "small" : "medium"} />
-              </IconButton>
-            </Tooltip>
+      <AppNavBar
+        comparisonCount={groceries.length}
+        onCartClick={handleCartClick}
+        onClearAll={groceries.length > 0 ? handleClearAll : undefined}
+        onHomeReset={handleHomeReset}
+      />
 
-            <Tooltip title="Share a suggestion">
-              <IconButton
-                color="inherit"
-                onClick={handleSuggestionClick}
-                sx={{ mr: 2 }}
-                aria-label="Open suggestion dialog"
-                aria-haspopup="dialog"
-              >
-                <LightbulbIcon />
-              </IconButton>
-            </Tooltip>
-            
-            <Divider 
-              orientation="vertical" 
-              flexItem 
-              sx={{ 
-                bgcolor: 'rgba(255, 255, 255, 0.3)', 
-                mr: { xs: 0.5, sm: 2 },
-                display: { xs: 'none', sm: 'block' } // Hide divider on mobile to save space
-              }} 
-            />
-            
-            {country.available && (
-              <>
-                <IconButton
-                  color="inherit"
-                  onClick={handleCartClick}
-                  aria-label={groceries.length > 0 ? 'Open cheapest supermarket dialog' : 'Open basket'}
-                  sx={{ mr: { xs: 0.5, sm: 2 }, p: { xs: 1, sm: 1 } }}
-                  size={isMobile ? 'small' : 'medium'}
-                >
-                  <Badge badgeContent={groceries.length > 0 ? groceries.length : basketCount} color="secondary">
-                    <ShoppingCartIcon fontSize={isMobile ? 'small' : 'medium'} />
-                  </Badge>
-                </IconButton>
-                {groceries.length > 0 && (
-                  isMobile ? (
-                    <Tooltip title={t('app.clearAll')}>
-                      <IconButton
-                        color="inherit"
-                        onClick={handleClearAll}
-                        size="small"
-                        sx={{ p: 1 }}
-                      >
-                        <DeleteSweepIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  ) : (
-                    <Button 
-                      color="inherit" 
-                      startIcon={<DeleteSweepIcon />} 
-                      onClick={handleClearAll}
-                      sx={{ minWidth: 'auto' }}
-                    >
-                      {t('app.clearAll')}
-                    </Button>
-                  )
-                )}
-              </>
-            )}
-          </Box>
-        </Toolbar>
-      </AppBar>
-      
       <Container maxWidth="lg" sx={{ flex: '1 0 auto', pb: 4 }}>
         {!country.available ? (
           <Paper elevation={0} sx={{ p: 5, mb: 4, textAlign: 'center', borderRadius: 3 }} variant="outlined">
@@ -246,9 +78,9 @@ const App: React.FC = () => {
             <Typography variant="body1" color="text.secondary" paragraph sx={{ mt: 3 }}>
               {t('app.currentlyOnlyNetherlandsSupported')}
             </Typography>
-            <Button 
-              variant="contained" 
-              color="primary" 
+            <Button
+              variant="contained"
+              color="primary"
               onClick={() => setCountry('nl')}
               sx={{ mt: 2 }}
             >
@@ -259,30 +91,25 @@ const App: React.FC = () => {
           <>
             <Paper elevation={0} variant="outlined" sx={{ p: { xs: 2, sm: 3 }, mb: 4, borderRadius: 3 }}>
               <Typography variant="h5" component="h1" gutterBottom fontWeight={600}>
-                {t('app.title')}
+                {t('app.compareHeading')}
               </Typography>
-              <Typography variant="body1" color="text.secondary" paragraph sx={{ mb: 2 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5 }}>
                 {t(`app.description.${country.code}`) || t('app.description').replace('{country}', country.name)}
               </Typography>
-              <ProductSearch onAddGrocery={handleAddGrocery} />
+              <ProductSearch key={searchResetKey} onAddGrocery={handleAddGrocery} />
             </Paper>
-            
-            <GroceryComparison 
-              groceries={groceries} 
+
+            <GroceryComparison
+              groceries={groceries}
               onRemoveGrocery={handleRemoveGrocery}
               onGroceriesWithPricesChange={handleGroceriesWithPricesChange}
             />
           </>
         )}
       </Container>
-      
+
       <Footer />
-      
-      <SuggestionDialog 
-        open={suggestionDialogOpen}
-        onClose={handleSuggestionDialogClose}
-      />
-      
+
       <CheapestDialog
         open={triggerCheapestDialog}
         onClose={handleCheapestDialogHandled}

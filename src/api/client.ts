@@ -28,6 +28,7 @@ export interface Product {
   productUrl: string | null;
   scrapedAt: string;
   category?: ProductCategory;
+  barcode?: string | null;
 }
 
 export interface StoreInfo {
@@ -42,6 +43,7 @@ export async function fetchProducts(params?: {
   search?: string;
   store?: string;
   category?: string;
+  barcode?: string;
 }): Promise<Product[]> {
   const { data } = await api.get<Product[]>('/products', { params });
   return data;

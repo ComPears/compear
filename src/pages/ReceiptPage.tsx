@@ -26,7 +26,7 @@ import UploadFileIcon from '@mui/icons-material/UploadFile';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SavingsIcon from '@mui/icons-material/Savings';
 import StoreIcon from '@mui/icons-material/Store';
-import { PagesNavBar } from '../components/PagesNavBar';
+import AppNavBar from '../components/AppNavBar';
 import {
   deleteReceipt,
   fetchReceiptAnalytics,
@@ -281,7 +281,7 @@ export const ReceiptPage: React.FC = () => {
 
   return (
     <>
-      <PagesNavBar />
+      <AppNavBar />
       <Container maxWidth="md" sx={{ py: 3 }}>
         <Typography variant="h5" fontWeight={600} gutterBottom>
           Bonnen & besparingen

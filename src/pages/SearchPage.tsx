@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Container,
   Typography,
@@ -14,17 +14,19 @@ import {
 } from '@mui/material';
 import { fetchProducts, fetchStores, Product, StoreInfo } from '../api/client';
 import { useCountry } from '../context/CountryContext';
-import { PagesNavBar } from '../components/PagesNavBar';
+import AppNavBar from '../components/AppNavBar';
 import { ProductSearchBar } from '../components/ProductSearchBar';
 import { ProductSortBar } from '../components/ProductSortBar';
 import { FilterChipBar } from '../components/FilterChipBar';
 import { ProductGroupList } from '../components/ProductGroupList';
+import { BarcodeScanButton } from '../components/BarcodeScanner';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import {
   SortMode,
   buildSuggestions,
   filterBySearch,
   groupProducts,
+  groupProductsByBarcode,
   sortGroups,
 } from '../utils/productGrouping';
 import { extractFilterChips, filterByChip } from '../utils/filterChips';
@@ -41,6 +43,7 @@ export const SearchPage: React.FC = () => {
   const [stores, setStores] = useState<StoreInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [barcodeQuery, setBarcodeQuery] = useState<string | null>(null);
 
   const debouncedQuery = useDebouncedValue(query, 300);
 
@@ -56,6 +59,7 @@ export const SearchPage: React.FC = () => {
 
   useEffect(() => {
     if (!country.available) return;
+    if (barcodeQuery) return;
 
     const q = debouncedQuery.trim();
     if (q.length < 2 && !storeFilter) {
@@ -88,7 +92,41 @@ export const SearchPage: React.FC = () => {
         setSuggestionPool([]);
       })
       .finally(() => setLoading(false));
-  }, [debouncedQuery, storeFilter, dealsOnly, country.available]);
+  }, [debouncedQuery, storeFilter, dealsOnly, country.available, barcodeQuery]);
+
+  const handleBarcodeDetected = useCallback((barcode: string) => {
+    setBarcodeQuery(barcode);
+    setQuery('');
+    setActiveChips([]);
+    setSearched(true);
+    setLoading(true);
+
+    const params: { barcode: string; store?: string } = { barcode };
+    if (storeFilter) params.store = storeFilter;
+
+    fetchProducts(params)
+      .then((data) => {
+        let list = data;
+        if (dealsOnly) {
+          list = list.filter(
+            (p) => p.promoType != null && p.effectivePrice < p.originalPrice
+          );
+        }
+        setProducts(list);
+        setSuggestionPool(list);
+      })
+      .catch(() => {
+        setProducts([]);
+        setSuggestionPool([]);
+      })
+      .finally(() => setLoading(false));
+  }, [storeFilter, dealsOnly]);
+
+  const clearBarcodeSearch = () => {
+    setBarcodeQuery(null);
+    setProducts([]);
+    setSearched(false);
+  };
 
   useEffect(() => {
     setActiveChips([]);
@@ -112,10 +150,12 @@ export const SearchPage: React.FC = () => {
 
   const filterChips = useMemo(() => extractFilterChips(products), [products]);
 
-  const groups = useMemo(
-    () => sortGroups(groupProducts(filteredProducts), sort, debouncedQuery),
-    [filteredProducts, sort, debouncedQuery]
-  );
+  const groups = useMemo(() => {
+    const grouped = barcodeQuery
+      ? groupProductsByBarcode(filteredProducts)
+      : groupProducts(filteredProducts);
+    return sortGroups(grouped, sort, barcodeQuery ? '' : debouncedQuery);
+  }, [filteredProducts, sort, debouncedQuery, barcodeQuery]);
 
   const toggleChip = (chip: string) => {
     setActiveChips((prev) =>
@@ -125,23 +165,40 @@ export const SearchPage: React.FC = () => {
 
   return (
     <>
-      <PagesNavBar />
+      <AppNavBar />
       <Container maxWidth="lg" sx={{ py: 3, bgcolor: 'background.default' }}>
         <Typography variant="h5" gutterBottom fontWeight={600}>
           Zoek producten
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Vergelijk prijzen per product — niet eindeloos scrollen door losse kaarten.
+          Zoek op naam of scan de streepjescode op de verpakking om prijzen te vergelijken.
         </Typography>
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
-          <ProductSearchBar
-            value={query}
-            onChange={setQuery}
-            suggestions={suggestions}
-            loading={loading}
-            placeholder="Bijv. melk, eieren, pasta..."
-          />
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'flex-start' }}>
+            <Box sx={{ flex: 1, minWidth: 240 }}>
+              <ProductSearchBar
+                value={query}
+                onChange={(value) => {
+                  setQuery(value);
+                  if (barcodeQuery) setBarcodeQuery(null);
+                }}
+                suggestions={suggestions}
+                loading={loading}
+                placeholder="Bijv. melk, eieren, pasta..."
+              />
+            </Box>
+            <BarcodeScanButton onDetected={handleBarcodeDetected} disabled={loading} />
+          </Box>
+
+          {barcodeQuery && (
+            <Chip
+              label={`Barcode: ${barcodeQuery}`}
+              onDelete={clearBarcodeSearch}
+              color="primary"
+              variant="outlined"
+            />
+          )}
 
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
             <FormControl size="small" sx={{ minWidth: 180 }}>
@@ -191,7 +248,7 @@ export const SearchPage: React.FC = () => {
 
         {!loading && !searched && (
           <Typography color="text.secondary">
-            Typ minstens 2 letters om producten te vergelijken tussen winkels.
+            Typ minstens 2 letters of scan een streepjescode om producten te vergelijken.
           </Typography>
         )}
 
@@ -199,9 +256,11 @@ export const SearchPage: React.FC = () => {
           <ProductGroupList
             groups={groups}
             emptyMessage={
-              debouncedQuery.trim().length < 2 && !storeFilter
-                ? 'Typ minstens 2 letters om te zoeken.'
-                : 'Geen producten gevonden. Probeer een andere zoekterm of filter.'
+              barcodeQuery
+                ? `Geen producten gevonden voor barcode ${barcodeQuery}. Dekking is het sterkst bij Jumbo; andere winkels volgen.`
+                : debouncedQuery.trim().length < 2 && !storeFilter
+                  ? 'Typ minstens 2 letters om te zoeken.'
+                  : 'Geen producten gevonden. Probeer een andere zoekterm of filter.'
             }
           />
         )}

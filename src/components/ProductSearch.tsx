@@ -3,8 +3,6 @@ import { Box, Typography, CircularProgress, Alert, Chip } from '@mui/material';
 import { Grocery } from '../types';
 import { fetchProducts, Product } from '../api/client';
 import { useLanguage } from '../context/LanguageContext';
-import CategoryFilter from './CategoryFilter';
-import { ProductCategory, filterByCategory } from '../services/categoryService';
 import { ProductSearchBar } from './ProductSearchBar';
 import { ProductSortBar } from './ProductSortBar';
 import { FilterChipBar } from './FilterChipBar';
@@ -45,7 +43,6 @@ function productToGrocery(product: Product): Grocery {
 
 const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<ProductCategory | 'All'>('All');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -54,28 +51,14 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
   const { t } = useLanguage();
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const resolveSearchQuery = useCallback((): { search?: string; category?: string } | null => {
-    const term = searchTerm.trim();
-    if (term.length >= 2) {
-      return {
-        search: term,
-        category: selectedCategory !== 'All' ? selectedCategory : undefined,
-      };
-    }
-    if (selectedCategory !== 'All') {
-      return { category: selectedCategory };
-    }
-    return null;
-  }, [searchTerm, selectedCategory]);
-
   const performSearch = useCallback(async () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
 
-    const query = resolveSearchQuery();
-    if (!query) {
-      if (searchTerm.trim().length > 0 && searchTerm.trim().length <= 2) {
+    const term = searchTerm.trim();
+    if (term.length < 2) {
+      if (term.length > 0) {
         setError(t('error.minCharacters'));
       }
       return;
@@ -87,21 +70,13 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
     setActiveChips([]);
 
     try {
-      const fetched = await fetchProducts(query);
+      const fetched = await fetchProducts({ search: term });
       if (abortControllerRef.current.signal.aborted) return;
 
-      let list = fetched;
-      if (selectedCategory !== 'All' && query.search) {
-        list = filterByCategory(list, selectedCategory);
-      }
-
-      setProducts(list);
+      setProducts(fetched);
       setError(
-        list.length === 0
-          ? t('error.noProductsFound').replace(
-              '{searchTerm}',
-              searchTerm.trim() || selectedCategory
-            )
+        fetched.length === 0
+          ? t('error.noProductsFound').replace('{searchTerm}', term)
           : null
       );
     } catch (searchError) {
@@ -114,7 +89,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
         setLoading(false);
       }
     }
-  }, [resolveSearchQuery, searchTerm, selectedCategory, t]);
+  }, [searchTerm, t]);
 
   const filteredProducts = useMemo(() => {
     let list = products;
@@ -138,6 +113,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
       setProducts([]);
       setSearchTerm('');
       setActiveChips([]);
+      setError(null);
     },
     [onAddGrocery]
   );
@@ -149,40 +125,16 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
   };
 
   return (
-    <Box sx={{ mb: 4 }}>
-      <Typography variant="h6" sx={{ mb: 2 }}>
-        {t('search.title')}
-      </Typography>
-
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontStyle: 'italic' }}>
-        Product names are shown in Dutch as they appear in Dutch supermarkets. The interface
-        language can be changed using the language switcher.
-      </Typography>
-      <Typography variant="body2" color="primary" sx={{ mb: 2 }}>
-        Prices come from ComPears scraped supermarket data. Results are grouped by product with store prices side by side.
-      </Typography>
-
-      <CategoryFilter
-        selectedCategory={selectedCategory}
-        onCategoryChange={(category) => {
-          setSelectedCategory(category);
-          if (category !== 'All') {
-            setSearchTerm('');
-            setTimeout(() => performSearch(), 100);
-          } else {
-            setProducts([]);
-          }
-        }}
-        variant="chips"
-      />
-
+    <Box>
       <ProductSearchBar
         value={searchTerm}
-        onChange={setSearchTerm}
+        onChange={(value) => {
+          setSearchTerm(value);
+          if (error) setError(null);
+        }}
         suggestions={suggestions}
         loading={loading}
-        label={t('search.placeholder')}
-        placeholder={t('search.placeholder')}
+        placeholder={t('search.placeholderShort')}
         onSubmit={performSearch}
       />
 
@@ -208,12 +160,14 @@ const ProductSearch: React.FC<ProductSearchProps> = ({ onAddGrocery }) => {
           <Chip
             size="small"
             variant="outlined"
-            label={`${groups.length} productgroepen · ${filteredProducts.length} resultaten`}
+            label={t('search.resultCount')
+              .replace('{groups}', String(groups.length))
+              .replace('{results}', String(filteredProducts.length))}
           />
           <ProductGroupList
             groups={groups}
             onAddProduct={handleAddProduct}
-            addButtonLabel="Toevoegen"
+            addButtonLabel={t('search.addButton')}
           />
         </Box>
       )}
