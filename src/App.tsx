@@ -15,6 +15,7 @@ import AppNavBar from './components/AppNavBar';
 import { Grocery, GroceryWithPrices } from './types';
 import { useCountry } from './context/CountryContext';
 import { useLanguage } from './context/LanguageContext';
+import { useBasketStore } from './store/basketStore';
 
 const App: React.FC = () => {
   const navigate = useNavigate();
@@ -35,6 +36,7 @@ const App: React.FC = () => {
 
   const handleClearAll = () => {
     setGroceries([]);
+    useBasketStore.getState().clear();
   };
 
   const handleCartClick = () => {
@@ -51,6 +53,8 @@ const App: React.FC = () => {
 
   const handleHomeReset = useCallback(() => {
     setSearchResetKey((k) => k + 1);
+    setGroceries([]);
+    useBasketStore.getState().clear();
   }, []);
 
   const handleGroceriesWithPricesChange = (newGroceriesWithPrices: GroceryWithPrices[]) => {
@@ -96,7 +100,11 @@ const App: React.FC = () => {
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5 }}>
                 {t(`app.description.${country.code}`) || t('app.description').replace('{country}', country.name)}
               </Typography>
-              <ProductSearch key={searchResetKey} onAddGrocery={handleAddGrocery} />
+              <ProductSearch
+                key={searchResetKey}
+                onAddGrocery={handleAddGrocery}
+                onResetComparison={() => setGroceries([])}
+              />
             </Paper>
 
             <GroceryComparison

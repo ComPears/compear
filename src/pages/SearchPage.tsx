@@ -14,6 +14,8 @@ import {
 } from '@mui/material';
 import { fetchProducts, fetchStores, Product, StoreInfo } from '../api/client';
 import { useCountry } from '../context/CountryContext';
+import { useLanguage } from '../context/LanguageContext';
+import { useBasketStore } from '../store/basketStore';
 import AppNavBar from '../components/AppNavBar';
 import { ProductSearchBar } from '../components/ProductSearchBar';
 import { ProductSortBar } from '../components/ProductSortBar';
@@ -33,6 +35,8 @@ import { extractFilterChips, filterByChip } from '../utils/filterChips';
 
 export const SearchPage: React.FC = () => {
   const { country } = useCountry();
+  const { t } = useLanguage();
+  const clearBasket = useBasketStore((s) => s.clear);
   const [query, setQuery] = useState('');
   const [storeFilter, setStoreFilter] = useState('');
   const [dealsOnly, setDealsOnly] = useState(false);
@@ -95,6 +99,7 @@ export const SearchPage: React.FC = () => {
   }, [debouncedQuery, storeFilter, dealsOnly, country.available, barcodeQuery]);
 
   const handleBarcodeDetected = useCallback((barcode: string) => {
+    clearBasket();
     setBarcodeQuery(barcode);
     setQuery('');
     setActiveChips([]);
@@ -120,7 +125,7 @@ export const SearchPage: React.FC = () => {
         setSuggestionPool([]);
       })
       .finally(() => setLoading(false));
-  }, [storeFilter, dealsOnly]);
+  }, [storeFilter, dealsOnly, clearBasket]);
 
   const clearBarcodeSearch = () => {
     setBarcodeQuery(null);
@@ -168,10 +173,10 @@ export const SearchPage: React.FC = () => {
       <AppNavBar />
       <Container maxWidth="lg" sx={{ py: 3, bgcolor: 'background.default' }}>
         <Typography variant="h5" gutterBottom fontWeight={600}>
-          Zoek producten
+          {t('search.title')}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Zoek op naam of scan de streepjescode op de verpakking om prijzen te vergelijken.
+          {t('search.pageHint')}
         </Typography>
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>

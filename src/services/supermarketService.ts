@@ -1,6 +1,7 @@
 import { Grocery, SupermarketPrice, Supermarket } from '../types';
-import { fetchProducts } from '../api/client';
+import { fetchCompare, fetchProducts, Product } from '../api/client';
 import { productToSupermarketPrice } from '../utils/productMapper';
+import { filterBySearch } from '../utils/productGrouping';
 
 export const supermarkets: Supermarket[] = [
   {
@@ -47,16 +48,43 @@ export const supermarkets: Supermarket[] = [
   },
 ];
 
-/** Fetch prices for a grocery item from the backend API. */
+async function resolveComparableProducts(grocery: Grocery): Promise<Product[]> {
+  if (grocery.barcode) {
+    return fetchProducts({ barcode: grocery.barcode });
+  }
+
+  if (grocery.canonicalName) {
+    const compared = await fetchCompare(grocery.canonicalName);
+    if (compared.length > 0) return compared;
+  }
+
+  if (grocery.searchKeyword) {
+    const results = await fetchProducts({ search: grocery.searchKeyword });
+    const filtered = filterBySearch(results, grocery.searchKeyword);
+    if (filtered.length > 0) return filtered;
+
+    if (grocery.productId) {
+      const picked = results.find((p) => p.id === grocery.productId);
+      if (picked?.canonicalName) {
+        return fetchCompare(picked.canonicalName);
+      }
+      if (picked) return [picked];
+    }
+  }
+
+  return [];
+}
+
+/** Fetch comparable prices for the grocery item the user picked (not fuzzy re-search). */
 export const fetchPricesForGrocery = async (
   grocery: Grocery,
   countryCode: string = 'nl'
 ): Promise<SupermarketPrice[]> => {
-  if (!grocery?.searchKeyword || countryCode !== 'nl') {
+  if (countryCode !== 'nl') {
     return [];
   }
 
-  const products = await fetchProducts({ search: grocery.searchKeyword });
+  const products = await resolveComparableProducts(grocery);
   return products.map((product) => {
     const mapped = productToSupermarketPrice(product, grocery.unit);
     return {
@@ -64,6 +92,7 @@ export const fetchPricesForGrocery = async (
       unitPrice:
         calculateUnitPrice(product.effectivePrice, product.packageSize, grocery.unit) ??
         mapped.unitPrice,
+      category: product.category,
     };
   });
 };

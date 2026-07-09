@@ -14,7 +14,7 @@ const en: Translations = {
   
   // Main Content
   'app.description': 'Add grocery items to compare prices across {country} supermarkets. Prices from supermarkets without APIs are estimated using advanced algorithms.',
-  'app.description.nl': 'Add grocery items to compare prices across Dutch supermarkets. Prices from supermarkets without APIs are estimated using advanced algorithms.',
+  'app.description.nl': 'Search or scan a product, add it to your list, and compare the same item across Dutch supermarkets.',
   'app.description.uk': 'Add grocery items to compare prices across UK supermarkets. Prices from supermarkets without APIs are estimated using advanced algorithms.',
   'app.description.de': 'Add grocery items to compare prices across German supermarkets. Prices from supermarkets without APIs are estimated using advanced algorithms.',
 
@@ -97,6 +97,11 @@ const en: Translations = {
   'search.addButton': 'Add',
   'search.resultCount': '{groups} product groups · {results} results',
   'search.noProductsFound': 'No products found for "{term}".',
+  'search.homeHint': 'Type a product name or scan a barcode. Pick the exact product, then we compare that item across stores.',
+  'search.pickProductHint': 'Pick the exact product you want — we compare that same item at every supermarket.',
+  'search.pageHint': 'Search by name or scan the barcode on the packaging to compare prices.',
+  'search.barcodeChip': 'Barcode: {barcode}',
+  'search.barcodeNotFound': 'No products found for barcode {barcode}. Coverage is strongest at Jumbo.',
   'search.showDebug': 'Show Debug',
   'search.hideDebug': 'Hide Debug',
   
@@ -148,7 +153,7 @@ const nl: Translations = {
   
   // Main Content
   'app.description': 'Voeg boodschappen toe om prijzen te vergelijken tussen verschillende {country} supermarkten. Prijzen van supermarkten zonder API\'s worden geschat met geavanceerde algoritmen.',
-  'app.description.nl': 'Voeg boodschappen toe om prijzen te vergelijken tussen verschillende Nederlandse supermarkten. Prijzen van supermarkten zonder API\'s worden geschat met geavanceerde algoritmen.',
+  'app.description.nl': 'Zoek of scan een product, voeg het toe aan je lijst en vergelijk hetzelfde artikel bij alle supermarkten.',
   'app.description.uk': 'Voeg boodschappen toe om prijzen te vergelijken tussen verschillende Britse supermarkten. Prijzen van supermarkten zonder API\'s worden geschat met geavanceerde algoritmen.',
   'app.description.de': 'Voeg boodschappen toe om prijzen te vergelijken tussen verschillende Duitse supermarkten. Prijzen van supermarkten zonder API\'s worden geschat met geavanceerde algoritmen.',
 
@@ -231,6 +236,11 @@ const nl: Translations = {
   'search.addButton': 'Toevoegen',
   'search.resultCount': '{groups} productgroepen · {results} resultaten',
   'search.noProductsFound': 'Geen producten gevonden voor "{term}".',
+  'search.homeHint': 'Typ een productnaam of scan een streepjescode. Kies het exacte product — wij vergelijken dat artikel bij alle winkels.',
+  'search.pickProductHint': 'Kies het exacte product dat je wilt — wij vergelijken datzelfde artikel bij elke supermarkt.',
+  'search.pageHint': 'Zoek op naam of scan de streepjescode op de verpakking om prijzen te vergelijken.',
+  'search.barcodeChip': 'Streepjescode: {barcode}',
+  'search.barcodeNotFound': 'Geen producten gevonden voor streepjescode {barcode}. Dekking is het sterkst bij Jumbo.',
   'search.showDebug': 'Debug Tonen',
   'search.hideDebug': 'Debug Verbergen',
   
@@ -318,6 +328,11 @@ const de: Translations = {
   'search.addToListButton': 'Zur Liste Hinzufügen',
   'search.addButton': 'Hinzufügen',
   'search.resultCount': '{groups} Produktgruppen · {results} Ergebnisse',
+  'search.homeHint': 'Produktname eingeben oder Barcode scannen. Wählen Sie das genaue Produkt — wir vergleichen es in allen Geschäften.',
+  'search.pickProductHint': 'Wählen Sie das genaue Produkt — wir vergleichen dasselbe Artikel in jedem Supermarkt.',
+  'search.pageHint': 'Nach Name suchen oder den Barcode auf der Verpackung scannen.',
+  'search.barcodeChip': 'Barcode: {barcode}',
+  'search.barcodeNotFound': 'Keine Produkte für Barcode {barcode} gefunden. Abdeckung ist bei Jumbo am stärksten.',
   'error.minCharacters': 'Bitte mindestens 2 Zeichen eingeben.',
   
   // Optimal Strategy

@@ -3,11 +3,16 @@ export interface Grocery {
   name: string;
   unit: 'piece' | 'kg' | 'gram' | 'liter' | 'ml';
   quantity: number;
-  variant?: string; // Optional variant information
-  brand?: string;   // Optional brand information
+  variant?: string;
+  brand?: string;
   price?: number;
   searchKeyword?: string;
-  category?: string; // Product category (e.g., 'Fruits & Vegetables', 'Dairy', etc.)
+  category?: string;
+  /** Exact product picked from search — used for cross-store comparison */
+  canonicalName?: string;
+  barcode?: string | null;
+  productId?: string;
+  packageSize?: string;
 }
 
 export interface SupermarketPrice {
