@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -16,7 +16,8 @@ import {
   Alert,
   Button,
 } from '@mui/material';
-import { fetchProducts, fetchStores, Product, StoreInfo } from '../api/client';
+import { fetchProducts, fetchStores, Product, StoreInfo, ApiCountry } from '../api/client';
+import { fetchProductsByBarcode, isAbortError } from '../utils/barcodeSearch';
 import { useCountry } from '../context/CountryContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useComparisonStore } from '../store/comparisonStore';
@@ -59,6 +60,8 @@ export const SearchPage: React.FC = () => {
   const [barcodeQuery, setBarcodeQuery] = useState<string | null>(null);
   const [dietaryLabels, setDietaryLabels] = useState<string[]>([]);
   const [addedSnackbar, setAddedSnackbar] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const debouncedQuery = useDebouncedValue(query, 300);
 
@@ -82,18 +85,27 @@ export const SearchPage: React.FC = () => {
       setSuggestionPool([]);
       setSearched(false);
       setLoading(false);
+      setSearchError(null);
       return;
     }
 
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setLoading(true);
     setSearched(true);
+    setSearchError(null);
     const params: { search?: string; store?: string; labels?: string } = {};
     if (q.length >= 2) params.search = q;
     if (storeFilter) params.store = storeFilter;
     if (dietaryLabels.length > 0) params.labels = dietaryLabels.join(',');
 
-    fetchProducts(params, country.code)
+    fetchProducts(params, country.code as ApiCountry, { signal: controller.signal })
       .then((data) => {
+        if (controller.signal.aborted) return;
         let list = data;
         if (dealsOnly) {
           list = list.filter(
@@ -103,28 +115,31 @@ export const SearchPage: React.FC = () => {
         setProducts(list);
         setSuggestionPool(list);
       })
-      .catch(() => {
+      .catch((err) => {
+        if (controller.signal.aborted || isAbortError(err)) return;
         setProducts([]);
         setSuggestionPool([]);
+        setSearchError(t('error.searchFailed'));
       })
-      .finally(() => setLoading(false));
-  }, [debouncedQuery, storeFilter, dealsOnly, country.available, country.code, barcodeQuery, dietaryLabels]);
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [debouncedQuery, storeFilter, dealsOnly, country.available, country.code, barcodeQuery, dietaryLabels, t]);
 
   const handleBarcodeDetected = useCallback(
     (barcode: string) => {
       clearComparison();
-      setBarcodeQuery(barcode);
       setQuery('');
       setActiveChips([]);
       setSearched(true);
       setLoading(true);
+      setSearchError(null);
 
-      const params: { barcode: string; store?: string; labels?: string } = { barcode };
-      if (storeFilter) params.store = storeFilter;
-      if (dietaryLabels.length > 0) params.labels = dietaryLabels.join(',');
-
-      fetchProducts(params, country.code)
-        .then((data) => {
+      fetchProductsByBarcode(barcode, country.code as ApiCountry)
+        .then(({ products: data, normalized, invalid }) => {
+          setBarcodeQuery(normalized ?? barcode);
           let list = data;
           if (dealsOnly) {
             list = list.filter(
@@ -133,14 +148,23 @@ export const SearchPage: React.FC = () => {
           }
           setProducts(list);
           setSuggestionPool(list);
+          if (invalid) {
+            setSearchError(t('search.barcodeInvalid'));
+          } else if (list.length === 0) {
+            setSearchError(
+              t('search.barcodeNotFound').replace('{barcode}', normalized ?? barcode)
+            );
+          }
         })
-        .catch(() => {
+        .catch((err) => {
+          if (isAbortError(err)) return;
           setProducts([]);
           setSuggestionPool([]);
+          setSearchError(t('error.searchFailed'));
         })
         .finally(() => setLoading(false));
     },
-    [storeFilter, dealsOnly, clearComparison, dietaryLabels]
+    [storeFilter, dealsOnly, clearComparison, dietaryLabels, country.code, t]
   );
 
   const clearBarcodeSearch = () => {
@@ -298,6 +322,12 @@ export const SearchPage: React.FC = () => {
 
         {!loading && !searched && (
           <Typography color="text.secondary">{t('search.emptyPrompt')}</Typography>
+        )}
+
+        {!loading && searchError && (
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            {searchError}
+          </Alert>
         )}
 
         {!loading && searched && (

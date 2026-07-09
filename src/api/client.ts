@@ -57,9 +57,13 @@ export async function fetchProducts(
     barcode?: string;
     labels?: string;
   },
-  country: ApiCountry = 'nl'
+  country: ApiCountry = 'nl',
+  options?: { signal?: AbortSignal }
 ): Promise<Product[]> {
-  const { data } = await api.get<Product[]>('/products', { params: withCountry(params, country) });
+  const { data } = await api.get<Product[]>('/products', {
+    params: withCountry(params, country),
+    signal: options?.signal,
+  });
   return data;
 }
 

@@ -147,18 +147,40 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
                 color="inherit"
                 startIcon={<PlaceIcon />}
                 onClick={() => navigate(`${base}/stores`)}
-                sx={{ minWidth: { xs: 'auto', sm: 'auto' }, display: { xs: 'none', md: 'inline-flex' } }}
+                sx={{ minWidth: 'auto', display: { xs: 'none', md: 'inline-flex' } }}
               >
                 {t('nav.stores')}
               </Button>
+              <Tooltip title={t('nav.stores')}>
+                <IconButton
+                  color="inherit"
+                  onClick={() => navigate(`${base}/stores`)}
+                  aria-label={t('nav.stores')}
+                  size="small"
+                  sx={{ display: { xs: 'inline-flex', md: 'none' } }}
+                >
+                  <PlaceIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
               <Button
                 color="inherit"
                 startIcon={<ReceiptLongIcon />}
                 onClick={() => navigate(`${base}/receipts`)}
-                sx={{ minWidth: { xs: 'auto', sm: 'auto' }, display: { xs: 'none', sm: 'inline-flex' } }}
+                sx={{ minWidth: 'auto', display: { xs: 'none', sm: 'inline-flex' } }}
               >
                 {t('nav.receipts')}
               </Button>
+              <Tooltip title={t('nav.receipts')}>
+                <IconButton
+                  color="inherit"
+                  onClick={() => navigate(`${base}/receipts`)}
+                  aria-label={t('nav.receipts')}
+                  size="small"
+                  sx={{ display: { xs: 'inline-flex', sm: 'none' } }}
+                >
+                  <ReceiptLongIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
             </>
           )}
 

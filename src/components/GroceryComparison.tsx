@@ -103,20 +103,27 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
 
   useEffect(() => {
     const fetchPrices = async () => {
+      if (groceries.length === 0) {
+        setGroceriesWithPrices([]);
+        return;
+      }
+
       const updatedGroceries: GroceryWithPrices[] = [];
       const groceriesToFetch: Grocery[] = [];
-      
-      // Separate existing groceries from new ones
-      groceries.forEach(grocery => {
-        const existing = groceriesWithPrices.find(g => g.id === grocery.id);
+
+      groceries.forEach((grocery) => {
+        const existing = groceriesWithPrices.find((g) => g.id === grocery.id);
         if (existing) {
           updatedGroceries.push(existing);
         } else {
           groceriesToFetch.push(grocery);
         }
       });
-      
-      // Fetch prices for new groceries
+
+      if (groceriesToFetch.length === 0) {
+        setGroceriesWithPrices(updatedGroceries);
+        return;
+      }
       const fetchPromises = groceriesToFetch.map(async (grocery) => {
         setLoading(prev => ({ ...prev, [grocery.id]: true }));
         
@@ -318,7 +325,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
         {/* Individual Grocery Accordions */}
         {filteredGroceries.map((grocery) => {
           const lowestPriceSupermarket = getLowestPriceSupermarket(grocery.prices);
-          const isExpanded = expandedAccordions[grocery.id] || false;
+          const isExpanded = expandedAccordions[grocery.id] ?? isMobile;
           
           return (
             <Accordion 
@@ -332,7 +339,14 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                 aria-controls={`panel-${grocery.id}-content`}
                 id={`panel-${grocery.id}-header`}
               >
-                <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', pr: 2 }}>
+                <Box sx={{
+                  display: 'flex',
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  alignItems: { xs: 'stretch', sm: 'center' },
+                  width: '100%',
+                  pr: 2,
+                  gap: { xs: 1, sm: 0 },
+                }}>
                   {/* Searched Item */}
                   <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
@@ -350,7 +364,13 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                     </Box>
                   </Box>
                   {lowestPriceSupermarket && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
+                    <Box sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      flexWrap: 'wrap',
+                      gap: 0.5,
+                      mr: { xs: 0, sm: 2 },
+                    }}>
                       <Avatar 
                         src={getSupermarketLogo(lowestPriceSupermarket.supermarketName)} 
                         alt={lowestPriceSupermarket.supermarketName}

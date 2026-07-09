@@ -52,10 +52,7 @@ async function resolveComparableProducts(
   grocery: Grocery,
   country: ApiCountry
 ): Promise<Product[]> {
-  if (grocery.barcode) {
-    return fetchProducts({ barcode: grocery.barcode }, country);
-  }
-
+  // Cross-store matching uses identityKey/canonicalName — barcode lookup is Jumbo-heavy.
   if (grocery.identityKey) {
     const compared = await fetchCompare(grocery.canonicalName ?? '', grocery.identityKey, country);
     if (compared.length > 0) return compared;
@@ -66,6 +63,22 @@ async function resolveComparableProducts(
     if (compared.length > 0) return compared;
   }
 
+  if (grocery.barcode) {
+    const byBarcode = await fetchProducts({ barcode: grocery.barcode }, country);
+    if (byBarcode.length > 0) {
+      const seed = byBarcode[0];
+      if (seed.identityKey) {
+        const compared = await fetchCompare(seed.canonicalName, seed.identityKey, country);
+        if (compared.length > 0) return compared;
+      }
+      if (seed.canonicalName) {
+        const compared = await fetchCompare(seed.canonicalName, undefined, country);
+        if (compared.length > 0) return compared;
+      }
+      return byBarcode;
+    }
+  }
+
   if (grocery.searchKeyword) {
     const results = await fetchProducts({ search: grocery.searchKeyword }, country);
     const filtered = filterBySearch(results, grocery.searchKeyword);
@@ -73,8 +86,12 @@ async function resolveComparableProducts(
 
     if (grocery.productId) {
       const picked = results.find((p) => p.id === grocery.productId);
+      if (picked?.identityKey) {
+        const compared = await fetchCompare(picked.canonicalName, picked.identityKey, country);
+        if (compared.length > 0) return compared;
+      }
       if (picked?.canonicalName) {
-        return fetchCompare(picked.canonicalName, picked.identityKey, country);
+        return fetchCompare(picked.canonicalName, undefined, country);
       }
       if (picked) return [picked];
     }

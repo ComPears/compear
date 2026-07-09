@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Box, Typography, CircularProgress, Alert, Chip } from '@mui/material';
 import { Grocery } from '../types';
 import { fetchProducts, Product, ApiCountry } from '../api/client';
+import { fetchProductsByBarcode, isAbortError } from '../utils/barcodeSearch';
 import { useLanguage } from '../context/LanguageContext';
 import { useCountry } from '../context/CountryContext';
 import { productToGrocery } from '../utils/groceryMapper';
@@ -76,7 +77,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
     setActiveChips([]);
     setError(null);
 
-    fetchProducts({ search: term }, apiCountry)
+    fetchProducts({ search: term }, apiCountry, { signal: controller.signal })
       .then((fetched) => {
         if (controller.signal.aborted) return;
         const filtered = filterBySearch(fetched, term);
@@ -87,8 +88,8 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
             : null
         );
       })
-      .catch(() => {
-        if (controller.signal.aborted) return;
+      .catch((err) => {
+        if (controller.signal.aborted || isAbortError(err)) return;
         setProducts([]);
         setError(t('error.searchFailed'));
       })
@@ -102,26 +103,30 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
   const handleBarcodeDetected = useCallback(
     (barcode: string) => {
       resetForBarcode();
-      setBarcodeQuery(barcode);
       setSearched(true);
       setLoading(true);
+      setError(null);
 
-      fetchProducts({ barcode }, apiCountry)
-        .then((data) => {
+      fetchProductsByBarcode(barcode, apiCountry)
+        .then(({ products: data, normalized, invalid }) => {
+          setBarcodeQuery(normalized ?? barcode);
           setProducts(data);
-          setError(
-            data.length === 0
-              ? t('search.barcodeNotFound').replace('{barcode}', barcode)
-              : null
-          );
+          if (invalid) {
+            setError(t('search.barcodeInvalid'));
+          } else if (data.length === 0) {
+            setError(
+              t('search.barcodeNotFound').replace('{barcode}', normalized ?? barcode)
+            );
+          }
         })
-        .catch(() => {
+        .catch((err) => {
+          if (isAbortError(err)) return;
           setProducts([]);
           setError(t('error.searchFailed'));
         })
         .finally(() => setLoading(false));
     },
-    [resetForBarcode, t]
+    [resetForBarcode, t, apiCountry]
   );
 
   const clearBarcodeSearch = () => {
