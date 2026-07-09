@@ -165,6 +165,11 @@ const en: Translations = {
   'stores.loadError': 'Could not load store locations.',
   'stores.geoUnsupported': 'Geolocation is not supported in this browser.',
   'stores.geoDenied': 'Location access denied. Showing all stores instead.',
+  'stores.geoDeniedHint':
+    'Location is blocked. Allow location for compears.shop in your browser settings (lock icon in the address bar), then tap Near me again.',
+  'stores.geoTimeout': 'Could not get your location in time. Try again or pick a store filter.',
+  'stores.geoUnavailable': 'Your location could not be determined. Showing all stores instead.',
+  'stores.locating': 'Getting your location…',
   'stores.openMaps': 'Open in Maps',
 
   'shared.title': 'Share shopping list',
@@ -352,6 +357,11 @@ const nl: Translations = {
   'stores.loadError': 'Kon winkels niet laden.',
   'stores.geoUnsupported': 'Geolocatie wordt niet ondersteund.',
   'stores.geoDenied': 'Locatie geweigerd. Toon alle winkels.',
+  'stores.geoDeniedHint':
+    'Locatie is geblokkeerd. Sta locatie toe voor compears.shop in je browserinstellingen (slotje in de adresbalk) en tik opnieuw op In de buurt.',
+  'stores.geoTimeout': 'Locatie kon niet op tijd worden bepaald. Probeer opnieuw.',
+  'stores.geoUnavailable': 'Locatie kon niet worden bepaald. Toon alle winkels.',
+  'stores.locating': 'Locatie ophalen…',
   'stores.openMaps': 'Open in Maps',
 
   'shared.title': 'Deel boodschappenlijst',
@@ -464,6 +474,11 @@ const de: Translations = {
   'stores.loadError': 'Filialen konnten nicht geladen werden.',
   'stores.geoUnsupported': 'Geolocation wird nicht unterstützt.',
   'stores.geoDenied': 'Standort verweigert. Zeige alle Filialen.',
+  'stores.geoDeniedHint':
+    'Standort ist blockiert. Erlauben Sie den Standort für compears.shop in den Browser-Einstellungen (Schloss in der Adressleiste) und tippen Sie erneut auf In der Nähe.',
+  'stores.geoTimeout': 'Standort konnte nicht rechtzeitig ermittelt werden. Bitte erneut versuchen.',
+  'stores.geoUnavailable': 'Standort konnte nicht ermittelt werden. Zeige alle Filialen.',
+  'stores.locating': 'Standort wird ermittelt…',
   'stores.openMaps': 'In Maps öffnen',
 
   'shared.title': 'Einkaufsliste teilen',

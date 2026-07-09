@@ -48,6 +48,7 @@ export const StoreLocatorPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating] = useState(false);
 
   const loadLocations = useCallback(
     async (lat?: number, lng?: number) => {
@@ -82,9 +83,27 @@ export const StoreLocatorPage: React.FC = () => {
       setError(t('stores.geoUnsupported'));
       return;
     }
+    setLocating(true);
+    setError(null);
+
     navigator.geolocation.getCurrentPosition(
-      (pos) => setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => setError(t('stores.geoDenied'))
+      (pos) => {
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLocating(false);
+      },
+      (err) => {
+        setLocating(false);
+        if (err.code === err.PERMISSION_DENIED) {
+          setError(t('stores.geoDeniedHint'));
+        } else if (err.code === err.TIMEOUT) {
+          setError(t('stores.geoTimeout'));
+        } else if (err.code === err.POSITION_UNAVAILABLE) {
+          setError(t('stores.geoUnavailable'));
+        } else {
+          setError(t('stores.geoDenied'));
+        }
+      },
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
     );
   };
 
@@ -125,8 +144,13 @@ export const StoreLocatorPage: React.FC = () => {
               ))}
             </Select>
           </FormControl>
-          <Button variant="outlined" startIcon={<MyLocationIcon />} onClick={handleNearMe}>
-            {t('stores.nearMe')}
+          <Button
+            variant="outlined"
+            startIcon={locating ? <CircularProgress size={18} /> : <MyLocationIcon />}
+            onClick={handleNearMe}
+            disabled={locating}
+          >
+            {locating ? t('stores.locating') : t('stores.nearMe')}
           </Button>
           {coords && (
             <Chip
