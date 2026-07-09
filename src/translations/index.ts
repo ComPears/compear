@@ -170,6 +170,7 @@ const en: Translations = {
   'stores.geoTimeout': 'Could not get your location in time. Try again or pick a store filter.',
   'stores.geoUnavailable': 'Your location could not be determined. Showing all stores instead.',
   'stores.locating': 'Getting your location…',
+  'stores.osmAttribution': 'Store data © OpenStreetMap contributors',
   'stores.openMaps': 'Open in Maps',
 
   'shared.title': 'Share shopping list',
@@ -362,6 +363,7 @@ const nl: Translations = {
   'stores.geoTimeout': 'Locatie kon niet op tijd worden bepaald. Probeer opnieuw.',
   'stores.geoUnavailable': 'Locatie kon niet worden bepaald. Toon alle winkels.',
   'stores.locating': 'Locatie ophalen…',
+  'stores.osmAttribution': 'Winkeldata © OpenStreetMap-bijdragers',
   'stores.openMaps': 'Open in Maps',
 
   'shared.title': 'Deel boodschappenlijst',
@@ -479,6 +481,7 @@ const de: Translations = {
   'stores.geoTimeout': 'Standort konnte nicht rechtzeitig ermittelt werden. Bitte erneut versuchen.',
   'stores.geoUnavailable': 'Standort konnte nicht ermittelt werden. Zeige alle Filialen.',
   'stores.locating': 'Standort wird ermittelt…',
+  'stores.osmAttribution': 'Filialdaten © OpenStreetMap-Mitwirkende',
   'stores.openMaps': 'In Maps öffnen',
 
   'shared.title': 'Einkaufsliste teilen',

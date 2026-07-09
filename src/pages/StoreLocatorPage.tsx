@@ -201,6 +201,17 @@ export const StoreLocatorPage: React.FC = () => {
             ))}
           </List>
         )}
+
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
+          <a
+            href="https://www.openstreetmap.org/copyright"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: 'inherit' }}
+          >
+            {t('stores.osmAttribution')}
+          </a>
+        </Typography>
       </Container>
     </>
   );
