@@ -27,6 +27,7 @@ import { ProductSortBar } from '../components/ProductSortBar';
 import { FilterChipBar } from '../components/FilterChipBar';
 import { ProductGroupList } from '../components/ProductGroupList';
 import { BarcodeScanButton } from '../components/BarcodeScanner';
+import { DietaryFilterBar } from '../components/DietaryFilterBar';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import {
   SortMode,
@@ -56,6 +57,7 @@ export const SearchPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [barcodeQuery, setBarcodeQuery] = useState<string | null>(null);
+  const [dietaryLabels, setDietaryLabels] = useState<string[]>([]);
   const [addedSnackbar, setAddedSnackbar] = useState(false);
 
   const debouncedQuery = useDebouncedValue(query, 300);
@@ -85,9 +87,10 @@ export const SearchPage: React.FC = () => {
 
     setLoading(true);
     setSearched(true);
-    const params: { search?: string; store?: string } = {};
+    const params: { search?: string; store?: string; labels?: string } = {};
     if (q.length >= 2) params.search = q;
     if (storeFilter) params.store = storeFilter;
+    if (dietaryLabels.length > 0) params.labels = dietaryLabels.join(',');
 
     fetchProducts(params)
       .then((data) => {
@@ -105,7 +108,7 @@ export const SearchPage: React.FC = () => {
         setSuggestionPool([]);
       })
       .finally(() => setLoading(false));
-  }, [debouncedQuery, storeFilter, dealsOnly, country.available, barcodeQuery]);
+  }, [debouncedQuery, storeFilter, dealsOnly, country.available, barcodeQuery, dietaryLabels]);
 
   const handleBarcodeDetected = useCallback(
     (barcode: string) => {
@@ -116,8 +119,9 @@ export const SearchPage: React.FC = () => {
       setSearched(true);
       setLoading(true);
 
-      const params: { barcode: string; store?: string } = { barcode };
+      const params: { barcode: string; store?: string; labels?: string } = { barcode };
       if (storeFilter) params.store = storeFilter;
+      if (dietaryLabels.length > 0) params.labels = dietaryLabels.join(',');
 
       fetchProducts(params)
         .then((data) => {
@@ -136,7 +140,7 @@ export const SearchPage: React.FC = () => {
         })
         .finally(() => setLoading(false));
     },
-    [storeFilter, dealsOnly, clearComparison]
+    [storeFilter, dealsOnly, clearComparison, dietaryLabels]
   );
 
   const clearBarcodeSearch = () => {
@@ -241,6 +245,8 @@ export const SearchPage: React.FC = () => {
               variant="outlined"
             />
           )}
+
+          <DietaryFilterBar selected={dietaryLabels} onChange={setDietaryLabels} />
 
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
             <FormControl size="small" sx={{ minWidth: 180 }}>

@@ -8,6 +8,8 @@ import { ProductPage } from '../pages/ProductPage';
 import { DealsPage } from '../pages/DealsPage';
 import { BasketPage } from '../pages/BasketPage';
 import { ReceiptPage } from '../pages/ReceiptPage';
+import { StoreLocatorPage } from '../pages/StoreLocatorPage';
+import { SharedListPage } from '../pages/SharedListPage';
 
 const AppRouter: React.FC = () => {
   return (
@@ -20,6 +22,8 @@ const AppRouter: React.FC = () => {
           <Route path="product/:id" element={<ProductPage />} />
           <Route path="deals" element={<DealsPage />} />
           <Route path="basket" element={<BasketPage />} />
+          <Route path="stores" element={<StoreLocatorPage />} />
+          <Route path="shared/:listId" element={<SharedListPage />} />
           <Route path="receipts" element={<ReceiptPage />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />

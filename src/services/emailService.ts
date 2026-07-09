@@ -7,7 +7,7 @@ interface SuggestionData {
   suggestion: string;
 }
 
-const ADMIN_EMAIL = process.env.REACT_APP_ADMIN_EMAIL || 'admin@compears.shop';
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'admin@compears.shop';
 const MIN_SUBMIT_INTERVAL_MS = 60_000;
 const MAX_SUGGESTION_LENGTH = 2000;
 const MAX_NAME_LENGTH = 100;

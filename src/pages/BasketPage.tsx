@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Container,
   Typography,
@@ -17,8 +17,11 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
+import ShareIcon from '@mui/icons-material/Share';
 import { useBasketStore, BasketItem } from '../store/basketStore';
 import AppNavBar from '../components/AppNavBar';
+import { ShareListDialog } from '../components/ShareListDialog';
+import { useLanguage } from '../context/LanguageContext';
 
 function formatPrice(n: number) {
   return `€${n.toFixed(2)}`;
@@ -46,6 +49,20 @@ function bestSingleStoreTotal(items: BasketItem[]): { total: number; store: stri
 
 export const BasketPage: React.FC = () => {
   const { items, remove, setQuantity, clear } = useBasketStore();
+  const { t } = useLanguage();
+  const [shareOpen, setShareOpen] = useState(false);
+
+  const shareItems = useMemo(
+    () =>
+      items.map((i) => ({
+        productId: i.product.id,
+        productName: i.product.productName,
+        store: i.product.store,
+        quantity: i.quantity,
+        effectivePrice: i.product.effectivePrice,
+      })),
+    [items]
+  );
 
   const cheapestPerItemTotal = useMemo(() => totalCheapestPerItem(items), [items]);
   const singleStore = useMemo(() => bestSingleStoreTotal(items), [items]);
@@ -60,9 +77,9 @@ export const BasketPage: React.FC = () => {
         <AppNavBar />
         <Container maxWidth="md" sx={{ py: 4, bgcolor: 'background.default' }}>
           <Typography variant="h5" gutterBottom fontWeight={600}>
-            Winkelmand
+            {t('basket.title')}
           </Typography>
-          <Typography color="text.secondary">Je mandje is leeg.</Typography>
+          <Typography color="text.secondary">{t('basket.empty')}</Typography>
         </Container>
       </>
     );
@@ -73,7 +90,7 @@ export const BasketPage: React.FC = () => {
       <AppNavBar />
       <Container maxWidth="md" sx={{ py: 3, bgcolor: 'background.default' }}>
         <Typography variant="h5" gutterBottom fontWeight={600}>
-          Winkelmand
+          {t('basket.title')}
         </Typography>
       <TableContainer component={Paper} variant="outlined" sx={{ mb: 3 }}>
         <Table size="small">
@@ -139,9 +156,23 @@ export const BasketPage: React.FC = () => {
           )}
         </CardContent>
       </Card>
-      <Button variant="outlined" onClick={clear} sx={{ mt: 2 }}>
-        Mandje legen
+      <Button variant="outlined" onClick={clear} sx={{ mt: 2, mr: 1 }}>
+        {t('basket.clear')}
       </Button>
+      <Button
+        variant="contained"
+        startIcon={<ShareIcon />}
+        onClick={() => setShareOpen(true)}
+        sx={{ mt: 2 }}
+      >
+        {t('shared.createLink')}
+      </Button>
+      <ShareListDialog
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        listName={t('basket.shareDefaultName')}
+        items={shareItems}
+      />
       </Container>
     </>
   );

@@ -19,6 +19,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import PlaceIcon from '@mui/icons-material/Place';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import LanguageIcon from '@mui/icons-material/Language';
 import TranslateIcon from '@mui/icons-material/Translate';
@@ -141,6 +142,14 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
                 sx={{ minWidth: 'auto' }}
               >
                 {isMobile ? '' : t('nav.deals')}
+              </Button>
+              <Button
+                color="inherit"
+                startIcon={<PlaceIcon />}
+                onClick={() => navigate(`${base}/stores`)}
+                sx={{ minWidth: { xs: 'auto', sm: 'auto' }, display: { xs: 'none', md: 'inline-flex' } }}
+              >
+                {t('nav.stores')}
               </Button>
               <Button
                 color="inherit"

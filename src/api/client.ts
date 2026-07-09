@@ -45,6 +45,7 @@ export async function fetchProducts(params?: {
   store?: string;
   category?: string;
   barcode?: string;
+  labels?: string;
 }): Promise<Product[]> {
   const { data } = await api.get<Product[]>('/products', { params });
   return data;
@@ -217,4 +218,68 @@ export async function deleteReceipt(receiptId: string, userId: string): Promise<
   await api.delete(`/receipts/${encodeURIComponent(receiptId)}`, {
     headers: userHeaders(userId),
   });
+}
+
+export interface StoreLocation {
+  id: string;
+  chain: string;
+  name: string;
+  address: string;
+  city: string;
+  lat: number;
+  lng: number;
+  distanceKm?: number;
+}
+
+export async function fetchStoreLocations(params?: {
+  chain?: string;
+  city?: string;
+  lat?: number;
+  lng?: number;
+  radius?: number;
+  limit?: number;
+}): Promise<StoreLocation[]> {
+  const { data } = await api.get<StoreLocation[]>('/stores/locations', { params });
+  return data;
+}
+
+export interface SharedListItem {
+  productId: string;
+  productName: string;
+  store: string;
+  quantity: number;
+  effectivePrice: number;
+}
+
+export interface SharedList {
+  id: string;
+  name: string;
+  items: SharedListItem[];
+  createdAt: string;
+  updatedAt: string;
+  expiresAt: string;
+}
+
+export async function createSharedList(
+  name: string,
+  items: SharedListItem[]
+): Promise<SharedList> {
+  const { data } = await api.post<SharedList>('/lists', { name, items });
+  return data;
+}
+
+export async function fetchSharedList(id: string): Promise<SharedList> {
+  const { data } = await api.get<SharedList>(`/lists/${encodeURIComponent(id)}`);
+  return data;
+}
+
+export interface PublicApiDocs {
+  version: string;
+  description: string;
+  endpoints: Array<{ method: string; path: string; query?: string; description?: string }>;
+}
+
+export async function fetchPublicApiDocs(): Promise<PublicApiDocs> {
+  const { data } = await api.get<PublicApiDocs>('/api/v1/docs');
+  return data;
 }

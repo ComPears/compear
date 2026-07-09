@@ -17,7 +17,7 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    # Dependabot grouped bumps often break CRA; validate on main only.
+    # Dependabot grouped bumps can break the build; validate on main only.
     if: github.actor != 'dependabot[bot]'
     permissions:
       contents: read
@@ -36,16 +36,14 @@ jobs:
         run: npm install netlify-cli@20.1.1 -g
 
       - name: Install Dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
 
       - name: Build project
         env:
-          CI: false
-          DISABLE_ESLINT_PLUGIN: true
-          REACT_APP_API_URL: https://compear-backend.onrender.com
-          REACT_APP_EMAILJS_SERVICE_ID: ${{ secrets.EMAILJS_SERVICE_ID }}
-          REACT_APP_EMAILJS_TEMPLATE_ID: ${{ secrets.EMAILJS_TEMPLATE_ID }}
-          REACT_APP_EMAILJS_PUBLIC_KEY: ${{ secrets.EMAILJS_PUBLIC_KEY }}
+          VITE_API_URL: https://compear-backend.onrender.com
+          VITE_EMAILJS_SERVICE_ID: ${{ secrets.EMAILJS_SERVICE_ID }}
+          VITE_EMAILJS_TEMPLATE_ID: ${{ secrets.EMAILJS_TEMPLATE_ID }}
+          VITE_EMAILJS_PUBLIC_KEY: ${{ secrets.EMAILJS_PUBLIC_KEY }}
         run: npm run build
 
       - name: Deploy to Netlify
@@ -55,7 +53,7 @@ jobs:
           if [ "$BRANCH_NAME" = "main" ]; then prod_flag="--prod"; fi
 
           netlify deploy \
-            --dir build \
+            --dir dist \
             --site ${{ secrets.NETLIFY_SITE_ID }} \
             --auth ${{ secrets.NETLIFY_API_TOKEN }} \
             $prod_flag \

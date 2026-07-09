@@ -7,6 +7,14 @@ import reportWebVitals from './reportWebVitals';
 import theme from './theme';
 import AppRouter from './components/AppRouter';
 
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      /* PWA optional */
+    });
+  });
+}
+
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
