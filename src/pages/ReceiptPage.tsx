@@ -307,7 +307,7 @@ export const ReceiptPage: React.FC = () => {
             <UploadFileIcon sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
             <Typography gutterBottom>Sleep een bonfoto of kies een bestand</Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              JPEG, PNG of WebP — max 8 MB
+              JPEG, PNG of WebP — max 8 MB. Maximaal een paar bonnen per uur.
             </Typography>
             <Button variant="contained" component="label" disabled={uploading}>
               {uploading ? 'Bon wordt gelezen…' : 'Bon uploaden'}
