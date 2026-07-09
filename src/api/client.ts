@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { ProductCategory } from '../services/categoryService';
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:4000';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 export const api = axios.create({
   baseURL: API_BASE,
@@ -29,6 +29,7 @@ export interface Product {
   scrapedAt: string;
   category?: ProductCategory;
   barcode?: string | null;
+  identityKey?: string;
 }
 
 export interface StoreInfo {
@@ -93,8 +94,15 @@ export async function fetchDealsDigest(): Promise<DealsDigest> {
   return data;
 }
 
-export async function fetchCompare(canonicalName: string): Promise<Product[]> {
-  const { data } = await api.get<Product[]>(`/compare/${encodeURIComponent(canonicalName)}`);
+export async function fetchCompare(
+  canonicalName: string,
+  identityKey?: string | null
+): Promise<Product[]> {
+  const params = identityKey ? { identityKey } : undefined;
+  const { data } = await api.get<Product[]>(
+    `/compare/${encodeURIComponent(canonicalName)}`,
+    { params }
+  );
   return data;
 }
 

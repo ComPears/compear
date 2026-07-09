@@ -61,6 +61,9 @@ export function filterBySearch(products: Product[], query: string): Product[] {
 }
 
 export function groupKey(product: Product): string {
+  if (product.identityKey) {
+    return product.identityKey;
+  }
   if (product.barcode) {
     return `barcode:${product.barcode}`;
   }

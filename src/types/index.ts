@@ -10,6 +10,7 @@ export interface Grocery {
   category?: string;
   /** Exact product picked from search — used for cross-store comparison */
   canonicalName?: string;
+  identityKey?: string;
   barcode?: string | null;
   productId?: string;
   packageSize?: string;

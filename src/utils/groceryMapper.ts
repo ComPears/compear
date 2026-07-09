@@ -21,6 +21,7 @@ export function productToGrocery(product: Product): Grocery {
     variant: product.store,
     searchKeyword: product.productName,
     canonicalName: product.canonicalName,
+    identityKey: product.identityKey,
     barcode: product.barcode,
     productId: product.id,
     packageSize: product.packageSize,

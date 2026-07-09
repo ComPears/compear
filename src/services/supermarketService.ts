@@ -53,6 +53,11 @@ async function resolveComparableProducts(grocery: Grocery): Promise<Product[]> {
     return fetchProducts({ barcode: grocery.barcode });
   }
 
+  if (grocery.identityKey) {
+    const compared = await fetchCompare(grocery.canonicalName ?? '', grocery.identityKey);
+    if (compared.length > 0) return compared;
+  }
+
   if (grocery.canonicalName) {
     const compared = await fetchCompare(grocery.canonicalName);
     if (compared.length > 0) return compared;
