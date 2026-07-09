@@ -110,6 +110,19 @@ const en: Translations = {
   'search.allStores': 'All stores',
   'search.dealsOnly': 'Deals only',
   'search.emptyPrompt': 'Type at least 2 letters or scan a barcode to compare products.',
+  'search.scanButton': 'Scan barcode',
+  'search.scanTitle': 'Scan barcode',
+  'search.scanHint':
+    'Point your camera at the EAN barcode on the packaging. Works best on standard retail barcodes.',
+  'search.scanning': 'Scanning…',
+  'search.manualEan': 'Or enter EAN manually',
+  'search.searchButton': 'Search',
+  'search.cameraDenied':
+    'Camera access is blocked. Allow camera for compears.shop in your browser settings (lock icon in the address bar), then try again.',
+  'search.cameraNotFound': 'No camera found on this device.',
+  'search.cameraInUse': 'Camera is in use by another app. Close it and try again.',
+  'search.cameraUnavailable':
+    'Camera unavailable. Enter the barcode manually or check browser permissions.',
   'search.noResults': 'No products found. Try a different search term or filter.',
   'search.showDebug': 'Show Debug',
   'search.hideDebug': 'Hide Debug',
@@ -303,6 +316,19 @@ const nl: Translations = {
   'search.allStores': 'Alle winkels',
   'search.dealsOnly': 'Alleen aanbiedingen',
   'search.emptyPrompt': 'Typ minstens 2 letters of scan een streepjescode om producten te vergelijken.',
+  'search.scanButton': 'Scan streepjescode',
+  'search.scanTitle': 'Scan streepjescode',
+  'search.scanHint':
+    'Richt je camera op de EAN-streepjescode op de verpakking. Werkt het best op standaard barcodes.',
+  'search.scanning': 'Scannen…',
+  'search.manualEan': 'Of typ EAN handmatig',
+  'search.searchButton': 'Zoeken',
+  'search.cameraDenied':
+    'Cameratoegang geblokkeerd. Sta camera toe voor compears.shop in je browserinstellingen (slotje in de adresbalk) en probeer opnieuw.',
+  'search.cameraNotFound': 'Geen camera gevonden op dit apparaat.',
+  'search.cameraInUse': 'Camera is in gebruik door een andere app. Sluit die en probeer opnieuw.',
+  'search.cameraUnavailable':
+    'Camera niet beschikbaar. Voer de streepjescode handmatig in of controleer browserrechten.',
   'search.noResults': 'Geen producten gevonden. Probeer een andere zoekterm of filter.',
   'search.showDebug': 'Debug Tonen',
   'search.hideDebug': 'Debug Verbergen',
@@ -449,6 +475,19 @@ const de: Translations = {
   'search.allStores': 'Alle Geschäfte',
   'search.dealsOnly': 'Nur Angebote',
   'search.emptyPrompt': 'Mindestens 2 Buchstaben eingeben oder Barcode scannen.',
+  'search.scanButton': 'Barcode scannen',
+  'search.scanTitle': 'Barcode scannen',
+  'search.scanHint':
+    'Richten Sie die Kamera auf den EAN-Barcode auf der Verpackung.',
+  'search.scanning': 'Scannen…',
+  'search.manualEan': 'Oder EAN manuell eingeben',
+  'search.searchButton': 'Suchen',
+  'search.cameraDenied':
+    'Kamerazugriff blockiert. Erlauben Sie die Kamera für compears.shop in den Browser-Einstellungen.',
+  'search.cameraNotFound': 'Keine Kamera auf diesem Gerät gefunden.',
+  'search.cameraInUse': 'Kamera wird von einer anderen App verwendet.',
+  'search.cameraUnavailable':
+    'Kamera nicht verfügbar. Barcode manuell eingeben oder Berechtigungen prüfen.',
   'search.noResults': 'Keine Produkte gefunden. Anderen Suchbegriff oder Filter versuchen.',
   'error.minCharacters': 'Bitte mindestens 2 Zeichen eingeben.',
   

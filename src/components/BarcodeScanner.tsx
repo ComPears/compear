@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import { BrowserMultiFormatReader, IScannerControls } from '@zxing/browser';
+import { useLanguage } from '../context/LanguageContext';
 
 interface BarcodeScannerDialogProps {
   open: boolean;
@@ -19,92 +20,140 @@ interface BarcodeScannerDialogProps {
   onDetected: (barcode: string) => void;
 }
 
+function cameraErrorMessage(err: unknown, t: (key: string) => string): string {
+  if (err instanceof DOMException) {
+    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+      return t('search.cameraDenied');
+    }
+    if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+      return t('search.cameraNotFound');
+    }
+    if (err.name === 'NotReadableError') {
+      return t('search.cameraInUse');
+    }
+  }
+  return t('search.cameraUnavailable');
+}
+
 export const BarcodeScannerDialog: React.FC<BarcodeScannerDialogProps> = ({
   open,
   onClose,
   onDetected,
 }) => {
+  const { t } = useLanguage();
   const videoRef = useRef<HTMLVideoElement>(null);
   const readerRef = useRef<BrowserMultiFormatReader | null>(null);
   const controlsRef = useRef<IScannerControls | null>(null);
+  const activeRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [manualCode, setManualCode] = useState('');
   const [scanning, setScanning] = useState(false);
 
   const stopScanner = useCallback(() => {
+    activeRef.current = false;
     controlsRef.current?.stop();
     controlsRef.current = null;
     readerRef.current = null;
+    const video = videoRef.current;
+    if (video?.srcObject instanceof MediaStream) {
+      video.srcObject.getTracks().forEach((track) => track.stop());
+      video.srcObject = null;
+    }
     setScanning(false);
   }, []);
 
-  useEffect(() => {
-    if (!open) {
-      stopScanner();
-      setError(null);
-      setManualCode('');
+  const startScanner = useCallback(async () => {
+    stopScanner();
+    activeRef.current = true;
+
+    // Dialog enter animation finishes before onEntered; retry once if ref is late.
+    let video = videoRef.current;
+    if (!video) {
+      await new Promise((r) => requestAnimationFrame(r));
+      video = videoRef.current;
+    }
+    if (!video) {
+      setError(t('search.cameraUnavailable'));
       return;
     }
 
-    let cancelled = false;
+    setError(null);
+    setScanning(true);
 
-    const start = async () => {
-      if (!videoRef.current) return;
-      setError(null);
-      setScanning(true);
-
-      try {
-        const reader = new BrowserMultiFormatReader();
-        readerRef.current = reader;
-        const controls = await reader.decodeFromVideoDevice(
-          undefined,
-          videoRef.current,
-          (result, err) => {
-            if (cancelled || !result) return;
-            const text = result.getText().trim();
-            if (!text) return;
-            onDetected(text);
-            stopScanner();
-            onClose();
-          }
-        );
-        if (cancelled) {
-          controls.stop();
-          return;
+    try {
+      const reader = new BrowserMultiFormatReader();
+      readerRef.current = reader;
+      const controls = await reader.decodeFromConstraints(
+        {
+          video: {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+        },
+        video,
+        (result) => {
+          if (!activeRef.current || !result) return;
+          const text = result.getText().trim();
+          if (!text) return;
+          onDetected(text);
+          stopScanner();
+          onClose();
         }
-        controlsRef.current = controls;
-      } catch (err) {
-        if (!cancelled) {
-          setScanning(false);
-          setError(
-            'Camera niet beschikbaar. Voer de streepjescode handmatig in of geef cameratoegang.'
-          );
-        }
+      );
+      if (!activeRef.current) {
+        controls.stop();
+        return;
       }
-    };
+      controlsRef.current = controls;
+      try {
+        await video.play();
+      } catch {
+        // Some browsers auto-play after srcObject is set by zxing.
+      }
+    } catch (err) {
+      if (activeRef.current) {
+        setScanning(false);
+        setError(cameraErrorMessage(err, t));
+      }
+    }
+  }, [onClose, onDetected, stopScanner, t]);
 
-    start();
+  useEffect(() => () => stopScanner(), [stopScanner]);
 
-    return () => {
-      cancelled = true;
-      stopScanner();
-    };
-  }, [open, onClose, onDetected, stopScanner]);
+  const handleClose = () => {
+    stopScanner();
+    onClose();
+  };
 
   const submitManual = () => {
     const code = manualCode.trim();
     if (!code) return;
     onDetected(code);
-    onClose();
+    handleClose();
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Scan streepjescode</DialogTitle>
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      fullWidth
+      maxWidth="sm"
+      TransitionProps={{
+        onEntered: () => {
+          void startScanner();
+        },
+        onExited: () => {
+          stopScanner();
+          setError(null);
+          setManualCode('');
+        },
+      }}
+    >
+      <DialogTitle>{t('search.scanTitle')}</DialogTitle>
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Richt de camera op de EAN op de verpakking. Werkt het best op verpakte producten met een
-          standaard barcode.
+          {t('search.scanHint')}
         </Typography>
 
         <Box
@@ -123,8 +172,9 @@ export const BarcodeScannerDialog: React.FC<BarcodeScannerDialogProps> = ({
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             muted
             playsInline
+            autoPlay
           />
-          {scanning && (
+          {scanning && !error && (
             <Typography
               variant="caption"
               sx={{
@@ -138,7 +188,7 @@ export const BarcodeScannerDialog: React.FC<BarcodeScannerDialogProps> = ({
                 borderRadius: 1,
               }}
             >
-              Scannen…
+              {t('search.scanning')}
             </Typography>
           )}
         </Box>
@@ -152,7 +202,7 @@ export const BarcodeScannerDialog: React.FC<BarcodeScannerDialogProps> = ({
         <TextField
           fullWidth
           size="small"
-          label="Of typ EAN handmatig"
+          label={t('search.manualEan')}
           placeholder="8710400012345"
           value={manualCode}
           onChange={(e) => setManualCode(e.target.value)}
@@ -162,9 +212,9 @@ export const BarcodeScannerDialog: React.FC<BarcodeScannerDialogProps> = ({
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Annuleren</Button>
+        <Button onClick={handleClose}>{t('search.cancel')}</Button>
         <Button variant="contained" onClick={submitManual} disabled={!manualCode.trim()}>
-          Zoeken
+          {t('search.searchButton')}
         </Button>
       </DialogActions>
     </Dialog>
@@ -180,6 +230,7 @@ export const BarcodeScanButton: React.FC<BarcodeScanButtonProps> = ({
   onDetected,
   disabled,
 }) => {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
 
   return (
@@ -190,7 +241,7 @@ export const BarcodeScanButton: React.FC<BarcodeScanButtonProps> = ({
         onClick={() => setOpen(true)}
         disabled={disabled}
       >
-        Scan barcode
+        {t('search.scanButton')}
       </Button>
       <BarcodeScannerDialog
         open={open}
