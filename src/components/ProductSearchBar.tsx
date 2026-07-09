@@ -15,6 +15,8 @@ interface ProductSearchBarProps {
   placeholder?: string;
   label?: string;
   onSubmit?: () => void;
+  /** Hide autocomplete dropdown while results are shown below */
+  disableSuggestions?: boolean;
 }
 
 export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
@@ -25,12 +27,14 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
   placeholder = 'Bijv. melk, eieren, pasta...',
   label,
   onSubmit,
+  disableSuggestions = false,
 }) => {
   return (
     <Autocomplete
       freeSolo
       fullWidth
-      options={suggestions}
+      open={disableSuggestions ? false : undefined}
+      options={disableSuggestions ? [] : suggestions}
       inputValue={value}
       onInputChange={(_e, newValue) => onChange(newValue)}
       onChange={(_e, selected) => {

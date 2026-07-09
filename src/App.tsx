@@ -12,31 +12,25 @@ import ProductSearch from './components/ProductSearch';
 import Footer from './components/Footer';
 import CheapestDialog from './components/CheapestDialog';
 import AppNavBar from './components/AppNavBar';
-import { Grocery, GroceryWithPrices } from './types';
+import { GroceryWithPrices } from './types';
 import { useCountry } from './context/CountryContext';
 import { useLanguage } from './context/LanguageContext';
-import { useBasketStore } from './store/basketStore';
+import { useComparisonStore } from './store/comparisonStore';
 
 const App: React.FC = () => {
   const navigate = useNavigate();
   const { country, setCountry } = useCountry();
   const { t } = useLanguage();
-  const [groceries, setGroceries] = useState<Grocery[]>([]);
+  const groceries = useComparisonStore((s) => s.items);
+  const addGrocery = useComparisonStore((s) => s.add);
+  const removeGrocery = useComparisonStore((s) => s.remove);
+  const clearComparison = useComparisonStore((s) => s.clear);
   const [groceriesWithPrices, setGroceriesWithPrices] = useState<GroceryWithPrices[]>([]);
   const [triggerCheapestDialog, setTriggerCheapestDialog] = useState(false);
   const [searchResetKey, setSearchResetKey] = useState(0);
 
-  const handleAddGrocery = (newGrocery: Grocery) => {
-    setGroceries((prevGroceries) => [...prevGroceries, newGrocery]);
-  };
-
-  const handleRemoveGrocery = (id: string) => {
-    setGroceries((prevGroceries) => prevGroceries.filter((grocery) => grocery.id !== id));
-  };
-
   const handleClearAll = () => {
-    setGroceries([]);
-    useBasketStore.getState().clear();
+    clearComparison();
   };
 
   const handleCartClick = () => {
@@ -53,8 +47,6 @@ const App: React.FC = () => {
 
   const handleHomeReset = useCallback(() => {
     setSearchResetKey((k) => k + 1);
-    setGroceries([]);
-    useBasketStore.getState().clear();
   }, []);
 
   const handleGroceriesWithPricesChange = (newGroceriesWithPrices: GroceryWithPrices[]) => {
@@ -64,7 +56,6 @@ const App: React.FC = () => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: 'background.default' }}>
       <AppNavBar
-        comparisonCount={groceries.length}
         onCartClick={handleCartClick}
         onClearAll={groceries.length > 0 ? handleClearAll : undefined}
         onHomeReset={handleHomeReset}
@@ -102,14 +93,14 @@ const App: React.FC = () => {
               </Typography>
               <ProductSearch
                 key={searchResetKey}
-                onAddGrocery={handleAddGrocery}
-                onResetComparison={() => setGroceries([])}
+                onAddGrocery={addGrocery}
+                onResetComparison={clearComparison}
               />
             </Paper>
 
             <GroceryComparison
               groceries={groceries}
-              onRemoveGrocery={handleRemoveGrocery}
+              onRemoveGrocery={removeGrocery}
               onGroceriesWithPricesChange={handleGroceriesWithPricesChange}
             />
           </>

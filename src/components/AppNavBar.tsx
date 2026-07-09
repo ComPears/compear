@@ -26,18 +26,16 @@ import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import { useTheme, useMediaQuery } from '@mui/material';
 import { useCountry, CountryCode, countries } from '../context/CountryContext';
 import { useLanguage, LanguageCode } from '../context/LanguageContext';
-import { useBasketStore } from '../store/basketStore';
+import { useComparisonStore } from '../store/comparisonStore';
 import SuggestionDialog from './SuggestionDialog';
 
 interface AppNavBarProps {
-  comparisonCount?: number;
   onCartClick?: () => void;
   onClearAll?: () => void;
   onHomeReset?: () => void;
 }
 
 export const AppNavBar: React.FC<AppNavBarProps> = ({
-  comparisonCount = 0,
   onCartClick,
   onClearAll,
   onHomeReset,
@@ -48,12 +46,12 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
   const { language, setLanguage, t } = useLanguage();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const basketCount = useBasketStore((s) => s.items.reduce((n, i) => n + i.quantity, 0));
+  const listCount = useComparisonStore((s) => s.items.length);
   const [suggestionDialogOpen, setSuggestionDialogOpen] = useState(false);
 
   const base = `/${country.code}`;
   const isHome = location.pathname === base || location.pathname === `${base}/`;
-  const cartBadge = comparisonCount > 0 ? comparisonCount : basketCount;
+  const isSearch = location.pathname === `${base}/search`;
 
   const handleLogoClick = () => {
     if (isHome && onHomeReset) {
@@ -81,9 +79,19 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
   const handleCartClick = () => {
     if (onCartClick) {
       onCartClick();
+    } else if (listCount > 0) {
+      navigate(base);
     } else {
       navigate(`${base}/basket`);
     }
+  };
+
+  const handleSearchNav = () => {
+    if (isSearch) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    navigate(`${base}/search`);
   };
 
   return (
@@ -118,8 +126,11 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
               <Button
                 color="inherit"
                 startIcon={<SearchIcon />}
-                onClick={() => navigate(`${base}/search`)}
-                sx={{ minWidth: 'auto' }}
+                onClick={handleSearchNav}
+                sx={{
+                  minWidth: 'auto',
+                  ...(isSearch ? { bgcolor: 'rgba(255,255,255,0.12)' } : {}),
+                }}
               >
                 {isMobile ? '' : t('nav.search')}
               </Button>
@@ -207,15 +218,15 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
                   color="inherit"
                   onClick={handleCartClick}
                   aria-label={
-                    comparisonCount > 0 ? t('nav.openCheapest') : t('nav.openBasket')
+                    listCount > 0 ? t('nav.openCheapest') : t('nav.openBasket')
                   }
                   size={isMobile ? 'small' : 'medium'}
                 >
-                  <Badge badgeContent={cartBadge > 0 ? cartBadge : undefined} color="secondary">
+                  <Badge badgeContent={listCount > 0 ? listCount : undefined} color="secondary">
                     <ShoppingCartIcon fontSize={isMobile ? 'small' : 'medium'} />
                   </Badge>
                 </IconButton>
-                {onClearAll && comparisonCount > 0 && (
+                {onClearAll && listCount > 0 && (
                   isMobile ? (
                     <Tooltip title={t('app.clearAll')}>
                       <IconButton color="inherit" onClick={onClearAll} size="small">

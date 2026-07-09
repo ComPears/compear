@@ -3,7 +3,7 @@ import { Box, Typography, CircularProgress, Alert, Chip } from '@mui/material';
 import { Grocery } from '../types';
 import { fetchProducts, Product } from '../api/client';
 import { useLanguage } from '../context/LanguageContext';
-import { useBasketStore } from '../store/basketStore';
+import { productToGrocery } from '../utils/groceryMapper';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { ProductSearchBar } from './ProductSearchBar';
 import { ProductSortBar } from './ProductSortBar';
@@ -25,33 +25,6 @@ interface ProductSearchProps {
   onResetComparison?: () => void;
 }
 
-function productToGrocery(product: Product): Grocery {
-  let unit: Grocery['unit'] = 'piece';
-  const sizeStr = product.packageSize.toLowerCase();
-
-  if (sizeStr.includes('kg')) unit = 'kg';
-  else if (sizeStr.includes('g')) unit = 'gram';
-  else if (sizeStr.includes('l') && !sizeStr.includes('ml')) unit = 'liter';
-  else if (sizeStr.includes('ml')) unit = 'ml';
-
-  const match = sizeStr.match(/(\d+(?:\.\d+)?)/);
-  const quantity = match ? parseFloat(match[1]) : 1;
-
-  return {
-    id: `supermarket-${Date.now()}-${Math.random()}`,
-    name: product.productName,
-    unit,
-    quantity,
-    variant: product.store,
-    searchKeyword: product.productName,
-    canonicalName: product.canonicalName,
-    barcode: product.barcode,
-    productId: product.id,
-    packageSize: product.packageSize,
-    category: product.category,
-  };
-}
-
 const ProductSearch: React.FC<ProductSearchProps> = ({
   onAddGrocery,
   onResetComparison,
@@ -65,18 +38,16 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
   const [barcodeQuery, setBarcodeQuery] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
   const { t } = useLanguage();
-  const clearBasket = useBasketStore((s) => s.clear);
   const abortControllerRef = useRef<AbortController | null>(null);
   const debouncedQuery = useDebouncedValue(searchTerm, 350);
 
   const resetForBarcode = useCallback(() => {
-    clearBasket();
     onResetComparison?.();
     setProducts([]);
     setActiveChips([]);
     setError(null);
     setSearchTerm('');
-  }, [clearBasket, onResetComparison]);
+  }, [onResetComparison]);
 
   useEffect(() => {
     if (barcodeQuery) return;
@@ -176,6 +147,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
 
   const filterChips = useMemo(() => extractFilterChips(products), [products]);
   const suggestions = useMemo(() => buildSuggestions(products, 8), [products]);
+  const showResults = products.length > 0 && !loading;
 
   const handleAddProduct = useCallback(
     (product: Product) => {
@@ -209,6 +181,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
             }}
             suggestions={suggestions}
             loading={loading}
+            disableSuggestions={showResults}
             placeholder={t('search.placeholderShort')}
           />
         </Box>
@@ -250,7 +223,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
         </Alert>
       )}
 
-      {products.length > 0 && !loading && (
+      {showResults && (
         <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
           <ProductSortBar value={sort} onChange={setSort} />
           <FilterChipBar chips={filterChips} active={activeChips} onToggle={toggleChip} />
