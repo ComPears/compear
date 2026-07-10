@@ -195,7 +195,14 @@ export const BasketPage: React.FC = () => {
             )}
           </CardContent>
         </Card>
-        <Button variant="outlined" onClick={clear} sx={{ mt: 2, mr: 1 }}>
+        <Button
+          variant="outlined"
+          color="error"
+          onClick={() => {
+            if (window.confirm(t('basket.clearConfirm'))) clear();
+          }}
+          sx={{ mt: 2, mr: 1 }}
+        >
           {t('basket.clear')}
         </Button>
         <Button

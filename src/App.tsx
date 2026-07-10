@@ -15,6 +15,7 @@ import { useLanguage } from './context/LanguageContext';
 import { useComparisonStore } from './store/comparisonStore';
 import { useBasketStore } from './store/basketStore';
 import { fetchProduct } from './api/client';
+import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 
 const App: React.FC = () => {
   const { country, setCountry } = useCountry();
@@ -49,6 +50,7 @@ const App: React.FC = () => {
   }, [country.available, country.code, groceries, basketItems, addToBasket]);
 
   const handleClearAll = () => {
+    if (!window.confirm(t('app.clearAllConfirm'))) return;
     clearComparison();
     clearBasket();
   };
@@ -65,12 +67,17 @@ const App: React.FC = () => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: 'background.default' }}>
-      <AppNavBar
-        onClearAll={groceries.length > 0 ? handleClearAll : undefined}
-        onHomeReset={handleHomeReset}
-      />
+      <AppNavBar onHomeReset={handleHomeReset} />
 
-      <Container maxWidth="lg" sx={{ flex: '1 0 auto', pb: 4 }}>
+      <Container
+        maxWidth="lg"
+        sx={{
+          flex: '1 0 auto',
+          pb: 4,
+          pt: { xs: 0, md: groceries.length === 0 ? 4 : 0 },
+          transition: 'padding-top 180ms ease',
+        }}
+      >
         {!country.available ? (
           <Paper elevation={0} sx={{ p: 5, mb: 4, textAlign: 'center', borderRadius: 3 }} variant="outlined">
             <Typography variant="h4" gutterBottom>
@@ -93,7 +100,11 @@ const App: React.FC = () => {
           </Paper>
         ) : (
           <>
-            <Paper elevation={0} variant="outlined" sx={{ p: { xs: 2, sm: 3 }, mb: 4, borderRadius: 3 }}>
+            <Paper
+              elevation={0}
+              variant="outlined"
+              sx={{ p: { xs: 2, sm: 3 }, mb: 4, borderRadius: 3, maxWidth: 960, mx: 'auto' }}
+            >
               <Typography variant="h5" component="h1" gutterBottom fontWeight={600}>
                 {t('app.compareHeading')}
               </Typography>
@@ -104,8 +115,23 @@ const App: React.FC = () => {
                 key={searchResetKey}
                 onAddGrocery={addGrocery}
                 onResetComparison={clearComparison}
+                showEmptyGuide={groceries.length === 0}
               />
             </Paper>
+
+            {groceries.length > 0 && (
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+                <Button
+                  color="error"
+                  variant="outlined"
+                  size="small"
+                  startIcon={<DeleteSweepIcon />}
+                  onClick={handleClearAll}
+                >
+                  {t('app.clearAll')}
+                </Button>
+              </Box>
+            )}
 
             <GroceryComparison
               groceries={groceries}

@@ -281,6 +281,7 @@ export const ReceiptPage: React.FC = () => {
   };
 
   const onClearAll = async () => {
+    if (!window.confirm('Alle opgeslagen bonnen en analyses verwijderen?')) return;
     setError(null);
     setLoadingHistory(true);
     try {
@@ -298,11 +299,26 @@ export const ReceiptPage: React.FC = () => {
 
   return (
     <>
-      <AppNavBar onClearAll={history.length > 0 || latest ? onClearAll : undefined} />
+      <AppNavBar />
       <Container maxWidth="md" sx={{ py: 3 }}>
-        <Typography variant="h5" fontWeight={600} gutterBottom>
-          Bonnen & besparingen
-        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2 }}>
+          <Typography variant="h5" fontWeight={600} gutterBottom>
+            Bonnen & besparingen
+          </Typography>
+          {(history.length > 0 || latest) && (
+            <Button
+              color="error"
+              variant="outlined"
+              size="small"
+              startIcon={<DeleteIcon />}
+              onClick={onClearAll}
+              disabled={loadingHistory}
+              sx={{ flexShrink: 0 }}
+            >
+              Alles wissen
+            </Button>
+          )}
+        </Box>
         <Typography color="text.secondary" sx={{ mb: 3 }}>
           Upload een bonfoto. AI leest de producten en laat zien waar je goedkoper had kunnen
           winkelen. Je bonnen worden opgeslagen om uitgaven over tijd te volgen.

@@ -1,5 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Typography, CircularProgress, Alert, Chip } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
+import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
+import RouteIcon from '@mui/icons-material/Route';
 import { Grocery } from '../types';
 import { fetchProducts, Product, ApiCountry } from '../api/client';
 import { fetchProductsByBarcode, isAbortError } from '../utils/barcodeSearch';
@@ -26,11 +29,13 @@ import { useBasketStore } from '../store/basketStore';
 interface ProductSearchProps {
   onAddGrocery: (grocery: Grocery) => void;
   onResetComparison?: () => void;
+  showEmptyGuide?: boolean;
 }
 
 const ProductSearch: React.FC<ProductSearchProps> = ({
   onAddGrocery,
   onResetComparison,
+  showEmptyGuide = false,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
@@ -202,6 +207,62 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
         {t('search.homeHint')}
       </Typography>
+
+      {showEmptyGuide && !searched && !loading && !searchTerm.trim() && !barcodeQuery && (
+        <Box sx={{ mt: 3, pt: 2.5, borderTop: 1, borderColor: 'divider' }}>
+          <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
+            {t('guide.title')}
+          </Typography>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
+              gap: { xs: 1.5, sm: 2 },
+            }}
+          >
+            <Box sx={{ display: 'flex', gap: 1.25, alignItems: 'flex-start' }}>
+              <SearchIcon color="primary" sx={{ mt: 0.25 }} />
+              <Box>
+                <Typography variant="body2" fontWeight={600}>{t('guide.searchTitle')}</Typography>
+                <Typography variant="caption" color="text.secondary">{t('guide.searchText')}</Typography>
+              </Box>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 1.25, alignItems: 'flex-start' }}>
+              <CompareArrowsIcon color="primary" sx={{ mt: 0.25 }} />
+              <Box>
+                <Typography variant="body2" fontWeight={600}>{t('guide.compareTitle')}</Typography>
+                <Typography variant="caption" color="text.secondary">{t('guide.compareText')}</Typography>
+              </Box>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 1.25, alignItems: 'flex-start' }}>
+              <RouteIcon color="primary" sx={{ mt: 0.25 }} />
+              <Box>
+                <Typography variant="body2" fontWeight={600}>{t('guide.chooseTitle')}</Typography>
+                <Typography variant="caption" color="text.secondary">{t('guide.chooseText')}</Typography>
+              </Box>
+            </Box>
+          </Box>
+
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center', mt: 2.5 }}>
+            <Typography variant="caption" color="text.secondary">
+              {t('guide.try')}
+            </Typography>
+            {[
+              { label: t('guide.milk'), query: 'melk' },
+              { label: t('guide.coffee'), query: 'koffie' },
+              { label: t('guide.pasta'), query: 'pasta' },
+            ].map((example) => (
+              <Chip
+                key={example.query}
+                label={example.label}
+                size="small"
+                variant="outlined"
+                onClick={() => setSearchTerm(example.query)}
+              />
+            ))}
+          </Box>
+        </Box>
+      )}
 
       {barcodeQuery && (
         <Chip
