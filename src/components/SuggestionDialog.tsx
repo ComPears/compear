@@ -15,6 +15,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import SendIcon from '@mui/icons-material/Send';
 import { sendSuggestion } from '../services/emailService';
+import { useLanguage } from '../context/LanguageContext';
 
 interface SuggestionDialogProps {
   open: boolean;
@@ -22,6 +23,7 @@ interface SuggestionDialogProps {
 }
 
 const SuggestionDialog: React.FC<SuggestionDialogProps> = ({ open, onClose }) => {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -82,18 +84,21 @@ const SuggestionDialog: React.FC<SuggestionDialogProps> = ({ open, onClose }) =>
       onClose={handleClose}
       maxWidth="sm"
       fullWidth
+      aria-labelledby="suggestion-dialog-title"
       PaperProps={{
         sx: { borderRadius: 2 }
       }}
     >
       <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
-        <Typography variant="h6" component="div">
-          💡 Share Your Suggestion
+        <Typography id="suggestion-dialog-title" variant="h6" component="div">
+          💡 {t('suggestion.title')}
         </Typography>
         <IconButton 
           onClick={handleClose} 
           disabled={isSubmitting}
           size="small"
+          aria-label={t('dialog.close')}
+          sx={{ minWidth: 44, minHeight: 44 }}
         >
           <CloseIcon />
         </IconButton>
@@ -102,46 +107,46 @@ const SuggestionDialog: React.FC<SuggestionDialogProps> = ({ open, onClose }) =>
       <form onSubmit={handleSubmit}>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" paragraph>
-            Help us improve ComPear! Share your ideas, feature requests, or feedback.
+            {t('suggestion.description')}
           </Typography>
 
           {submitStatus === 'success' && (
             <Alert severity="success" sx={{ mb: 2 }}>
-              Thank you! Your suggestion has been sent successfully. 🎉
+              {t('suggestion.success')}
             </Alert>
           )}
 
           {submitStatus === 'error' && (
             <Alert severity="error" sx={{ mb: 2 }}>
-              Sorry, there was an error sending your suggestion. Please try again.
+              {t('suggestion.error')}
             </Alert>
           )}
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <TextField
-              label="Your Name (Optional)"
+              label={t('suggestion.name')}
               variant="outlined"
               fullWidth
               value={formData.name}
               onChange={handleInputChange('name')}
               disabled={isSubmitting}
-              placeholder="e.g., John Doe"
+              placeholder={t('suggestion.namePlaceholder')}
             />
 
             <TextField
-              label="Email (Optional)"
+              label={t('suggestion.email')}
               type="email"
               variant="outlined"
               fullWidth
               value={formData.email}
               onChange={handleInputChange('email')}
               disabled={isSubmitting}
-              placeholder="e.g., john@example.com"
-              helperText="We'll only use this to follow up if needed"
+              placeholder={t('suggestion.emailPlaceholder')}
+              helperText={t('suggestion.emailHint')}
             />
 
             <TextField
-              label="Your Suggestion *"
+              label={t('suggestion.message')}
               variant="outlined"
               fullWidth
               multiline
@@ -149,10 +154,10 @@ const SuggestionDialog: React.FC<SuggestionDialogProps> = ({ open, onClose }) =>
               value={formData.suggestion}
               onChange={handleInputChange('suggestion')}
               disabled={isSubmitting}
-              placeholder="Share your ideas, feature requests, bug reports, or general feedback..."
+              placeholder={t('suggestion.messagePlaceholder')}
               required
               error={!formData.suggestion.trim() && submitStatus === 'error'}
-              helperText={!formData.suggestion.trim() && submitStatus === 'error' ? 'Please enter your suggestion' : ''}
+              helperText={!formData.suggestion.trim() && submitStatus === 'error' ? t('suggestion.required') : ''}
             />
           </Box>
         </DialogContent>
@@ -163,7 +168,7 @@ const SuggestionDialog: React.FC<SuggestionDialogProps> = ({ open, onClose }) =>
             disabled={isSubmitting}
             color="inherit"
           >
-            Cancel
+            {t('search.cancel')}
           </Button>
           <Button
             type="submit"
@@ -171,7 +176,7 @@ const SuggestionDialog: React.FC<SuggestionDialogProps> = ({ open, onClose }) =>
             disabled={!formData.suggestion.trim() || isSubmitting}
             startIcon={isSubmitting ? <CircularProgress size={20} /> : <SendIcon />}
           >
-            {isSubmitting ? 'Sending...' : 'Send Suggestion'}
+            {isSubmitting ? t('suggestion.sending') : t('suggestion.send')}
           </Button>
         </DialogActions>
       </form>

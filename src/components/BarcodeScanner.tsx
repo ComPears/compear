@@ -11,8 +11,10 @@ import {
   Typography,
 } from '@mui/material';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
-import { BrowserMultiFormatReader, IScannerControls } from '@zxing/browser';
+import type { IScannerControls } from '@zxing/browser';
 import { useLanguage } from '../context/LanguageContext';
+
+type BarcodeReader = import('@zxing/browser').BrowserMultiFormatReader;
 
 interface BarcodeScannerDialogProps {
   open: boolean;
@@ -42,7 +44,7 @@ export const BarcodeScannerDialog: React.FC<BarcodeScannerDialogProps> = ({
 }) => {
   const { t } = useLanguage();
   const videoRef = useRef<HTMLVideoElement>(null);
-  const readerRef = useRef<BrowserMultiFormatReader | null>(null);
+  const readerRef = useRef<BarcodeReader | null>(null);
   const controlsRef = useRef<IScannerControls | null>(null);
   const activeRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +57,7 @@ export const BarcodeScannerDialog: React.FC<BarcodeScannerDialogProps> = ({
     controlsRef.current = null;
     readerRef.current = null;
     const video = videoRef.current;
-    if (video?.srcObject instanceof MediaStream) {
+    if (typeof MediaStream !== 'undefined' && video?.srcObject instanceof MediaStream) {
       video.srcObject.getTracks().forEach((track) => track.stop());
       video.srcObject = null;
     }
@@ -81,6 +83,8 @@ export const BarcodeScannerDialog: React.FC<BarcodeScannerDialogProps> = ({
     setScanning(true);
 
     try {
+      const { BrowserMultiFormatReader } = await import('@zxing/browser');
+      if (!activeRef.current) return;
       const reader = new BrowserMultiFormatReader();
       readerRef.current = reader;
       const controls = await reader.decodeFromConstraints(
@@ -137,6 +141,8 @@ export const BarcodeScannerDialog: React.FC<BarcodeScannerDialogProps> = ({
     <Dialog
       open={open}
       onClose={handleClose}
+      aria-labelledby="barcode-scanner-title"
+      aria-describedby="barcode-scanner-description"
       fullWidth
       maxWidth="sm"
       TransitionProps={{
@@ -150,9 +156,9 @@ export const BarcodeScannerDialog: React.FC<BarcodeScannerDialogProps> = ({
         },
       }}
     >
-      <DialogTitle>{t('search.scanTitle')}</DialogTitle>
+      <DialogTitle id="barcode-scanner-title">{t('search.scanTitle')}</DialogTitle>
       <DialogContent>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        <Typography id="barcode-scanner-description" variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {t('search.scanHint')}
         </Typography>
 
@@ -169,6 +175,7 @@ export const BarcodeScannerDialog: React.FC<BarcodeScannerDialogProps> = ({
         >
           <video
             ref={videoRef}
+            aria-label={t('search.cameraPreview')}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             muted
             playsInline
@@ -176,6 +183,8 @@ export const BarcodeScannerDialog: React.FC<BarcodeScannerDialogProps> = ({
           />
           {scanning && !error && (
             <Typography
+              role="status"
+              aria-live="polite"
               variant="caption"
               sx={{
                 position: 'absolute',
@@ -203,6 +212,7 @@ export const BarcodeScannerDialog: React.FC<BarcodeScannerDialogProps> = ({
           fullWidth
           size="small"
           label={t('search.manualEan')}
+          autoFocus
           placeholder="8710400012345"
           value={manualCode}
           onChange={(e) => setManualCode(e.target.value)}

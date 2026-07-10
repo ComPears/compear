@@ -82,11 +82,11 @@ const OptimalShoppingStrategy: React.FC<OptimalShoppingStrategyProps> = ({ groce
       grandTotal: plan.grandTotal,
       totalSavings: supermarketsInStrategy.reduce((sum, s) => sum + s.totalSavings, 0),
       singleStorePrice: plan.singleStorePrice ?? plan.grandTotal,
-      cheapestSingleStoreName: plan.singleStoreName ?? 'any single store',
+      cheapestSingleStoreName: plan.singleStoreName ?? t('optimal.anySingleStore'),
       savings: plan.savingsVsSingleStore,
       storeCount: plan.storeCount,
     };
-  }, [groceriesWithPrices]);
+  }, [groceriesWithPrices, t]);
 
   // Handle sharing the shopping list
   const handleShare = () => {
@@ -238,11 +238,13 @@ const OptimalShoppingStrategy: React.FC<OptimalShoppingStrategyProps> = ({ groce
         
         <Box sx={{ mt: 3, p: 2, bgcolor: 'success.light', borderRadius: 2 }}>
           <Typography variant="subtitle1">
-            Items total: {formatCurrency(optimalStrategy.totalPrice)}
+            {t('optimal.itemsTotal').replace('{amount}', formatCurrency(optimalStrategy.totalPrice))}
           </Typography>
           {optimalStrategy.tripPenalty > 0 && (
             <Typography variant="body2" color="text.secondary">
-              Extra store visits ({optimalStrategy.storeCount} stores): {formatCurrency(optimalStrategy.tripPenalty)}
+              {t('optimal.extraVisits')
+                .replace('{count}', String(optimalStrategy.storeCount))
+                .replace('{amount}', formatCurrency(optimalStrategy.tripPenalty))}
             </Typography>
           )}
           <Typography variant="subtitle1" sx={{ mt: 1 }}>
@@ -250,7 +252,9 @@ const OptimalShoppingStrategy: React.FC<OptimalShoppingStrategyProps> = ({ groce
           </Typography>
           {optimalStrategy.savings > 0 && (
             <Typography variant="body2" color="primary" sx={{ mt: 1 }}>
-              Saves {formatCurrency(optimalStrategy.savings)} vs buying all at {optimalStrategy.cheapestSingleStoreName}
+              {t('optimal.savesVs')
+                .replace('{amount}', formatCurrency(optimalStrategy.savings))
+                .replace('{store}', optimalStrategy.cheapestSingleStoreName)}
             </Typography>
           )}
         </Box>

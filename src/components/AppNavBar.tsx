@@ -93,6 +93,7 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
         color="inherit"
         startIcon={<SearchIcon />}
         onClick={handleSearchNav}
+        aria-current={isSearch ? 'page' : undefined}
         sx={{
           minWidth: 'auto',
           ...(isSearch ? { bgcolor: 'rgba(255,255,255,0.12)' } : {}),
@@ -121,7 +122,7 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
 
   return (
     <>
-      <AppBar position="static" elevation={0} sx={{ mb: { xs: 2, sm: 3 }, bgcolor: 'primary.main' }}>
+      <AppBar component="nav" aria-label={t('app.title')} position="static" elevation={0} sx={{ mb: { xs: 2, sm: 3 }, bgcolor: 'primary.main' }}>
         <Toolbar
           sx={{
             px: { xs: 1, sm: 3 },
@@ -156,8 +157,10 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
                 border: 'none',
                 cursor: 'pointer',
                 p: 0,
+                minHeight: 44,
                 mr: { xs: 0.5, sm: 1 },
                 '&:hover': { opacity: 0.92 },
+                '&:focus-visible': { outline: '2px solid currentColor', outlineOffset: 3 },
               }}
             >
               {t('app.title')}
@@ -185,8 +188,9 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
                     color="inherit"
                     onClick={handleSearchNav}
                     aria-label={t('nav.search')}
+                    aria-current={isSearch ? 'page' : undefined}
                     size="small"
-                    sx={isSearch ? { bgcolor: 'rgba(255,255,255,0.12)' } : undefined}
+                    sx={{ minWidth: 44, minHeight: 44, ...(isSearch ? { bgcolor: 'rgba(255,255,255,0.12)' } : {}) }}
                   >
                     <SearchIcon fontSize="small" />
                   </IconButton>
@@ -199,6 +203,7 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
                   onClick={handleCartClick}
                   aria-label={t('nav.openBasket')}
                   size={isMobile ? 'small' : 'medium'}
+                  sx={{ minWidth: 44, minHeight: 44 }}
                 >
                   <Badge badgeContent={basketCount > 0 ? basketCount : undefined} color="secondary">
                     <ShoppingCartIcon fontSize={isMobile ? 'small' : 'medium'} />
@@ -209,9 +214,12 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
               <IconButton
                 color="inherit"
                 onClick={(e) => setMobileMenuAnchor(e.currentTarget)}
-                aria-label="Menu"
+                aria-label={t('nav.menu')}
                 aria-haspopup="menu"
+                aria-controls={mobileMenuAnchor ? 'app-navigation-menu' : undefined}
+                aria-expanded={Boolean(mobileMenuAnchor)}
                 size={isMobile ? 'small' : 'medium'}
+                sx={{ minWidth: 44, minHeight: 44 }}
               >
                 {isMobile ? <MenuIcon fontSize="small" /> : <MoreVertIcon />}
               </IconButton>
@@ -221,6 +229,7 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
       </AppBar>
 
       <Menu
+        id="app-navigation-menu"
         anchorEl={mobileMenuAnchor}
         open={Boolean(mobileMenuAnchor)}
         onClose={() => setMobileMenuAnchor(null)}
@@ -249,7 +258,11 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
         )}
         <Box sx={{ px: 2, py: 1, minWidth: 200 }}>
           <FormControl fullWidth size="small">
-            <Select value={country.code} onChange={handleCountryChange}>
+            <Select
+              value={country.code}
+              onChange={handleCountryChange}
+              inputProps={{ 'aria-label': t('nav.country') }}
+            >
               {countries.map((option) => (
                 <MenuItem key={option.code} value={option.code}>
                   {option.name}

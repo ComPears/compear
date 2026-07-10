@@ -25,6 +25,7 @@ import ShareIcon from '@mui/icons-material/Share';
 import { GroceryWithPrices, SupermarketPrice } from '../types';
 import { supermarkets } from '../services/supermarketService';
 import { useCountry } from '../context/CountryContext';
+import { useLanguage } from '../context/LanguageContext';
 
 
 interface CheapestDialogProps {
@@ -44,6 +45,7 @@ interface SupermarketSummary {
 
 const CheapestDialog: React.FC<CheapestDialogProps> = ({ open, onClose, groceries }) => {
   const { country } = useCountry();
+  const { t } = useLanguage();
 
 
 
@@ -170,11 +172,11 @@ const CheapestDialog: React.FC<CheapestDialogProps> = ({ open, onClose, grocerie
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
       .then(() => {
-        alert('Shopping list copied to clipboard!');
+        alert(t('clipboard.copied'));
       })
       .catch(err => {
         console.error('Failed to copy text: ', err);
-        alert('Failed to copy to clipboard');
+        alert(t('clipboard.failed'));
       });
   };
 
@@ -184,6 +186,7 @@ const CheapestDialog: React.FC<CheapestDialogProps> = ({ open, onClose, grocerie
       onClose={onClose}
       maxWidth="md"
       fullWidth
+      aria-labelledby="cheapest-dialog-title"
       PaperProps={{
         sx: { borderRadius: 2 }
       }}
@@ -191,11 +194,11 @@ const CheapestDialog: React.FC<CheapestDialogProps> = ({ open, onClose, grocerie
       <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <ShoppingCartIcon color="primary" />
-          <Typography variant="h6" component="div">
-            Cheapest Supermarket
+          <Typography id="cheapest-dialog-title" variant="h6" component="div">
+            {t('cheapest.title')}
           </Typography>
         </Box>
-        <IconButton onClick={onClose} size="small">
+        <IconButton onClick={onClose} size="small" aria-label={t('dialog.close')} sx={{ minWidth: 44, minHeight: 44 }}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
@@ -204,13 +207,13 @@ const CheapestDialog: React.FC<CheapestDialogProps> = ({ open, onClose, grocerie
         {groceries.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 4 }}>
             <Typography variant="body1" color="text.secondary">
-              Add some groceries to your list to see the cheapest supermarket!
+              {t('cheapest.empty')}
             </Typography>
           </Box>
         ) : supermarketSummaries.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 4 }}>
             <Typography variant="body1" color="text.secondary">
-              No supermarkets found with any of your items. Try adding more groceries or check individual item prices.
+              {t('cheapest.noStores')}
             </Typography>
           </Box>
         ) : (
@@ -237,7 +240,7 @@ const CheapestDialog: React.FC<CheapestDialogProps> = ({ open, onClose, grocerie
                       🏆 {cheapestSupermarket.supermarketName}
                     </Typography>
                     <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                      Best overall price for your {groceries.length} items
+                      {t('cheapest.bestFor').replace('{count}', String(groceries.length))}
                     </Typography>
                   </Box>
                 </Box>
@@ -248,7 +251,7 @@ const CheapestDialog: React.FC<CheapestDialogProps> = ({ open, onClose, grocerie
                       {formatCurrency(cheapestSupermarket.totalPrice)}
                     </Typography>
                     <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                      Total for all items
+                      {t('cheapest.totalAll')}
                     </Typography>
                   </Box>
                   
@@ -256,7 +259,7 @@ const CheapestDialog: React.FC<CheapestDialogProps> = ({ open, onClose, grocerie
                     {cheapestSupermarket.saleCount > 0 && (
                       <Chip 
                         icon={<LocalOfferIcon />} 
-                        label={`${cheapestSupermarket.saleCount} on sale`}
+                        label={t('comparison.itemsOnSale').replace('{count}', String(cheapestSupermarket.saleCount))}
                         sx={{ 
                           backgroundColor: 'rgba(255,255,255,0.2)', 
                           color: 'white',
@@ -278,7 +281,7 @@ const CheapestDialog: React.FC<CheapestDialogProps> = ({ open, onClose, grocerie
                         }
                       }}
                     >
-                      Share List
+                      {t('optimal.shareList')}
                     </Button>
                   </Box>
                 </Box>
@@ -289,17 +292,17 @@ const CheapestDialog: React.FC<CheapestDialogProps> = ({ open, onClose, grocerie
             {cheapestSupermarket && cheapestSupermarket.productCount === groceries.length && (
               <Box sx={{ mt: 3 }}>
                 <Typography variant="h6" gutterBottom>
-                  Item Details at {cheapestSupermarket.supermarketName}
+                  {t('cheapest.itemDetails').replace('{store}', cheapestSupermarket.supermarketName)}
                 </Typography>
                 
                 <TableContainer component={Paper} variant="outlined">
                   <Table size="small">
                     <TableHead>
                       <TableRow>
-                        <TableCell>Item</TableCell>
-                        <TableCell align="right">Price</TableCell>
-                        <TableCell align="right">Size</TableCell>
-                        <TableCell align="center">Sale</TableCell>
+                        <TableCell>{t('table.product')}</TableCell>
+                        <TableCell align="right">{t('table.price')}</TableCell>
+                        <TableCell align="right">{t('table.size')}</TableCell>
+                        <TableCell align="center">{t('label.sale')}</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -326,7 +329,7 @@ const CheapestDialog: React.FC<CheapestDialogProps> = ({ open, onClose, grocerie
                               {price?.onSale ? (
                                 <Chip 
                                   icon={<LocalOfferIcon />} 
-                                  label="Sale" 
+                                  label={t('label.sale')}
                                   size="small" 
                                   color="secondary"
                                 />
@@ -350,7 +353,7 @@ const CheapestDialog: React.FC<CheapestDialogProps> = ({ open, onClose, grocerie
 
       <DialogActions sx={{ px: 3, pb: 3 }}>
         <Button onClick={onClose} color="inherit">
-          Close
+          {t('dialog.close')}
         </Button>
       </DialogActions>
     </Dialog>

@@ -111,7 +111,7 @@ export const StoreLocatorPage: React.FC = () => {
     return (
       <>
         <AppNavBar />
-        <Container maxWidth="md" sx={{ py: 4 }}>
+        <Container component="main" maxWidth="md" sx={{ py: 4 }}>
           <Alert severity="info">{t('app.comingSoon')}</Alert>
         </Container>
       </>
@@ -121,8 +121,8 @@ export const StoreLocatorPage: React.FC = () => {
   return (
     <>
       <AppNavBar />
-      <Container maxWidth="md" sx={{ py: 3 }}>
-        <Typography variant="h5" fontWeight={600} gutterBottom>
+      <Container component="main" maxWidth="md" sx={{ py: 3 }}>
+        <Typography component="h1" variant="h5" fontWeight={600} gutterBottom>
           {t('stores.title')}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -156,6 +156,7 @@ export const StoreLocatorPage: React.FC = () => {
             <Chip
               label={t('stores.usingLocation')}
               onDelete={() => setCoords(null)}
+              deleteIcon={<span aria-label={t('stores.clearLocation')}>×</span>}
               size="small"
             />
           )}
@@ -168,13 +169,25 @@ export const StoreLocatorPage: React.FC = () => {
         )}
 
         {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <Box role="status" aria-live="polite" aria-label={t('stores.locating')} sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
             <CircularProgress />
           </Box>
         ) : locations.length === 0 ? (
           <Typography color="text.secondary">{t('stores.noneFound')}</Typography>
         ) : (
-          <List component={Paper} variant="outlined">
+          <List
+            component={Paper}
+            variant="outlined"
+            aria-label={t('stores.resultsStatus').replace('{count}', String(locations.length))}
+          >
+            <Typography
+              component="li"
+              role="status"
+              aria-live="polite"
+              sx={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}
+            >
+              {t('stores.resultsStatus').replace('{count}', String(locations.length))}
+            </Typography>
             {locations.map((loc) => (
               <ListItem key={loc.id} divider>
                 <ListItemText
@@ -189,10 +202,11 @@ export const StoreLocatorPage: React.FC = () => {
                 <ListItemSecondaryAction>
                   <IconButton
                     edge="end"
-                    aria-label={t('stores.openMaps')}
+                    aria-label={t('stores.openMapsFor').replace('{store}', loc.name)}
                     href={mapsUrl(loc)}
                     target="_blank"
                     rel="noopener noreferrer"
+                    sx={{ minWidth: 44, minHeight: 44 }}
                   >
                     <OpenInNewIcon />
                   </IconButton>

@@ -16,6 +16,7 @@ import { ProductGroup } from '../utils/productGrouping';
 import { toSupermarketShortName } from '../utils/productMapper';
 import { useCountry } from '../context/CountryContext';
 import { useBasketStore } from '../store/basketStore';
+import { useLanguage } from '../context/LanguageContext';
 
 interface ProductGroupListProps {
   groups: ProductGroup[];
@@ -40,6 +41,7 @@ function StorePriceChip({
   showSize?: boolean;
   onClick: () => void;
 }) {
+  const { t } = useLanguage();
   const onSale = product.promoType != null && product.effectivePrice < product.originalPrice;
   return (
     <Chip
@@ -47,6 +49,7 @@ function StorePriceChip({
       variant={isCheapest ? 'filled' : 'outlined'}
       color={isCheapest ? 'primary' : 'default'}
       onClick={onClick}
+      aria-label={t('search.openProduct').replace('{product}', product.productName)}
       label={
         <Box component="span" sx={{ display: 'inline-flex', gap: 0.5, alignItems: 'center', flexWrap: 'wrap' }}>
           <strong>{toSupermarketShortName(product.store)}</strong>
@@ -79,6 +82,7 @@ function CompactProductRow({
   onOpen: () => void;
   onAdd: () => void;
 }) {
+  const { t } = useLanguage();
   const onSale = product.promoType != null && product.effectivePrice < product.originalPrice;
   return (
     <Box
@@ -92,7 +96,23 @@ function CompactProductRow({
         '&:hover': { bgcolor: 'action.hover' },
       }}
     >
-      <Box sx={{ flex: 1, minWidth: 0, cursor: 'pointer' }} onClick={onOpen}>
+      <Box
+        component="button"
+        type="button"
+        aria-label={t('search.openProduct').replace('{product}', product.productName)}
+        sx={{
+          flex: 1,
+          minWidth: 0,
+          cursor: 'pointer',
+          border: 0,
+          p: 0,
+          bgcolor: 'transparent',
+          color: 'inherit',
+          textAlign: 'left',
+          '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 2 },
+        }}
+        onClick={onOpen}
+      >
         <Typography variant="body2" noWrap>
           {toSupermarketShortName(product.store)} · {product.productName}
         </Typography>
@@ -112,24 +132,31 @@ function CompactProductRow({
         <Typography variant="body2" fontWeight={700} color="primary.main">
           {formatPrice(product.effectivePrice)}
         </Typography>
-        <Button size="small" variant="outlined" onClick={onAdd}>
-          +
+        <Button
+          size="small"
+          variant="outlined"
+          onClick={onAdd}
+          aria-label={t('search.addProduct').replace('{product}', product.productName)}
+          sx={{ minWidth: 44, minHeight: 44 }}
+        >
+          {t('search.addButton')}
         </Button>
       </Box>
     </Box>
   );
 }
 
-export const ProductGroupList: React.FC<ProductGroupListProps> = ({
+const ProductGroupListComponent: React.FC<ProductGroupListProps> = ({
   groups,
   showDeals = false,
-  emptyMessage = 'Geen producten gevonden.',
+  emptyMessage,
   onAddProduct,
-  addButtonLabel = 'Goedkoopste',
+  addButtonLabel,
 }) => {
   const navigate = useNavigate();
   const { country } = useCountry();
   const addToBasket = useBasketStore((s) => s.add);
+  const { t } = useLanguage();
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   const handleAdd = (product: Product) => {
@@ -143,7 +170,7 @@ export const ProductGroupList: React.FC<ProductGroupListProps> = ({
   if (groups.length === 0) {
     return (
       <Typography color="text.secondary" sx={{ py: 2 }}>
-        {emptyMessage}
+        {emptyMessage ?? t('search.noResults')}
       </Typography>
     );
   }
@@ -166,7 +193,20 @@ export const ProductGroupList: React.FC<ProductGroupListProps> = ({
             <Box sx={{ px: 1.5, py: 1.25 }}>
               <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
                 <Box
-                  sx={{ flex: 1, minWidth: 0, cursor: 'pointer' }}
+                  component="button"
+                  type="button"
+                  aria-label={t('search.openProduct').replace('{product}', group.displayName)}
+                  sx={{
+                    flex: 1,
+                    minWidth: 0,
+                    cursor: 'pointer',
+                    border: 0,
+                    p: 0,
+                    bgcolor: 'transparent',
+                    color: 'inherit',
+                    textAlign: 'left',
+                    '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 2 },
+                  }}
                   onClick={() => navigate(`/${country.code}/product/${group.cheapest.id}`)}
                 >
                   <Typography variant="subtitle1" fontWeight={600} noWrap>
@@ -174,9 +214,9 @@ export const ProductGroupList: React.FC<ProductGroupListProps> = ({
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     {group.packageSize && `${group.packageSize} · `}
-                    vanaf {formatPrice(group.cheapest.effectivePrice)}
+                    {t('search.fromPrice').replace('{price}', formatPrice(group.cheapest.effectivePrice))}
                     {hasMultipleStores
-                      ? ` · ${offers.length} winkels`
+                      ? ` · ${t('search.storeCount').replace('{count}', String(offers.length))}`
                       : ` · ${toSupermarketShortName(group.cheapest.store)}`}
                   </Typography>
                 </Box>
@@ -184,13 +224,16 @@ export const ProductGroupList: React.FC<ProductGroupListProps> = ({
                   size="small"
                   variant="contained"
                   onClick={() => handleAdd(group.cheapest)}
+                  sx={{ minHeight: 44 }}
                 >
-                  {addButtonLabel}
+                  {addButtonLabel ?? t('search.addButton')}
                 </Button>
                 {showExpand && (
                   <IconButton
                     size="small"
-                    aria-label={isOpen ? 'Inklappen' : 'Uitklappen'}
+                    aria-label={t(isOpen ? 'search.collapseGroup' : 'search.expandGroup').replace('{product}', group.displayName)}
+                    aria-expanded={isOpen}
+                    aria-controls={`product-group-${group.key}`}
                     onClick={() =>
                       setExpanded((prev) => ({ ...prev, [group.key]: !isOpen }))
                     }
@@ -214,7 +257,7 @@ export const ProductGroupList: React.FC<ProductGroupListProps> = ({
             </Box>
 
             <Collapse in={isOpen}>
-              <Box sx={{ borderTop: 1, borderColor: 'divider', bgcolor: 'background.default' }}>
+              <Box id={`product-group-${group.key}`} sx={{ borderTop: 1, borderColor: 'divider', bgcolor: 'background.default' }}>
                 {group.products.map((product) => (
                   <CompactProductRow
                     key={product.id}
@@ -232,3 +275,5 @@ export const ProductGroupList: React.FC<ProductGroupListProps> = ({
     </Box>
   );
 };
+
+export const ProductGroupList = React.memo(ProductGroupListComponent);

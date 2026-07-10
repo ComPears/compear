@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import { SortMode } from '../utils/productGrouping';
+import { useLanguage } from '../context/LanguageContext';
 
 interface ProductSortBarProps {
   value: SortMode;
@@ -8,18 +9,12 @@ interface ProductSortBarProps {
   showDiscount?: boolean;
 }
 
-const SORT_LABELS: Record<SortMode, string> = {
-  relevance: 'Relevantie',
-  price: 'Prijs',
-  unitPrice: 'Prijs/kg',
-  discount: 'Korting',
-};
-
 export const ProductSortBar: React.FC<ProductSortBarProps> = ({
   value,
   onChange,
   showDiscount = false,
 }) => {
+  const { t } = useLanguage();
   const modes: SortMode[] = showDiscount
     ? ['relevance', 'price', 'unitPrice', 'discount']
     : ['relevance', 'price', 'unitPrice'];
@@ -27,19 +22,20 @@ export const ProductSortBar: React.FC<ProductSortBarProps> = ({
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
       <Typography variant="body2" color="text.secondary">
-        Sorteer:
+        {t('search.sort')}:
       </Typography>
       <ToggleButtonGroup
         size="small"
         exclusive
         value={value}
+        aria-label={t('search.sort')}
         onChange={(_e, next: SortMode | null) => {
           if (next) onChange(next);
         }}
       >
         {modes.map((mode) => (
           <ToggleButton key={mode} value={mode}>
-            {SORT_LABELS[mode]}
+            {t(`search.sort.${mode}`)}
           </ToggleButton>
         ))}
       </ToggleButtonGroup>

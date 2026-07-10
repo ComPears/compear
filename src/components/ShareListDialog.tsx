@@ -59,7 +59,7 @@ export const ShareListDialog: React.FC<ShareListDialogProps> = ({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      /* ignore */
+      setError(t('shared.copyError'));
     }
   };
 
@@ -71,8 +71,8 @@ export const ShareListDialog: React.FC<ShareListDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{t('shared.title')}</DialogTitle>
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth aria-labelledby="share-list-title">
+      <DialogTitle id="share-list-title">{t('shared.title')}</DialogTitle>
       <DialogContent>
         {!shareUrl ? (
           <>
@@ -100,15 +100,16 @@ export const ShareListDialog: React.FC<ShareListDialogProps> = ({
               </IconButton>
             </Box>
             {copied && (
-              <Typography variant="caption" color="primary" sx={{ mt: 1, display: 'block' }}>
+              <Typography role="status" aria-live="polite" variant="caption" color="primary" sx={{ mt: 1, display: 'block' }}>
                 {t('shared.copied')}
               </Typography>
             )}
+            {error && <Alert severity="error" sx={{ mt: 1 }}>{error}</Alert>}
           </>
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>{shareUrl ? t('search.cancel') : t('shared.close')}</Button>
+        <Button onClick={handleClose}>{t('shared.close')}</Button>
         {!shareUrl && (
           <Button
             variant="contained"

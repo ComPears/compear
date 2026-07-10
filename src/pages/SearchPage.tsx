@@ -33,7 +33,6 @@ import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import {
   SortMode,
   buildSuggestions,
-  filterBySearch,
   groupProducts,
   groupProductsByBarcode,
   sortGroups,
@@ -56,6 +55,8 @@ export const SearchPage: React.FC = () => {
   const [suggestionPool, setSuggestionPool] = useState<Product[]>([]);
   const [stores, setStores] = useState<StoreInfo[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
   const [searched, setSearched] = useState(false);
   const [barcodeQuery, setBarcodeQuery] = useState<string | null>(null);
   const [dietaryLabels, setDietaryLabels] = useState<string[]>([]);
@@ -85,6 +86,7 @@ export const SearchPage: React.FC = () => {
       setSuggestionPool([]);
       setSearched(false);
       setLoading(false);
+      setHasMore(false);
       setSearchError(null);
       return;
     }
@@ -98,7 +100,9 @@ export const SearchPage: React.FC = () => {
     setLoading(true);
     setSearched(true);
     setSearchError(null);
-    const params: { search?: string; store?: string; labels?: string } = {};
+    const params: { search?: string; store?: string; labels?: string; limit?: number } = {
+      limit: 100,
+    };
     if (q.length >= 2) params.search = q;
     if (storeFilter) params.store = storeFilter;
     if (dietaryLabels.length > 0) params.labels = dietaryLabels.join(',');
@@ -106,19 +110,15 @@ export const SearchPage: React.FC = () => {
     fetchProducts(params, country.code as ApiCountry, { signal: controller.signal })
       .then((data) => {
         if (controller.signal.aborted) return;
-        let list = data;
-        if (dealsOnly) {
-          list = list.filter(
-            (p) => p.promoType != null && p.effectivePrice < p.originalPrice
-          );
-        }
-        setProducts(list);
-        setSuggestionPool(list);
+        setProducts(data);
+        setSuggestionPool(data);
+        setHasMore(data.length === 100);
       })
       .catch((err) => {
         if (controller.signal.aborted || isAbortError(err)) return;
         setProducts([]);
         setSuggestionPool([]);
+        setHasMore(false);
         setSearchError(t('error.searchFailed'));
       })
       .finally(() => {
@@ -126,7 +126,7 @@ export const SearchPage: React.FC = () => {
       });
 
     return () => controller.abort();
-  }, [debouncedQuery, storeFilter, dealsOnly, country.available, country.code, barcodeQuery, dietaryLabels, t]);
+  }, [debouncedQuery, storeFilter, country.available, country.code, barcodeQuery, dietaryLabels, t]);
 
   const handleBarcodeDetected = useCallback(
     (barcode: string) => {
@@ -140,17 +140,12 @@ export const SearchPage: React.FC = () => {
       fetchProductsByBarcode(barcode, country.code as ApiCountry)
         .then(({ products: data, normalized, invalid }) => {
           setBarcodeQuery(normalized ?? barcode);
-          let list = data;
-          if (dealsOnly) {
-            list = list.filter(
-              (p) => p.promoType != null && p.effectivePrice < p.originalPrice
-            );
-          }
-          setProducts(list);
-          setSuggestionPool(list);
+          setProducts(data);
+          setSuggestionPool(data);
+          setHasMore(false);
           if (invalid) {
             setSearchError(t('search.barcodeInvalid'));
-          } else if (list.length === 0) {
+          } else if (data.length === 0) {
             setSearchError(
               t('search.barcodeNotFound').replace('{barcode}', normalized ?? barcode)
             );
@@ -160,16 +155,18 @@ export const SearchPage: React.FC = () => {
           if (isAbortError(err)) return;
           setProducts([]);
           setSuggestionPool([]);
+          setHasMore(false);
           setSearchError(t('error.searchFailed'));
         })
         .finally(() => setLoading(false));
     },
-    [storeFilter, dealsOnly, clearComparison, dietaryLabels, country.code, t]
+    [clearComparison, country.code, t]
   );
 
   const clearBarcodeSearch = () => {
     setBarcodeQuery(null);
     setProducts([]);
+    setHasMore(false);
     setSearched(false);
   };
 
@@ -184,14 +181,17 @@ export const SearchPage: React.FC = () => {
 
   const filteredProducts = useMemo(() => {
     let list = products;
-    if (debouncedQuery.trim().length >= 2) {
-      list = filterBySearch(list, debouncedQuery);
+    if (dealsOnly) {
+      list = list.filter(
+        (product) =>
+          product.promoType != null && product.effectivePrice < product.originalPrice
+      );
     }
     for (const chip of activeChips) {
       list = filterByChip(list, chip);
     }
     return list;
-  }, [products, debouncedQuery, activeChips]);
+  }, [products, dealsOnly, activeChips]);
 
   const filterChips = useMemo(() => extractFilterChips(products), [products]);
 
@@ -210,19 +210,63 @@ export const SearchPage: React.FC = () => {
     [addToComparison]
   );
 
+  const loadMore = useCallback(async () => {
+    const q = debouncedQuery.trim();
+    if (loadingMore || !hasMore || barcodeQuery) return;
+
+    const params: {
+      search?: string;
+      store?: string;
+      labels?: string;
+      limit: number;
+      offset: number;
+    } = {
+      limit: 100,
+      offset: products.length,
+    };
+    if (q.length >= 2) params.search = q;
+    if (storeFilter) params.store = storeFilter;
+    if (dietaryLabels.length > 0) params.labels = dietaryLabels.join(',');
+
+    setLoadingMore(true);
+    try {
+      const next = await fetchProducts(params, country.code as ApiCountry);
+      setProducts((current) => {
+        const seen = new Set(current.map((product) => product.id));
+        return [...current, ...next.filter((product) => !seen.has(product.id))];
+      });
+      setSuggestionPool((current) => [...current, ...next]);
+      setHasMore(next.length === 100);
+    } catch {
+      setSearchError(t('error.searchFailed'));
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [
+    barcodeQuery,
+    country.code,
+    debouncedQuery,
+    dietaryLabels,
+    hasMore,
+    loadingMore,
+    products.length,
+    storeFilter,
+    t,
+  ]);
+
   const toggleChip = (chip: string) => {
     setActiveChips((prev) =>
       prev.includes(chip) ? prev.filter((c) => c !== chip) : [...prev, chip]
     );
   };
 
-  const showResults = searched && !loading && products.length > 0;
+  const showResults = searched && !loading && filteredProducts.length > 0;
 
   return (
     <>
       <AppNavBar />
-      <Container maxWidth="lg" sx={{ py: 3, bgcolor: 'background.default' }}>
-        <Typography variant="h5" gutterBottom fontWeight={600}>
+      <Container component="main" maxWidth="lg" sx={{ py: 3, bgcolor: 'background.default' }}>
+        <Typography component="h1" variant="h5" gutterBottom fontWeight={600}>
           {t('search.title')}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -254,8 +298,10 @@ export const SearchPage: React.FC = () => {
                 }}
                 suggestions={suggestions}
                 loading={loading}
+                loadingLabel={t('search.searching')}
                 disableSuggestions={showResults}
                 placeholder={t('search.placeholderShort')}
+                label={t('search.inputLabel')}
               />
             </Box>
             <BarcodeScanButton onDetected={handleBarcodeDetected} disabled={loading} />
@@ -301,6 +347,13 @@ export const SearchPage: React.FC = () => {
 
           {searched && !loading && (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+              <Typography
+                role="status"
+                aria-live="polite"
+                sx={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}
+              >
+                {t('search.resultsStatus').replace('{count}', String(filteredProducts.length))}
+              </Typography>
               <ProductSortBar value={sort} onChange={setSort} />
               <FilterChipBar chips={filterChips} active={activeChips} onToggle={toggleChip} />
               <Chip
@@ -315,7 +368,7 @@ export const SearchPage: React.FC = () => {
         </Box>
 
         {loading && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <Box role="status" aria-live="polite" aria-label={t('search.searching')} sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
             <CircularProgress />
           </Box>
         )}
@@ -331,18 +384,27 @@ export const SearchPage: React.FC = () => {
         )}
 
         {!loading && searched && (
-          <ProductGroupList
-            groups={groups}
-            onAddProduct={handleAddProduct}
-            addButtonLabel={t('search.addButton')}
-            emptyMessage={
-              barcodeQuery
-                ? t('search.barcodeNotFound').replace('{barcode}', barcodeQuery)
-                : debouncedQuery.trim().length < 2 && !storeFilter
-                  ? t('error.minCharacters')
-                  : t('search.noResults')
-            }
-          />
+          <>
+            <ProductGroupList
+              groups={groups}
+              onAddProduct={handleAddProduct}
+              addButtonLabel={t('search.addButton')}
+              emptyMessage={
+                barcodeQuery
+                  ? t('search.barcodeNotFound').replace('{barcode}', barcodeQuery)
+                  : debouncedQuery.trim().length < 2 && !storeFilter
+                    ? t('error.minCharacters')
+                    : t('search.noResults')
+              }
+            />
+            {hasMore && !barcodeQuery && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+                <Button variant="outlined" onClick={loadMore} disabled={loadingMore}>
+                  {loadingMore ? t('search.loadingMore') : t('search.loadMore')}
+                </Button>
+              </Box>
+            )}
+          </>
         )}
       </Container>
 

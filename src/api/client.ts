@@ -18,6 +18,33 @@ export const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+const CLIENT_CACHE_TTL_MS = 2 * 60 * 1000;
+const MAX_PRODUCT_CACHE_ENTRIES = 100;
+
+interface ClientCacheEntry<T> {
+  data: T;
+  expiresAt: number;
+}
+
+const productQueryCache = new Map<string, ClientCacheEntry<Product[]>>();
+const storeCache = new Map<ApiCountry, ClientCacheEntry<StoreInfo[]>>();
+
+function productCacheKey(
+  params: Record<string, unknown> | undefined,
+  country: ApiCountry
+): string {
+  const entries = Object.entries(params ?? {}).sort(([a], [b]) => a.localeCompare(b));
+  return JSON.stringify([country, entries]);
+}
+
+function setProductCache(key: string, data: Product[]): void {
+  productQueryCache.set(key, { data, expiresAt: Date.now() + CLIENT_CACHE_TTL_MS });
+  while (productQueryCache.size > MAX_PRODUCT_CACHE_ENTRIES) {
+    const oldest = productQueryCache.keys().next().value;
+    if (oldest) productQueryCache.delete(oldest);
+  }
+}
+
 export interface Product {
   id: string;
   canonicalName: string;
@@ -34,8 +61,8 @@ export interface Product {
   promoValue: number | null;
   promoQuantity?: number | null;
   promoValidUntil: string | null;
-  productUrl: string | null;
-  scrapedAt: string;
+  productUrl?: string | null;
+  scrapedAt?: string;
   category?: ProductCategory;
   barcode?: string | null;
   identityKey?: string;
@@ -56,14 +83,24 @@ export async function fetchProducts(
     category?: string;
     barcode?: string;
     labels?: string;
+    limit?: number;
+    offset?: number;
   },
   country: ApiCountry = 'nl',
   options?: { signal?: AbortSignal }
 ): Promise<Product[]> {
+  const key = productCacheKey(params, country);
+  const cached = productQueryCache.get(key);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.data;
+  }
+  if (cached) productQueryCache.delete(key);
+
   const { data } = await api.get<Product[]>('/products', {
     params: withCountry(params, country),
     signal: options?.signal,
   });
+  setProductCache(key, data);
   return data;
 }
 
@@ -75,7 +112,12 @@ export async function fetchProduct(id: string, country: ApiCountry = 'nl'): Prom
 }
 
 export async function fetchStores(country: ApiCountry = 'nl'): Promise<StoreInfo[]> {
+  const cached = storeCache.get(country);
+  if (cached && cached.expiresAt > Date.now()) return cached.data;
+  if (cached) storeCache.delete(country);
+
   const { data } = await api.get<StoreInfo[]>('/stores', { params: withCountry(undefined, country) });
+  storeCache.set(country, { data, expiresAt: Date.now() + CLIENT_CACHE_TTL_MS });
   return data;
 }
 
@@ -94,6 +136,7 @@ export async function fetchCompare(
 
 export interface ReceiptLineMatch {
   rawName: string;
+  correctedName?: string | null;
   quantity: number;
   paidUnitPrice: number;
   paidLineTotal: number;
@@ -101,6 +144,9 @@ export interface ReceiptLineMatch {
   alternatives: Product[];
   cheapestAlternative: Product | null;
   lineSavings: number;
+  matchConfidence: number;
+  matchStatus: 'matched' | 'needs_review' | 'unmatched';
+  matchMethod: 'catalog' | 'ai_normalized' | 'user_corrected' | 'user_unmatched';
 }
 
 export interface ReceiptAnalysis {
@@ -209,6 +255,20 @@ export async function deleteAllReceipts(userId: string): Promise<void> {
   await api.delete('/receipts', {
     headers: userHeaders(userId),
   });
+}
+
+export async function correctReceiptLine(
+  receiptId: string,
+  lineIndex: number,
+  correction: { action: 'rematch'; correctedName: string } | { action: 'unmatched' },
+  userId: string
+): Promise<SavedReceipt> {
+  const { data } = await api.patch<SavedReceipt>(
+    `/receipts/${encodeURIComponent(receiptId)}/lines/${lineIndex}`,
+    correction,
+    { headers: userHeaders(userId) }
+  );
+  return data;
 }
 
 export interface StoreLocation {

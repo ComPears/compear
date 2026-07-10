@@ -9,7 +9,8 @@ import {
   SelectChangeEvent,
   Typography,
 } from '@mui/material';
-import { ProductCategory, CATEGORIES, getCategoryIcon, DEAL_CATEGORY_LABELS } from '../services/categoryService';
+import { ProductCategory, CATEGORIES, getCategoryIcon } from '../services/categoryService';
+import { useLanguage } from '../context/LanguageContext';
 
 interface CategoryFilterProps {
   selectedCategory: ProductCategory | 'All';
@@ -24,6 +25,8 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
   availableCategories,
   variant = 'chips',
 }) => {
+  const { t } = useLanguage();
+  const categoryLabel = (category: ProductCategory) => t(`filters.category.${category}`);
   const categoriesToShow = availableCategories && availableCategories.length > 0
     ? availableCategories
     : CATEGORIES;
@@ -35,20 +38,20 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
   if (variant === 'dropdown') {
     return (
       <FormControl fullWidth sx={{ mb: 2, minWidth: 200 }}>
-        <InputLabel id="category-filter-label">Category</InputLabel>
+        <InputLabel id="category-filter-label">{t('filters.category')}</InputLabel>
         <Select
           labelId="category-filter-label"
           id="category-filter"
           value={selectedCategory}
-          label="Category"
+          label={t('filters.category')}
           onChange={(e: SelectChangeEvent) => 
             onCategoryChange(e.target.value as ProductCategory | 'All')
           }
         >
-          <MenuItem value="All">Alle categorieën</MenuItem>
+          <MenuItem value="All">{t('filters.category.all')}</MenuItem>
           {categoriesToShow.map((category) => (
             <MenuItem key={category} value={category}>
-              {getCategoryIcon(category)} {DEAL_CATEGORY_LABELS[category]}
+              {getCategoryIcon(category)} {categoryLabel(category)}
             </MenuItem>
           ))}
         </Select>
@@ -59,24 +62,26 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
   return (
     <Box sx={{ mb: 3 }}>
       <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'medium' }}>
-        Categorie:
+        {t('filters.category')}:
       </Typography>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
         <Chip
-          label="Alle"
+          label={t('filters.category.all')}
           onClick={() => handleCategoryClick('All')}
           color={selectedCategory === 'All' ? 'primary' : 'default'}
           variant={selectedCategory === 'All' ? 'filled' : 'outlined'}
           sx={{ cursor: 'pointer' }}
+          aria-pressed={selectedCategory === 'All'}
         />
         {categoriesToShow.map((category) => (
           <Chip
             key={category}
-            label={`${getCategoryIcon(category)} ${DEAL_CATEGORY_LABELS[category]}`}
+            label={`${getCategoryIcon(category)} ${categoryLabel(category)}`}
             onClick={() => handleCategoryClick(category)}
             color={selectedCategory === category ? 'primary' : 'default'}
             variant={selectedCategory === category ? 'filled' : 'outlined'}
             sx={{ cursor: 'pointer' }}
+            aria-pressed={selectedCategory === category}
           />
         ))}
       </Box>

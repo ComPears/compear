@@ -18,7 +18,6 @@ import { BarcodeScanButton } from './BarcodeScanner';
 import {
   SortMode,
   buildSuggestions,
-  filterBySearch,
   groupProducts,
   groupProductsByBarcode,
   sortGroups,
@@ -87,10 +86,9 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
     fetchProducts({ search: term }, apiCountry, { signal: controller.signal })
       .then((fetched) => {
         if (controller.signal.aborted) return;
-        const filtered = filterBySearch(fetched, term);
-        setProducts(filtered);
+        setProducts(fetched);
         setError(
-          filtered.length === 0
+          fetched.length === 0
             ? t('error.noProductsFound').replace('{searchTerm}', term)
             : null
         );
@@ -144,14 +142,11 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
 
   const filteredProducts = useMemo(() => {
     let list = products;
-    if (!barcodeQuery && debouncedQuery.trim().length >= 2) {
-      list = filterBySearch(list, debouncedQuery);
-    }
     for (const chip of activeChips) {
       list = filterByChip(list, chip);
     }
     return list;
-  }, [products, debouncedQuery, activeChips, barcodeQuery]);
+  }, [products, activeChips]);
 
   const groups = useMemo(() => {
     const grouped = barcodeQuery
@@ -197,8 +192,10 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
             }}
             suggestions={suggestions}
             loading={loading}
+            loadingLabel={t('search.searching')}
             disableSuggestions={showResults}
             placeholder={t('search.placeholderShort')}
+            label={t('search.inputLabel')}
           />
         </Box>
         <BarcodeScanButton onDetected={handleBarcodeDetected} disabled={loading} />
@@ -275,7 +272,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
       )}
 
       {loading && (
-        <Box sx={{ display: 'flex', alignItems: 'center', mt: 1.5, gap: 1 }}>
+        <Box role="status" aria-live="polite" sx={{ display: 'flex', alignItems: 'center', mt: 1.5, gap: 1 }}>
           <CircularProgress size={16} />
           <Typography variant="caption" color="text.secondary">
             {t('search.searching')}
@@ -297,6 +294,13 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
 
       {showResults && (
         <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          <Typography
+            role="status"
+            aria-live="polite"
+            sx={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}
+          >
+            {t('search.resultsStatus').replace('{count}', String(filteredProducts.length))}
+          </Typography>
           <ProductSortBar value={sort} onChange={setSort} />
           <FilterChipBar chips={filterChips} active={activeChips} onToggle={toggleChip} />
           <Chip

@@ -296,12 +296,12 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
           <Tabs 
             value={tabValue} 
             onChange={handleTabChange} 
-            aria-label="view modes"
+            aria-label={t('comparison.viewModes')}
             centered
           >
-            <Tab icon={<ShoppingCartIcon />} label={isMobile ? t('tabs.individualItemsShort') : t('tabs.individualItems')} />
-            <Tab icon={<CompareIcon />} label={isMobile ? t('tabs.compareAllStoresShort') : t('tabs.compareAllStores')} />
-            <Tab icon={<RouteIcon />} label={isMobile ? t('tabs.optimalStrategyShort') : t('tabs.optimalStrategy')}
+            <Tab id="simple-tab-0" aria-controls="simple-tabpanel-0" icon={<ShoppingCartIcon />} label={isMobile ? t('tabs.individualItemsShort') : t('tabs.individualItems')} />
+            <Tab id="simple-tab-1" aria-controls="simple-tabpanel-1" icon={<CompareIcon />} label={isMobile ? t('tabs.compareAllStoresShort') : t('tabs.compareAllStores')} />
+            <Tab id="simple-tab-2" aria-controls="simple-tabpanel-2" icon={<RouteIcon />} label={isMobile ? t('tabs.optimalStrategyShort') : t('tabs.optimalStrategy')}
               sx={{
                 '& .MuiTab-labelContainer': {
                   fontSize: { xs: '0.7rem', sm: '0.875rem' }
@@ -385,7 +385,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                       {lowestPriceSupermarket.onSale && (
                         <Chip 
                           icon={<LocalOfferIcon />} 
-                          label="Sale" 
+                          label={t('label.sale')}
                           size="small" 
                           color="secondary" 
                           sx={{ ml: 0.5, height: 20 }}
@@ -401,8 +401,11 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                       onRemoveGrocery(grocery.id);
                     }} 
                     size="small"
-                    sx={{ 
-                      '&:hover': { 
+                    aria-label={t('comparison.remove').replace('{product}', grocery.name)}
+                    sx={{
+                      minWidth: 44,
+                      minHeight: 44,
+                      '&:hover': {
                         backgroundColor: 'error.light',
                         color: 'error.contrastText'
                       }
@@ -415,8 +418,8 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
               
               <AccordionDetails>
                 {loading[grocery.id] ? (
-                  <Box display="flex" justifyContent="center" p={3}>
-                    <CircularProgress />
+                  <Box role="status" aria-live="polite" display="flex" justifyContent="center" p={3}>
+                    <CircularProgress aria-label={t('search.searching')} />
                   </Box>
                 ) : grocery.prices.length >= 1 && (
                   <>
@@ -453,7 +456,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                                       {price.supermarketName}
                                       {lowestPriceSupermarket?.price === price.price && (
                                         <Chip 
-                                          label="Cheapest" 
+                                          label={t('label.cheapest')}
                                           size="small" 
                                           color="success" 
                                           sx={{ ml: 1 }}
@@ -493,7 +496,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                                         {formatCurrency(price.price)}
                                         <Chip 
                                           icon={<LocalOfferIcon />} 
-                                          label="Sale" 
+                                          label={t('label.sale')}
                                           size="small" 
                                           color="secondary" 
                                           sx={{ ml: 1 }}
@@ -557,7 +560,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                                     </Typography>
                                     {lowestPriceSupermarket?.price === price.price && (
                                       <Chip 
-                                        label="Cheapest" 
+                                        label={t('label.cheapest')}
                                         size="small" 
                                         color="success" 
                                         sx={{ mt: 0.5 }}
@@ -572,7 +575,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                                   {price.onSale && (
                                     <Chip 
                                       icon={<LocalOfferIcon />} 
-                                      label="Sale" 
+                                      label={t('label.sale')}
                                       size="small" 
                                       color="secondary" 
                                       sx={{ mt: 0.5 }}
@@ -693,7 +696,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                                 {summary.supermarketName}
                                 {summary === cheapestSupermarket && summary.productCount === groceriesWithPrices.length && (
                                   <Chip 
-                                    label="Cheapest" 
+                                    label={t('label.cheapest')}
                                     size="small" 
                                     color="success" 
                                     sx={{ ml: 1 }}
@@ -709,7 +712,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                           <TableCell align="right">
                             {Object.entries(summary.products).map(([productId, priceData], index) => {
                               const grocery = groceriesWithPrices.find(g => g.id === productId);
-                              const productName = priceData.productName || grocery?.name || 'Unknown';
+                              const productName = priceData.productName || grocery?.name || t('comparison.unknownProduct');
                               return (
                                 <Typography
                                   key={productId}
@@ -729,11 +732,11 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                             {summary.saleCount > 0 ? (
                               <Chip 
                                 icon={<LocalOfferIcon />} 
-                                label={`${summary.saleCount} items`} 
+                                label={t('comparison.itemsOnSale').replace('{count}', String(summary.saleCount))}
                                 size="small" 
                                 color="secondary" 
                               />
-                            ) : "None"}
+                            ) : t('label.none')}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -770,7 +773,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                               </Typography>
                               {summary === cheapestSupermarket && summary.productCount === groceriesWithPrices.length && (
                                 <Chip 
-                                  label="Cheapest" 
+                                  label={t('label.cheapest')}
                                   size="small" 
                                   color="success" 
                                   sx={{ mt: 0.5 }}
@@ -783,7 +786,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                               {formatCurrency(summary.totalPrice)}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                              {summary.productCount}/{groceriesWithPrices.length} items
+                              {summary.productCount}/{groceriesWithPrices.length} {t('label.items')}
                             </Typography>
                           </Box>
                         </Box>
@@ -793,7 +796,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                           <Box sx={{ mb: 2 }}>
                             <Chip 
                               icon={<LocalOfferIcon />} 
-                              label={`${summary.saleCount} items on sale`} 
+                              label={t('comparison.itemsOnSale').replace('{count}', String(summary.saleCount))}
                               size="small" 
                               color="secondary" 
                             />
@@ -803,12 +806,12 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                         {/* Product list */}
                         <Box>
                           <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
-                            Products:
+                            {t('comparison.products')}:
                           </Typography>
                           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                             {Object.entries(summary.products).map(([productId, priceData]) => {
                               const grocery = groceriesWithPrices.find(g => g.id === productId);
-                              const productName = priceData.productName || grocery?.name || 'Unknown';
+                              const productName = priceData.productName || grocery?.name || t('comparison.unknownProduct');
                               return (
                                 <Box 
                                   key={productId}
@@ -831,7 +834,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                                     {priceData.onSale && (
                                       <Chip 
                                         icon={<LocalOfferIcon />} 
-                                        label="Sale" 
+                                        label={t('label.sale')}
                                         size="small" 
                                         color="secondary" 
                                       />

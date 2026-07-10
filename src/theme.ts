@@ -3,14 +3,14 @@ import { createTheme } from '@mui/material/styles';
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#0d9488', // Teal – savings / trust (common in grocery/price apps)
+      main: '#0f766e', // Darker teal keeps white text at accessible contrast.
       light: '#2dd4bf',
-      dark: '#0f766e',
+      dark: '#115e59',
     },
     secondary: {
-      main: '#ea580c', // Warm orange for deals and CTAs
+      main: '#c2410c', // Darker orange keeps white text at accessible contrast.
       light: '#fb923c',
-      dark: '#c2410c',
+      dark: '#9a3412',
     },
     success: {
       main: '#059669',
@@ -50,6 +50,7 @@ const theme = createTheme({
           borderRadius: 10,
           textTransform: 'none',
           fontWeight: 600,
+          minHeight: 44,
         },
       },
     },
@@ -86,6 +87,21 @@ const theme = createTheme({
         root: {
           borderRadius: 8,
           fontWeight: 500,
+        },
+      },
+    },
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          minWidth: 44,
+          minHeight: 44,
+        },
+      },
+    },
+    MuiToggleButton: {
+      styleOverrides: {
+        root: {
+          minHeight: 44,
         },
       },
     },

@@ -20,6 +20,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TextField,
   Typography,
 } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
@@ -28,11 +29,13 @@ import SavingsIcon from '@mui/icons-material/Savings';
 import StoreIcon from '@mui/icons-material/Store';
 import AppNavBar from '../components/AppNavBar';
 import {
+  correctReceiptLine,
   deleteAllReceipts,
   deleteReceipt,
   fetchReceiptAnalytics,
   fetchReceipts,
   ReceiptAnalytics,
+  ReceiptLineMatch,
   SavedReceipt,
   uploadReceipt,
 } from '../api/client';
@@ -49,7 +52,65 @@ function formatDate(iso: string | null) {
   return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString('nl-NL');
 }
 
-const ReceiptResults: React.FC<{ receipt: SavedReceipt }> = ({ receipt }) => {
+const LineCorrection: React.FC<{
+  line: ReceiptLineMatch;
+  lineIndex: number;
+  onCorrect: (
+    lineIndex: number,
+    correction: { action: 'rematch'; correctedName: string } | { action: 'unmatched' }
+  ) => Promise<void>;
+}> = ({ line, lineIndex, onCorrect }) => {
+  const [name, setName] = useState(line.correctedName || line.rawName);
+  const [saving, setSaving] = useState(false);
+  const apply = async (
+    correction: { action: 'rematch'; correctedName: string } | { action: 'unmatched' }
+  ) => {
+    setSaving(true);
+    try {
+      await onCorrect(lineIndex, correction);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1, alignItems: 'center' }}>
+      <TextField
+        size="small"
+        label="Gecorrigeerde productnaam"
+        value={name}
+        onChange={(event) => setName(event.target.value)}
+        disabled={saving}
+        sx={{ minWidth: 220 }}
+      />
+      <Button
+        size="small"
+        variant="outlined"
+        disabled={saving || !name.trim()}
+        onClick={() => apply({ action: 'rematch', correctedName: name.trim() })}
+      >
+        Opnieuw koppelen
+      </Button>
+      <Button
+        size="small"
+        color="inherit"
+        disabled={saving}
+        onClick={() => apply({ action: 'unmatched' })}
+      >
+        Geen match
+      </Button>
+    </Box>
+  );
+};
+
+const ReceiptResults: React.FC<{
+  receipt: SavedReceipt;
+  onCorrect: (
+    receiptId: string,
+    lineIndex: number,
+    correction: { action: 'rematch'; correctedName: string } | { action: 'unmatched' }
+  ) => Promise<void>;
+}> = ({ receipt, onCorrect }) => {
   const { analysis } = receipt;
   return (
     <Card variant="outlined" sx={{ mb: 3 }}>
@@ -78,16 +139,34 @@ const ReceiptResults: React.FC<{ receipt: SavedReceipt }> = ({ receipt }) => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {analysis.lines.map((line) => (
+              {analysis.lines.map((line, lineIndex) => (
                 <TableRow key={`${line.rawName}-${line.paidLineTotal}`}>
                   <TableCell>
-                    {line.rawName}
+                    {line.correctedName || line.rawName}
                     {line.quantity > 1 ? ` ×${line.quantity}` : ''}
-                    {!line.matchedProduct && (
-                      <Typography variant="caption" color="warning.main" display="block">
-                        Geen match in catalogus
+                    {line.correctedName && (
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        Op bon: {line.rawName}
                       </Typography>
                     )}
+                    {(line.matchStatus ?? (line.matchedProduct ? 'matched' : 'unmatched')) !==
+                      'matched' && (
+                      <Typography variant="caption" color="warning.main" display="block">
+                        {line.matchStatus === 'needs_review'
+                          ? `Onzekere suggestie: ${line.alternatives[0]?.productName ?? 'onbekend'} (${Math.round((line.matchConfidence ?? 0) * 100)}%) — telt niet mee`
+                          : 'Geen match in catalogus'}
+                      </Typography>
+                    )}
+                    {line.matchStatus === 'matched' && (
+                      <Typography variant="caption" color="success.main" display="block">
+                        Matchzekerheid: {Math.round((line.matchConfidence ?? 1) * 100)}%
+                      </Typography>
+                    )}
+                    <LineCorrection
+                      line={line}
+                      lineIndex={lineIndex}
+                      onCorrect={(index, correction) => onCorrect(receipt.id, index, correction)}
+                    />
                   </TableCell>
                   <TableCell align="right">{formatEuro(line.paidLineTotal)}</TableCell>
                   <TableCell>
@@ -280,6 +359,25 @@ export const ReceiptPage: React.FC = () => {
     }
   };
 
+  const onCorrectLine = async (
+    receiptId: string,
+    lineIndex: number,
+    correction: { action: 'rematch'; correctedName: string } | { action: 'unmatched' }
+  ) => {
+    setError(null);
+    try {
+      const updated = await correctReceiptLine(receiptId, lineIndex, correction, userId);
+      upsertReceipt(updated);
+      setHistory((receipts) =>
+        receipts.map((receipt) => (receipt.id === updated.id ? updated : receipt))
+      );
+      setLatest((receipt) => (receipt?.id === updated.id ? updated : receipt));
+      setAnalytics(await fetchReceiptAnalytics(userId));
+    } catch (err: unknown) {
+      setError(axiosMessage(err) || 'Productcorrectie opslaan mislukt.');
+    }
+  };
+
   const onClearAll = async () => {
     if (!window.confirm('Alle opgeslagen bonnen en analyses verwijderen?')) return;
     setError(null);
@@ -323,6 +421,11 @@ export const ReceiptPage: React.FC = () => {
           Upload een bonfoto. AI leest de producten en laat zien waar je goedkoper had kunnen
           winkelen. Je bonnen worden opgeslagen om uitgaven over tijd te volgen.
         </Typography>
+        <Alert severity="info" sx={{ mb: 3 }}>
+          De bonfoto wordt naar de ingestelde AI-provider gestuurd maar niet als afbeelding door
+          ComPear opgeslagen. Uitgelezen bongegevens en gekoppelde AI-cache worden standaard
+          maximaal één jaar bewaard, of korter als je een bon of alle historie wist.
+        </Alert>
 
         <AnalyticsPanel analytics={analytics} loading={loadingHistory} />
 
@@ -371,7 +474,7 @@ export const ReceiptPage: React.FC = () => {
           <Tab label={`Geschiedenis (${history.length})`} />
         </Tabs>
 
-        {tab === 0 && latest && <ReceiptResults receipt={latest} />}
+        {tab === 0 && latest && <ReceiptResults receipt={latest} onCorrect={onCorrectLine} />}
         {tab === 0 && !latest && !uploading && (
           <Typography color="text.secondary">Upload een bon om aanbevelingen te zien.</Typography>
         )}
@@ -389,7 +492,7 @@ export const ReceiptPage: React.FC = () => {
                 >
                   <DeleteIcon fontSize="small" />
                 </IconButton>
-                <ReceiptResults receipt={receipt} />
+                <ReceiptResults receipt={receipt} onCorrect={onCorrectLine} />
               </Box>
             ))}
             {!loadingHistory && history.length === 0 && (

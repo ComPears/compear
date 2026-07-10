@@ -46,6 +46,7 @@ export const DietaryFilterBar: React.FC<DietaryFilterBarProps> = ({ selected, on
             color={selected.includes(label) ? 'primary' : 'default'}
             variant={selected.includes(label) ? 'filled' : 'outlined'}
             onClick={() => toggle(label)}
+            aria-pressed={selected.includes(label)}
           />
         ))}
       </Box>

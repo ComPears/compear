@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Chip, Typography } from '@mui/material';
+import { useLanguage } from '../context/LanguageContext';
 
 interface FilterChipBarProps {
   chips: string[];
@@ -16,12 +17,13 @@ export const FilterChipBar: React.FC<FilterChipBarProps> = ({
   active,
   onToggle,
 }) => {
+  const { t } = useLanguage();
   if (chips.length === 0) return null;
 
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
       <Typography variant="body2" color="text.secondary">
-        Verfijn:
+        {t('search.refine')}:
       </Typography>
       {chips.map((chip) => {
         const selected = active.includes(chip);
@@ -33,6 +35,7 @@ export const FilterChipBar: React.FC<FilterChipBarProps> = ({
             color={selected ? 'primary' : 'default'}
             variant={selected ? 'filled' : 'outlined'}
             onClick={() => onToggle(chip)}
+            aria-pressed={selected}
           />
         );
       })}

@@ -78,8 +78,8 @@ export const BasketPage: React.FC = () => {
     return (
       <>
         <AppNavBar />
-        <Container maxWidth="md" sx={{ py: 4, bgcolor: 'background.default' }}>
-          <Typography variant="h5" gutterBottom fontWeight={600}>
+        <Container component="main" maxWidth="md" sx={{ py: 4, bgcolor: 'background.default' }}>
+          <Typography component="h1" variant="h5" gutterBottom fontWeight={600}>
             {t('basket.title')}
           </Typography>
           <Typography color="text.secondary">{t('basket.empty')}</Typography>
@@ -91,8 +91,8 @@ export const BasketPage: React.FC = () => {
   return (
     <>
       <AppNavBar />
-      <Container maxWidth="md" sx={{ py: 3, bgcolor: 'background.default' }}>
-        <Typography variant="h5" gutterBottom fontWeight={600}>
+      <Container component="main" maxWidth="md" sx={{ py: 3, bgcolor: 'background.default' }}>
+        <Typography component="h1" variant="h5" gutterBottom fontWeight={600}>
           {t('basket.title')}
         </Typography>
 
@@ -114,19 +114,34 @@ export const BasketPage: React.FC = () => {
                   </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <IconButton size="small" onClick={() => setQuantity(product.id, quantity - 1)}>
+                      <IconButton
+                        size="small"
+                        aria-label={t('basket.decrease').replace('{product}', product.productName)}
+                        onClick={() => setQuantity(product.id, quantity - 1)}
+                        sx={{ minWidth: 44, minHeight: 44 }}
+                      >
                         <RemoveIcon fontSize="small" />
                       </IconButton>
-                      <Typography sx={{ mx: 1, minWidth: 24, textAlign: 'center' }}>{quantity}</Typography>
-                      <IconButton size="small" onClick={() => setQuantity(product.id, quantity + 1)}>
+                      <Typography aria-live="polite" sx={{ mx: 1, minWidth: 24, textAlign: 'center' }}>{quantity}</Typography>
+                      <IconButton
+                        size="small"
+                        aria-label={t('basket.increase').replace('{product}', product.productName)}
+                        onClick={() => setQuantity(product.id, quantity + 1)}
+                        sx={{ minWidth: 44, minHeight: 44 }}
+                      >
                         <AddIcon fontSize="small" />
                       </IconButton>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Typography variant="caption" color="text.secondary">
-                        {formatPrice(product.effectivePrice)} each
+                        {formatPrice(product.effectivePrice)} {t('basket.each')}
                       </Typography>
-                      <IconButton size="small" onClick={() => remove(product.id)}>
+                      <IconButton
+                        size="small"
+                        aria-label={t('basket.remove').replace('{product}', product.productName)}
+                        onClick={() => remove(product.id)}
+                        sx={{ minWidth: 44, minHeight: 44 }}
+                      >
                         <DeleteIcon fontSize="small" />
                       </IconButton>
                     </Box>
@@ -140,12 +155,12 @@ export const BasketPage: React.FC = () => {
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell>Product</TableCell>
-                  <TableCell>Winkel</TableCell>
-                  <TableCell align="right">Prijs</TableCell>
-                  <TableCell align="center">Aantal</TableCell>
-                  <TableCell align="right">Totaal</TableCell>
-                  <TableCell />
+                  <TableCell>{t('basket.product')}</TableCell>
+                  <TableCell>{t('basket.store')}</TableCell>
+                  <TableCell align="right">{t('basket.price')}</TableCell>
+                  <TableCell align="center">{t('basket.quantity')}</TableCell>
+                  <TableCell align="right">{t('basket.total')}</TableCell>
+                  <TableCell aria-label={t('basket.remove').replace('{product}', '')} />
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -155,11 +170,21 @@ export const BasketPage: React.FC = () => {
                     <TableCell>{product.store}</TableCell>
                     <TableCell align="right">{formatPrice(product.effectivePrice)}</TableCell>
                     <TableCell align="center">
-                      <IconButton size="small" onClick={() => setQuantity(product.id, quantity - 1)}>
+                      <IconButton
+                        size="small"
+                        aria-label={t('basket.decrease').replace('{product}', product.productName)}
+                        onClick={() => setQuantity(product.id, quantity - 1)}
+                        sx={{ minWidth: 44, minHeight: 44 }}
+                      >
                         <RemoveIcon fontSize="small" />
                       </IconButton>
                       {quantity}
-                      <IconButton size="small" onClick={() => setQuantity(product.id, quantity + 1)}>
+                      <IconButton
+                        size="small"
+                        aria-label={t('basket.increase').replace('{product}', product.productName)}
+                        onClick={() => setQuantity(product.id, quantity + 1)}
+                        sx={{ minWidth: 44, minHeight: 44 }}
+                      >
                         <AddIcon fontSize="small" />
                       </IconButton>
                     </TableCell>
@@ -167,7 +192,12 @@ export const BasketPage: React.FC = () => {
                       {formatPrice(product.effectivePrice * quantity)}
                     </TableCell>
                     <TableCell>
-                      <IconButton size="small" onClick={() => remove(product.id)}>
+                      <IconButton
+                        size="small"
+                        aria-label={t('basket.remove').replace('{product}', product.productName)}
+                        onClick={() => remove(product.id)}
+                        sx={{ minWidth: 44, minHeight: 44 }}
+                      >
                         <DeleteIcon />
                       </IconButton>
                     </TableCell>
@@ -181,16 +211,16 @@ export const BasketPage: React.FC = () => {
         <Card variant="outlined">
           <CardContent>
             <Typography variant="subtitle2" gutterBottom>
-              Optie 1: Per product bij de goedkoopste winkel
+              {t('basket.optionSplit')}
             </Typography>
             <Typography variant="h6">{formatPrice(cheapestPerItemTotal)}</Typography>
             <Typography variant="subtitle2" sx={{ mt: 2 }} gutterBottom>
-              Optie 2: Alles bij één winkel {singleStore ? `(${singleStore.store})` : ''}
+              {t('basket.optionSingle')} {singleStore ? `(${singleStore.store})` : ''}
             </Typography>
             <Typography variant="h6">{formatPrice(singleStoreTotal)}</Typography>
             {savings > 0 && (
               <Typography color="primary" sx={{ mt: 2 }} fontWeight="bold">
-                Je bespaart {formatPrice(savings)} door te splitsen.
+                {t('basket.savings').replace('{amount}', formatPrice(savings))}
               </Typography>
             )}
           </CardContent>

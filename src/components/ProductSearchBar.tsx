@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Autocomplete,
   TextField,
@@ -14,6 +14,7 @@ interface ProductSearchBarProps {
   loading?: boolean;
   placeholder?: string;
   label?: string;
+  loadingLabel?: string;
   onSubmit?: () => void;
   /** Hide autocomplete dropdown while results are shown below */
   disableSuggestions?: boolean;
@@ -24,16 +25,21 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
   onChange,
   suggestions = [],
   loading = false,
-  placeholder = 'Bijv. melk, eieren, pasta...',
+  placeholder = '',
   label,
+  loadingLabel = 'Loading',
   onSubmit,
   disableSuggestions = false,
 }) => {
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+
   return (
     <Autocomplete
       freeSolo
       fullWidth
-      open={disableSuggestions ? false : undefined}
+      open={!disableSuggestions && suggestionsOpen}
+      onOpen={() => setSuggestionsOpen(true)}
+      onClose={() => setSuggestionsOpen(false)}
       options={disableSuggestions ? [] : suggestions}
       inputValue={value}
       onInputChange={(_e, newValue) => onChange(newValue)}
@@ -45,6 +51,10 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
           {...params}
           label={label}
           placeholder={placeholder}
+          inputProps={{
+            ...params.inputProps,
+            'aria-label': label || placeholder,
+          }}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && onSubmit) onSubmit();
           }}
@@ -60,7 +70,7 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
             ),
             endAdornment: (
               <>
-                {loading ? <CircularProgress color="inherit" size={18} /> : null}
+                {loading ? <CircularProgress color="inherit" size={18} aria-label={loadingLabel} /> : null}
                 {params.InputProps.endAdornment}
               </>
             ),
