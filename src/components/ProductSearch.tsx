@@ -21,6 +21,7 @@ import {
   sortGroups,
 } from '../utils/productGrouping';
 import { extractFilterChips, filterByChip } from '../utils/filterChips';
+import { useBasketStore } from '../store/basketStore';
 
 interface ProductSearchProps {
   onAddGrocery: (grocery: Grocery) => void;
@@ -41,6 +42,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
   const [searched, setSearched] = useState(false);
   const { t } = useLanguage();
   const { country } = useCountry();
+  const addToBasket = useBasketStore((s) => s.add);
   const apiCountry = country.code as ApiCountry;
   const abortControllerRef = useRef<AbortController | null>(null);
   const debouncedQuery = useDebouncedValue(searchTerm, 350);
@@ -160,6 +162,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
   const handleAddProduct = useCallback(
     (product: Product) => {
       onAddGrocery(productToGrocery(product));
+      addToBasket(product);
       setProducts([]);
       setSearchTerm('');
       setBarcodeQuery(null);
@@ -167,7 +170,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
       setError(null);
       setSearched(false);
     },
-    [onAddGrocery]
+    [onAddGrocery, addToBasket]
   );
 
   const toggleChip = (chip: string) => {

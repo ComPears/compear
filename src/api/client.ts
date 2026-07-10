@@ -79,40 +79,6 @@ export async function fetchStores(country: ApiCountry = 'nl'): Promise<StoreInfo
   return data;
 }
 
-export async function fetchDeals(country: ApiCountry = 'nl'): Promise<Product[]> {
-  const { data } = await api.get<Product[]>('/deals', { params: withCountry(undefined, country) });
-  return data;
-}
-
-export interface DealsDigest {
-  weekLabel: string;
-  generatedAt: string;
-  totalDeals: number;
-  totalPotentialSavings: number;
-  byStore: Record<string, number>;
-  topSavings: Array<{
-    id: string;
-    productName: string;
-    store: string;
-    originalPrice: number;
-    effectivePrice: number;
-    savings: number;
-    promoType: string | null;
-  }>;
-  biggestPercentOff: Array<{
-    id: string;
-    productName: string;
-    store: string;
-    percentOff: number;
-    effectivePrice: number;
-  }>;
-}
-
-export async function fetchDealsDigest(country: ApiCountry = 'nl'): Promise<DealsDigest> {
-  const { data } = await api.get<DealsDigest>('/deals/digest', { params: withCountry(undefined, country) });
-  return data;
-}
-
 export async function fetchCompare(
   canonicalName: string,
   identityKey?: string | null,
@@ -235,6 +201,12 @@ export async function fetchReceiptAnalytics(userId: string): Promise<ReceiptAnal
 
 export async function deleteReceipt(receiptId: string, userId: string): Promise<void> {
   await api.delete(`/receipts/${encodeURIComponent(receiptId)}`, {
+    headers: userHeaders(userId),
+  });
+}
+
+export async function deleteAllReceipts(userId: string): Promise<void> {
+  await api.delete('/receipts', {
     headers: userHeaders(userId),
   });
 }

@@ -5,7 +5,6 @@ import App from '../App';
 import NotFoundPage from './NotFoundPage';
 import { SearchPage } from '../pages/SearchPage';
 import { ProductPage } from '../pages/ProductPage';
-import { DealsPage } from '../pages/DealsPage';
 import { BasketPage } from '../pages/BasketPage';
 import { ReceiptPage } from '../pages/ReceiptPage';
 import { StoreLocatorPage } from '../pages/StoreLocatorPage';
@@ -20,7 +19,6 @@ const AppRouter: React.FC = () => {
           <Route index element={<App />} />
           <Route path="search" element={<SearchPage />} />
           <Route path="product/:id" element={<ProductPage />} />
-          <Route path="deals" element={<DealsPage />} />
           <Route path="basket" element={<BasketPage />} />
           <Route path="stores" element={<StoreLocatorPage />} />
           <Route path="shared/:listId" element={<SharedListPage />} />

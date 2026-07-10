@@ -1,5 +1,4 @@
-import React, { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   Container,
   Typography,
@@ -10,53 +9,63 @@ import {
 import GroceryComparison from './components/GroceryComparison';
 import ProductSearch from './components/ProductSearch';
 import Footer from './components/Footer';
-import CheapestDialog from './components/CheapestDialog';
 import AppNavBar from './components/AppNavBar';
-import { GroceryWithPrices } from './types';
 import { useCountry } from './context/CountryContext';
 import { useLanguage } from './context/LanguageContext';
 import { useComparisonStore } from './store/comparisonStore';
+import { useBasketStore } from './store/basketStore';
+import { fetchProduct } from './api/client';
 
 const App: React.FC = () => {
-  const navigate = useNavigate();
   const { country, setCountry } = useCountry();
   const { t } = useLanguage();
   const groceries = useComparisonStore((s) => s.items);
   const addGrocery = useComparisonStore((s) => s.add);
   const removeGrocery = useComparisonStore((s) => s.remove);
   const clearComparison = useComparisonStore((s) => s.clear);
-  const [groceriesWithPrices, setGroceriesWithPrices] = useState<GroceryWithPrices[]>([]);
-  const [triggerCheapestDialog, setTriggerCheapestDialog] = useState(false);
+  const basketItems = useBasketStore((s) => s.items);
+  const addToBasket = useBasketStore((s) => s.add);
+  const removeFromBasket = useBasketStore((s) => s.remove);
+  const clearBasket = useBasketStore((s) => s.clear);
   const [searchResetKey, setSearchResetKey] = useState(0);
+  const migratedComparisonRef = useRef(false);
+
+  // Migrate products saved before comparison items and basket items were unified.
+  useEffect(() => {
+    if (migratedComparisonRef.current || !country.available) return;
+    migratedComparisonRef.current = true;
+
+    const basketIds = new Set(basketItems.map((item) => item.product.id));
+    const missingProductIds = groceries
+      .map((grocery) => grocery.productId)
+      .filter((id): id is string => Boolean(id) && !basketIds.has(id as string));
+
+    void Promise.allSettled(
+      missingProductIds.map(async (productId) => {
+        const product = await fetchProduct(productId, country.code);
+        addToBasket(product);
+      })
+    );
+  }, [country.available, country.code, groceries, basketItems, addToBasket]);
 
   const handleClearAll = () => {
     clearComparison();
+    clearBasket();
   };
 
-  const handleCartClick = () => {
-    if (groceries.length > 0) {
-      setTriggerCheapestDialog(true);
-    } else {
-      navigate(`/${country.code}/basket`);
-    }
+  const handleRemoveGrocery = (id: string) => {
+    const grocery = groceries.find((item) => item.id === id);
+    if (grocery?.productId) removeFromBasket(grocery.productId);
+    removeGrocery(id);
   };
-
-  const handleCheapestDialogHandled = useCallback(() => {
-    setTriggerCheapestDialog(false);
-  }, []);
 
   const handleHomeReset = useCallback(() => {
     setSearchResetKey((k) => k + 1);
   }, []);
 
-  const handleGroceriesWithPricesChange = (newGroceriesWithPrices: GroceryWithPrices[]) => {
-    setGroceriesWithPrices(newGroceriesWithPrices);
-  };
-
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: 'background.default' }}>
       <AppNavBar
-        onCartClick={handleCartClick}
         onClearAll={groceries.length > 0 ? handleClearAll : undefined}
         onHomeReset={handleHomeReset}
       />
@@ -100,20 +109,13 @@ const App: React.FC = () => {
 
             <GroceryComparison
               groceries={groceries}
-              onRemoveGrocery={removeGrocery}
-              onGroceriesWithPricesChange={handleGroceriesWithPricesChange}
+              onRemoveGrocery={handleRemoveGrocery}
             />
           </>
         )}
       </Container>
 
       <Footer />
-
-      <CheapestDialog
-        open={triggerCheapestDialog}
-        onClose={handleCheapestDialogHandled}
-        groceries={groceriesWithPrices}
-      />
     </Box>
   );
 };

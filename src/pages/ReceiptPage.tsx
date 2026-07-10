@@ -28,6 +28,7 @@ import SavingsIcon from '@mui/icons-material/Savings';
 import StoreIcon from '@mui/icons-material/Store';
 import AppNavBar from '../components/AppNavBar';
 import {
+  deleteAllReceipts,
   deleteReceipt,
   fetchReceiptAnalytics,
   fetchReceipts,
@@ -211,7 +212,6 @@ const AnalyticsPanel: React.FC<{ analytics: ReceiptAnalytics | null; loading: bo
 
 export const ReceiptPage: React.FC = () => {
   const userId = useMemo(() => getUserId(), []);
-  const localReceipts = useReceiptStore((s) => s.receipts);
   const upsertReceipt = useReceiptStore((s) => s.upsert);
   const removeLocalReceipt = useReceiptStore((s) => s.remove);
   const setAllReceipts = useReceiptStore((s) => s.setAll);
@@ -230,6 +230,7 @@ export const ReceiptPage: React.FC = () => {
         fetchReceipts(userId),
         fetchReceiptAnalytics(userId),
       ]);
+      const localReceipts = useReceiptStore.getState().receipts;
       const merged =
         receipts.length > 0
           ? receipts
@@ -242,7 +243,7 @@ export const ReceiptPage: React.FC = () => {
     } finally {
       setLoadingHistory(false);
     }
-  }, [userId, localReceipts, setAllReceipts]);
+  }, [userId, setAllReceipts]);
 
   useEffect(() => {
     refresh();
@@ -279,9 +280,25 @@ export const ReceiptPage: React.FC = () => {
     }
   };
 
+  const onClearAll = async () => {
+    setError(null);
+    setLoadingHistory(true);
+    try {
+      await deleteAllReceipts(userId);
+      setAllReceipts([]);
+      setHistory([]);
+      setLatest(null);
+      setAnalytics(null);
+    } catch {
+      setError('Bonhistorie wissen mislukt.');
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
   return (
     <>
-      <AppNavBar />
+      <AppNavBar onClearAll={history.length > 0 || latest ? onClearAll : undefined} />
       <Container maxWidth="md" sx={{ py: 3 }}>
         <Typography variant="h5" fontWeight={600} gutterBottom>
           Bonnen & besparingen

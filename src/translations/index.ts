@@ -21,7 +21,6 @@ const en: Translations = {
   // Navigation
   'nav.home': 'Go to home',
   'nav.search': 'Search',
-  'nav.deals': 'Deals',
   'nav.receipts': 'Receipts',
   'nav.stores': 'Stores',
   'nav.switchToLocal': 'Switch to local language',
@@ -228,7 +227,6 @@ const nl: Translations = {
   // Navigation
   'nav.home': 'Naar home',
   'nav.search': 'Zoek',
-  'nav.deals': 'Aanbiedingen',
   'nav.receipts': 'Bonnen',
   'nav.stores': 'Winkels',
   'nav.switchToLocal': 'Schakel naar lokale taal',
@@ -434,7 +432,6 @@ const de: Translations = {
   // Navigation
   'nav.home': 'Zur Startseite',
   'nav.search': 'Suchen',
-  'nav.deals': 'Angebote',
   'nav.receipts': 'Belege',
   'nav.stores': 'Filialen',
   'nav.switchToLocal': 'Zur Landessprache wechseln',
