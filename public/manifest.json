@@ -18,14 +18,55 @@
       "src": "logo512.png",
       "type": "image/png",
       "sizes": "512x512",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
     }
   ],
+  "id": "/",
   "start_url": "/nl",
   "scope": "/",
   "display": "standalone",
+  "lang": "nl",
+  "dir": "ltr",
   "theme_color": "#0d9488",
   "background_color": "#f5f5f5",
   "categories": ["shopping", "food"],
-  "orientation": "portrait-primary"
+  "orientation": "portrait-primary",
+  "shortcuts": [
+    {
+      "name": "Search products",
+      "short_name": "Search",
+      "url": "/nl/search",
+      "icons": [{ "src": "icon-maskable-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Basket",
+      "short_name": "Basket",
+      "url": "/nl/basket",
+      "icons": [{ "src": "icon-maskable-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Scan receipt",
+      "short_name": "Receipts",
+      "url": "/nl/receipts",
+      "icons": [{ "src": "icon-maskable-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Store locator",
+      "short_name": "Stores",
+      "url": "/nl/stores",
+      "icons": [{ "src": "icon-maskable-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
 }

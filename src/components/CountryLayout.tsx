@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet, useParams, Navigate } from 'react-router-dom';
 import { CountryProvider, VALID_COUNTRY_CODES, CountryCode } from '../context/CountryContext';
 import { LanguageProvider, LanguageCode } from '../context/LanguageContext';
+import InstallPrompt from './InstallPrompt';
 
 export const CountryLayout: React.FC = () => {
   const { countryCode } = useParams<{ countryCode: string }>();
@@ -17,6 +18,7 @@ export const CountryLayout: React.FC = () => {
     <CountryProvider initialCountryCode={countryCode as CountryCode}>
       <LanguageProvider initialLanguage={language}>
         <Outlet />
+        <InstallPrompt />
       </LanguageProvider>
     </CountryProvider>
   );
