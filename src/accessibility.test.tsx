@@ -78,6 +78,6 @@ describe('accessibility and translations', () => {
     );
 
     expect(screen.getAllByRole('button', { name: 'Halfvolle melk bekijken' }).length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: 'Toevoegen' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Vergelijk Halfvolle melk' })).toBeInTheDocument();
   });
 });

@@ -49,6 +49,17 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
       renderInput={(params) => (
         <TextField
           {...params}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              minHeight: 56,
+              bgcolor: 'background.paper',
+              borderRadius: 2,
+              transition: 'box-shadow 160ms ease, border-color 160ms ease',
+              '&.Mui-focused': {
+                boxShadow: '0 0 0 4px rgba(11, 110, 79, 0.12)',
+              },
+            },
+          }}
           label={label}
           placeholder={placeholder}
           inputProps={{

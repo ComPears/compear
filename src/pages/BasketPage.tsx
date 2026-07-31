@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -15,6 +15,9 @@ import {
   Paper,
   IconButton,
   Box,
+  Alert,
+  LinearProgress,
+  TextField,
   useMediaQuery,
   useTheme,
 } from '@mui/material';
@@ -55,6 +58,19 @@ export const BasketPage: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [shareOpen, setShareOpen] = useState(false);
+  const budgetKey = `compear-weekly-budget-${country.code}`;
+  const [budget, setBudget] = useState(() => Number(localStorage.getItem(budgetKey)) || 0);
+
+  useEffect(() => {
+    setBudget(Number(localStorage.getItem(budgetKey)) || 0);
+  }, [budgetKey]);
+
+  const updateBudget = (value: number) => {
+    const safeValue = Number.isFinite(value) && value > 0 ? value : 0;
+    setBudget(safeValue);
+    if (safeValue) localStorage.setItem(budgetKey, String(safeValue));
+    else localStorage.removeItem(budgetKey);
+  };
 
   const shareItems = useMemo(
     () =>
@@ -122,6 +138,41 @@ export const BasketPage: React.FC = () => {
         <Typography component="h1" variant="h5" gutterBottom fontWeight={600}>
           {t('basket.title')}
         </Typography>
+
+        <Card variant="outlined" sx={{ mb: 2 }}>
+          <CardContent>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: { xs: 'stretch', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' } }}>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="subtitle1" fontWeight={700}>{t('basket.budget')}</Typography>
+                <Typography variant="body2" color="text.secondary">{t('basket.budgetHint')}</Typography>
+              </Box>
+              <TextField
+                type="number"
+                size="small"
+                label={t('basket.budget')}
+                value={budget || ''}
+                onChange={(event) => updateBudget(Number(event.target.value))}
+                inputProps={{ min: 0, step: 1 }}
+                sx={{ width: { xs: '100%', sm: 160 } }}
+              />
+            </Box>
+            {budget > 0 && (
+              <Box sx={{ mt: 2 }}>
+                <LinearProgress
+                  variant="determinate"
+                  color={cheapestPerItemTotal > budget ? 'error' : 'primary'}
+                  value={Math.min(100, (cheapestPerItemTotal / budget) * 100)}
+                  sx={{ height: 8, borderRadius: 8, mb: 1 }}
+                />
+                <Alert severity={cheapestPerItemTotal > budget ? 'warning' : 'success'}>
+                  {cheapestPerItemTotal > budget
+                    ? t('basket.budgetOver').replace('{amount}', money(cheapestPerItemTotal - budget))
+                    : t('basket.budgetRemaining').replace('{amount}', money(budget - cheapestPerItemTotal))}
+                </Alert>
+              </Box>
+            )}
+          </CardContent>
+        </Card>
 
         {isMobile ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 3 }}>

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   Container,
   Typography,
@@ -7,6 +7,7 @@ import {
   TextField,
   Avatar,
   Stack,
+  Chip,
 } from '@mui/material';
 import GroceryComparison from './components/GroceryComparison';
 import ProductSearch from './components/ProductSearch';
@@ -16,9 +17,11 @@ import { useCountry } from './context/CountryContext';
 import { useLanguage } from './context/LanguageContext';
 import { useComparisonStore } from './store/comparisonStore';
 import { useBasketStore } from './store/basketStore';
-import { fetchProduct } from './api/client';
+import { fetchProduct, fetchStores, StoreInfo } from './api/client';
 import { getSupermarketsForCountry } from './services/supermarketService';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import { Link as RouterLink } from 'react-router-dom';
+import { CATEGORIES, categorySlug, getCategoryDisplayName } from './services/categoryService';
 
 const App: React.FC = () => {
   const { country, setCountry } = useCountry();
@@ -35,7 +38,40 @@ const App: React.FC = () => {
   const [searchResetKey, setSearchResetKey] = useState(0);
   const [waitlistEmail, setWaitlistEmail] = useState('');
   const [waitlistSent, setWaitlistSent] = useState(false);
+  const [catalogStores, setCatalogStores] = useState<StoreInfo[]>([]);
   const migratedComparisonRef = useRef(false);
+
+  useEffect(() => {
+    if (!country.available) return;
+    let cancelled = false;
+    fetchStores(country.code)
+      .then((stores) => {
+        if (!cancelled) setCatalogStores(stores);
+      })
+      .catch(() => {
+        if (!cancelled) setCatalogStores([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [country.available, country.code]);
+
+  const catalogProductCount = useMemo(
+    () => catalogStores.reduce((total, store) => total + (store.productCount ?? 0), 0),
+    [catalogStores]
+  );
+  const catalogFreshness = useMemo(() => {
+    const timestamps = catalogStores
+      .map((store) => store.latestPriceAt)
+      .filter((value): value is string => Boolean(value) && Number.isFinite(Date.parse(value as string)))
+      .map((value) => Date.parse(value));
+    if (timestamps.length === 0) return null;
+    return new Date(Math.max(...timestamps));
+  }, [catalogStores]);
+  const numberLocale = country.code === 'nl' ? 'nl-NL' : 'en-GB';
+  const updatedToday = catalogFreshness
+    ? catalogFreshness.toDateString() === new Date().toDateString()
+    : false;
 
   useEffect(() => {
     if (migratedComparisonRef.current || !country.available) return;
@@ -208,6 +244,49 @@ const App: React.FC = () => {
                 <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 440, mx: 'auto', mb: 2 }}>
                   {t(`app.heroSupport.${country.code}`) || t('app.heroSupport')}
                 </Typography>
+                {catalogProductCount > 0 && (
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    justifyContent="center"
+                    sx={{ flexWrap: 'wrap', rowGap: 1, mb: 2 }}
+                    aria-label={t('app.catalogCoverageLabel')}
+                  >
+                    <Chip
+                      color="primary"
+                      variant="outlined"
+                      label={t('app.catalogProducts').replace(
+                        '{count}',
+                        new Intl.NumberFormat(numberLocale).format(catalogProductCount)
+                      )}
+                      sx={{ bgcolor: 'rgba(255,255,255,0.72)' }}
+                    />
+                    <Chip
+                      color="primary"
+                      variant="outlined"
+                      label={t('app.catalogStores').replace('{count}', String(catalogStores.length))}
+                      sx={{ bgcolor: 'rgba(255,255,255,0.72)' }}
+                    />
+                    {catalogFreshness && (
+                      <Chip
+                        color="secondary"
+                        variant="outlined"
+                        label={
+                          updatedToday
+                            ? t('app.pricesUpdatedToday')
+                            : t('app.pricesUpdatedDate').replace(
+                                '{date}',
+                                new Intl.DateTimeFormat(numberLocale, {
+                                  day: 'numeric',
+                                  month: 'short',
+                                }).format(catalogFreshness)
+                              )
+                        }
+                        sx={{ bgcolor: 'rgba(255,255,255,0.72)' }}
+                      />
+                    )}
+                  </Stack>
+                )}
                 <Stack
                   direction="row"
                   spacing={1}
@@ -230,6 +309,27 @@ const App: React.FC = () => {
                       }}
                       imgProps={{ loading: 'lazy' }}
                     />
+                  ))}
+                </Stack>
+                <Stack
+                  component="nav"
+                  direction="row"
+                  spacing={0.75}
+                  justifyContent="center"
+                  aria-label={t('filters.category')}
+                  sx={{ flexWrap: 'wrap', rowGap: 0.75, mt: 1.5 }}
+                >
+                  {CATEGORIES.filter((category) => category !== 'Other').slice(0, 8).map((category) => (
+                    <Button
+                      key={category}
+                      component={RouterLink}
+                      to={`/${country.code}/categories/${categorySlug(category)}`}
+                      size="small"
+                      variant="text"
+                      sx={{ minHeight: 40 }}
+                    >
+                      {country.code === 'nl' ? getCategoryDisplayName(category) : category}
+                    </Button>
                   ))}
                 </Stack>
               </Box>

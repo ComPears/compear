@@ -38,7 +38,7 @@
   "scripts": {
     "dev": "vite",
     "start": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build && node scripts/prerender-seo.mjs",
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",

@@ -5,6 +5,7 @@ export interface Grocery {
   quantity: number;
   variant?: string;
   brand?: string;
+  weightInGrams?: number | null;
   price?: number;
   searchKeyword?: string;
   category?: string;
@@ -26,6 +27,10 @@ export interface SupermarketPrice {
   regularPrice?: number;
   link?: string;
   category?: string; // Product category
+  updatedAt?: string;
+  matchConfidence?: number;
+  matchType?: 'exact' | 'similar';
+  loyaltyLabel?: string;
 }
 
 export interface GroceryWithPrices extends Grocery {
@@ -49,4 +54,4 @@ export interface ProductVariant {
   defaultQuantity: number;
   imageUrl?: string;
   category: string;
-} 
+}

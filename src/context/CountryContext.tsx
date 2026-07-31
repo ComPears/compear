@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 export type CountryCode = 'nl' | 'uk' | 'de';
 
@@ -45,26 +45,6 @@ interface CountryProviderProps {
   initialCountryCode?: CountryCode;
 }
 
-// Helper function to update document meta information
-const updateDocumentMeta = (country: CountryInfo) => {
-  // Update document title
-  document.title = `ComPear - ${country.name}`;
-  
-  // Update meta description based on country
-  const metaDescriptions = {
-    'nl': 'Compare grocery prices across Dutch supermarkets. Find the best deals and save money on your shopping.',
-    'uk': 'Compare grocery prices across UK supermarkets. Find the best deals and save money on your shopping.',
-    'de': 'Compare grocery prices across German supermarkets. Find the best deals and save money on your shopping.'
-  };
-  
-  const metaDescription = metaDescriptions[country.code];
-  const descriptionMeta = document.querySelector('meta[name="description"]');
-  
-  if (descriptionMeta) {
-    descriptionMeta.setAttribute('content', metaDescription);
-  }
-};
-
 export const CountryProvider: React.FC<CountryProviderProps> = ({ 
   children,
   initialCountryCode = 'nl' // Default to Netherlands if not specified
@@ -76,11 +56,6 @@ export const CountryProvider: React.FC<CountryProviderProps> = ({
   };
   
   const [country, setCountryState] = useState<CountryInfo>(() => getInitialCountry());
-
-  // Update document meta information when country changes
-  useEffect(() => {
-    updateDocumentMeta(country);
-  }, [country]);
 
   // Update country state, localStorage, and URL
   const setCountry = (countryCode: CountryCode) => {
@@ -115,4 +90,4 @@ export const CountryProvider: React.FC<CountryProviderProps> = ({
       {children}
     </CountryContext.Provider>
   );
-}; 
+};

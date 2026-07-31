@@ -74,6 +74,7 @@ export interface StoreInfo {
   slug: string;
   logo?: string;
   productCount?: number;
+  latestPriceAt?: string | null;
 }
 
 export async function fetchProducts(
@@ -108,6 +109,22 @@ export async function fetchProduct(id: string, country: ApiCountry = 'nl'): Prom
   const { data } = await api.get<Product>(`/products/${encodeURIComponent(id)}`, {
     params: withCountry(undefined, country),
   });
+  return data;
+}
+
+export interface ProductSlugResponse {
+  product: Product;
+  offers: Product[];
+}
+
+export async function fetchProductBySlug(
+  slug: string,
+  country: ApiCountry = 'nl'
+): Promise<ProductSlugResponse> {
+  const { data } = await api.get<ProductSlugResponse>(
+    `/products/slug/${encodeURIComponent(slug)}`,
+    { params: withCountry(undefined, country) }
+  );
   return data;
 }
 

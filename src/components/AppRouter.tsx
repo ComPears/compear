@@ -11,6 +11,12 @@ const SearchPage = lazy(() =>
 const ProductPage = lazy(() =>
   import('../pages/ProductPage').then(({ ProductPage }) => ({ default: ProductPage }))
 );
+const CategoryLandingPage = lazy(() =>
+  import('../pages/CategoryLandingPage').then(({ CategoryLandingPage }) => ({ default: CategoryLandingPage }))
+);
+const TrustPage = lazy(() =>
+  import('../pages/TrustPage').then(({ TrustPage }) => ({ default: TrustPage }))
+);
 const BasketPage = lazy(() =>
   import('../pages/BasketPage').then(({ BasketPage }) => ({ default: BasketPage }))
 );
@@ -36,6 +42,9 @@ const AppRouter: React.FC = () => {
             <Route index element={<App />} />
             <Route path="search" element={<SearchPage />} />
             <Route path="product/:id" element={<ProductPage />} />
+            <Route path="products/:slug" element={<ProductPage />} />
+            <Route path="categories/:categorySlug" element={<CategoryLandingPage />} />
+            <Route path="how-it-works" element={<TrustPage />} />
             <Route path="basket" element={<BasketPage />} />
             <Route path="stores" element={<StoreLocatorPage />} />
             <Route path="shared/:listId" element={<SharedListPage />} />

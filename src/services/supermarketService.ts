@@ -1,7 +1,6 @@
 import { Grocery, SupermarketPrice, Supermarket } from '../types';
-import { fetchCompare, fetchProducts, Product, ApiCountry } from '../api/client';
+import { fetchCompare, fetchProducts, fetchStores, Product, ApiCountry } from '../api/client';
 import { productToSupermarketPrice } from '../utils/productMapper';
-import { filterBySearch } from '../utils/productGrouping';
 import { CountryCode } from '../context/CountryContext';
 
 export const nlSupermarkets: Supermarket[] = [
@@ -61,15 +60,19 @@ async function resolveComparableProducts(
   grocery: Grocery,
   country: ApiCountry
 ): Promise<Product[]> {
+  let exactMatches: Product[] = [];
+
   // Cross-store matching uses identityKey/canonicalName — barcode lookup is Jumbo-heavy.
   if (grocery.identityKey) {
     const compared = await fetchCompare(grocery.canonicalName ?? '', grocery.identityKey, country);
-    if (compared.length > 0) return compared;
+    exactMatches = mergeProducts(exactMatches, compared);
+    if (countStores(exactMatches) > 1) return pickCheapestPerStore(exactMatches);
   }
 
   if (grocery.canonicalName) {
     const compared = await fetchCompare(grocery.canonicalName, undefined, country);
-    if (compared.length > 0) return compared;
+    exactMatches = mergeProducts(exactMatches, compared);
+    if (countStores(exactMatches) > 1) return pickCheapestPerStore(exactMatches);
   }
 
   if (grocery.barcode) {
@@ -78,35 +81,176 @@ async function resolveComparableProducts(
       const seed = byBarcode[0];
       if (seed.identityKey) {
         const compared = await fetchCompare(seed.canonicalName, seed.identityKey, country);
-        if (compared.length > 0) return compared;
+        exactMatches = mergeProducts(exactMatches, compared);
+        if (countStores(exactMatches) > 1) return pickCheapestPerStore(exactMatches);
       }
       if (seed.canonicalName) {
         const compared = await fetchCompare(seed.canonicalName, undefined, country);
-        if (compared.length > 0) return compared;
+        exactMatches = mergeProducts(exactMatches, compared);
+        if (countStores(exactMatches) > 1) return pickCheapestPerStore(exactMatches);
       }
-      return byBarcode;
+      exactMatches = mergeProducts(exactMatches, byBarcode);
     }
   }
 
-  if (grocery.searchKeyword) {
-    const results = await fetchProducts({ search: grocery.searchKeyword }, country);
-    const filtered = filterBySearch(results, grocery.searchKeyword);
-    if (filtered.length > 0) return filtered;
-
-    if (grocery.productId) {
-      const picked = results.find((p) => p.id === grocery.productId);
-      if (picked?.identityKey) {
-        const compared = await fetchCompare(picked.canonicalName, picked.identityKey, country);
-        if (compared.length > 0) return compared;
-      }
-      if (picked?.canonicalName) {
-        return fetchCompare(picked.canonicalName, undefined, country);
-      }
-      if (picked) return [picked];
-    }
+  const similarityQuery = buildSimilarityQuery(grocery);
+  if (similarityQuery) {
+    const stores = await fetchStores(country);
+    const storeSearches = await Promise.allSettled(
+      stores.map((store) =>
+        fetchProducts({ search: similarityQuery, store: store.slug, limit: 50 }, country)
+      )
+    );
+    const results = storeSearches.flatMap((result) =>
+      result.status === 'fulfilled' ? result.value : []
+    );
+    const similar = results.filter((product) => isComparableAlternative(grocery, product));
+    const combined = pickCheapestPerStore(mergeProducts(exactMatches, similar));
+    if (countStores(combined) > 1) return combined;
   }
 
-  return [];
+  return pickCheapestPerStore(exactMatches);
+}
+
+const STORE_WORDS = new Set([
+  'ah',
+  'aldi',
+  'albert',
+  'heijn',
+  'jumbo',
+  'lidl',
+  'plus',
+  'coop',
+  'dirk',
+  'tesco',
+  'sainsburys',
+  'asda',
+  'morrisons',
+]);
+
+function words(value: string): string[] {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .split(/[^a-z0-9]+/)
+    .filter((word) => word.length > 1);
+}
+
+function buildSimilarityQuery(grocery: Grocery): string {
+  const brandWords = new Set(words(grocery.brand ?? ''));
+  const core = words(grocery.canonicalName ?? grocery.searchKeyword ?? grocery.name).filter(
+    (word) => !brandWords.has(word) && !STORE_WORDS.has(word)
+  );
+  return core.join(' ');
+}
+
+export function isComparableAlternative(grocery: Grocery, candidate: Product): boolean {
+  if (
+    grocery.category &&
+    grocery.category !== 'Other' &&
+    candidate.category &&
+    candidate.category !== 'Other' &&
+    candidate.category !== grocery.category
+  ) {
+    return false;
+  }
+
+  if (grocery.weightInGrams) {
+    if (!candidate.weightInGrams) return false;
+    const ratio = candidate.weightInGrams / grocery.weightInGrams;
+    if (ratio < 0.95 || ratio > 1.05) return false;
+  } else if (
+    grocery.packageSize &&
+    candidate.packageSize &&
+    candidate.packageSize.trim().toLowerCase() !== grocery.packageSize.trim().toLowerCase()
+  ) {
+    return false;
+  }
+
+  const queryWords = new Set(words(buildSimilarityQuery(grocery)));
+  if (queryWords.size === 0) return false;
+  const candidateWords = new Set(words(`${candidate.canonicalName} ${candidate.productName}`));
+  if (hasVariantConflict(queryWords, candidateWords)) return false;
+  let overlap = 0;
+  for (const word of queryWords) {
+    if (candidateWords.has(word)) overlap += 1;
+  }
+  const requiredOverlap = queryWords.size >= 4 ? Math.ceil(queryWords.size * 0.6) : queryWords.size >= 2 ? 2 : 1;
+  return overlap >= requiredOverlap;
+}
+
+const VARIANT_GROUPS = [
+  ['skimmed', 'semi-skimmed', 'whole'],
+  ['fresh', 'uht', 'evaporated', 'condensed'],
+  ['lactose-free', 'regular'],
+  ['organic', 'conventional'],
+] as const;
+
+function variantValue(tokens: Set<string>, group: readonly string[]): string | null {
+  const joined = Array.from(tokens).join(' ');
+  if (group.includes('semi-skimmed') && /\bsemi(?:\s+|-)skimmed\b/.test(joined)) return 'semi-skimmed';
+  if (group.includes('lactose-free') && /\blactose(?:\s+|-)free\b/.test(joined)) return 'lactose-free';
+  for (const value of group) {
+    if (value.includes('-')) continue;
+    if (tokens.has(value)) return value;
+  }
+  if (group.includes('regular')) return 'regular';
+  if (group.includes('conventional')) return 'conventional';
+  return null;
+}
+
+function hasVariantConflict(source: Set<string>, candidate: Set<string>): boolean {
+  return VARIANT_GROUPS.some((group) => {
+    const sourceValue = variantValue(source, group);
+    const candidateValue = variantValue(candidate, group);
+    if (!sourceValue) return false;
+    return candidateValue !== sourceValue;
+  });
+}
+
+function comparisonConfidence(grocery: Grocery, product: Product): { score: number; type: 'exact' | 'similar' } {
+  if (grocery.identityKey && product.identityKey === grocery.identityKey) {
+    return { score: 1, type: 'exact' };
+  }
+  if (
+    grocery.canonicalName &&
+    product.canonicalName.trim().toLowerCase() === grocery.canonicalName.trim().toLowerCase()
+  ) {
+    return { score: 0.98, type: 'exact' };
+  }
+  const source = new Set(words(buildSimilarityQuery(grocery)));
+  const candidate = new Set(words(`${product.canonicalName} ${product.productName}`));
+  const overlap = Array.from(source).filter((token) => candidate.has(token)).length;
+  return {
+    score: source.size > 0 ? Math.min(0.94, overlap / source.size) : 0,
+    type: 'similar',
+  };
+}
+
+function mergeProducts(current: Product[], incoming: Product[]): Product[] {
+  const byId = new Map(current.map((product) => [product.id, product]));
+  for (const product of incoming) byId.set(product.id, product);
+  return Array.from(byId.values());
+}
+
+function countStores(products: Product[]): number {
+  return new Set(products.map((product) => product.store)).size;
+}
+
+function pickCheapestPerStore(products: Product[]): Product[] {
+  const byStore = new Map<string, Product>();
+  for (const product of products) {
+    const existing = byStore.get(product.store);
+    const productPrice = Number.isFinite(product.effectiveUnitPrice)
+      ? product.effectiveUnitPrice
+      : product.effectivePrice;
+    const existingPrice = existing && Number.isFinite(existing.effectiveUnitPrice)
+      ? existing.effectiveUnitPrice
+      : existing?.effectivePrice ?? Number.POSITIVE_INFINITY;
+    if (!existing || productPrice < existingPrice) byStore.set(product.store, product);
+  }
+  return Array.from(byStore.values()).sort((a, b) => a.effectivePrice - b.effectivePrice);
 }
 
 /** Fetch comparable prices for the grocery item the user picked (not fuzzy re-search). */
@@ -118,12 +262,15 @@ export const fetchPricesForGrocery = async (
   const products = await resolveComparableProducts(grocery, country);
   return products.map((product) => {
     const mapped = productToSupermarketPrice(product, grocery.unit);
+    const confidence = comparisonConfidence(grocery, product);
     return {
       ...mapped,
       unitPrice:
         calculateUnitPrice(product.effectivePrice, product.packageSize, grocery.unit) ??
         mapped.unitPrice,
       category: product.category,
+      matchConfidence: confidence.score,
+      matchType: confidence.type,
     };
   });
 };

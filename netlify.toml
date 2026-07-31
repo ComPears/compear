@@ -5,6 +5,7 @@
 [build.environment]
   NODE_VERSION = "22"
   VITE_API_URL = "https://compear-backend.onrender.com"
+  VITE_SITE_URL = "https://www.compears.shop"
 
 [[headers]]
   for = "/index.html"

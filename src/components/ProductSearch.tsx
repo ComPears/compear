@@ -81,7 +81,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
     setActiveChips([]);
     setError(null);
 
-    fetchProducts({ search: term }, apiCountry, { signal: controller.signal })
+    fetchProducts({ search: term, limit: 30 }, apiCountry, { signal: controller.signal })
       .then((fetched) => {
         if (controller.signal.aborted) return;
         setProducts(fetched);

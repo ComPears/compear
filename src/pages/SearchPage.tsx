@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -17,6 +17,7 @@ import {
   Button,
   Skeleton,
   Collapse,
+  Paper,
 } from '@mui/material';
 import { fetchProducts, fetchStores, Product, StoreInfo, ApiCountry } from '../api/client';
 import { fetchProductsByBarcode, isAbortError } from '../utils/barcodeSearch';
@@ -41,14 +42,17 @@ import {
 } from '../utils/productGrouping';
 import { extractFilterChips, filterByChip } from '../utils/filterChips';
 
+const SEARCH_PAGE_SIZE = 30;
+
 export const SearchPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { country } = useCountry();
   const { t } = useLanguage();
   const addToComparison = useComparisonStore((s) => s.add);
   const clearComparison = useComparisonStore((s) => s.clear);
   const comparisonCount = useComparisonStore((s) => s.items.length);
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(() => searchParams.get('q') ?? '');
   const [storeFilter, setStoreFilter] = useState('');
   const [dealsOnly, setDealsOnly] = useState(false);
   const [sort, setSort] = useState<SortMode>('relevance');
@@ -68,6 +72,14 @@ export const SearchPage: React.FC = () => {
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const debouncedQuery = useDebouncedValue(query, 250);
+
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    const value = debouncedQuery.trim();
+    if (value) next.set('q', value);
+    else next.delete('q');
+    if (next.toString() !== searchParams.toString()) setSearchParams(next, { replace: true });
+  }, [debouncedQuery, searchParams, setSearchParams]);
 
   useEffect(() => {
     let cancelled = false;
@@ -104,7 +116,7 @@ export const SearchPage: React.FC = () => {
     setSearched(true);
     setSearchError(null);
     const params: { search?: string; store?: string; labels?: string; limit?: number } = {
-      limit: 100,
+      limit: SEARCH_PAGE_SIZE,
     };
     if (q.length >= 2) params.search = q;
     if (storeFilter) params.store = storeFilter;
@@ -115,7 +127,7 @@ export const SearchPage: React.FC = () => {
         if (controller.signal.aborted) return;
         setProducts(data);
         setSuggestionPool(data);
-        setHasMore(data.length === 100);
+        setHasMore(data.length === SEARCH_PAGE_SIZE);
       })
       .catch((err) => {
         if (controller.signal.aborted || isAbortError(err)) return;
@@ -224,7 +236,7 @@ export const SearchPage: React.FC = () => {
       limit: number;
       offset: number;
     } = {
-      limit: 100,
+      limit: SEARCH_PAGE_SIZE,
       offset: products.length,
     };
     if (q.length >= 2) params.search = q;
@@ -239,7 +251,7 @@ export const SearchPage: React.FC = () => {
         return [...current, ...next.filter((product) => !seen.has(product.id))];
       });
       setSuggestionPool((current) => [...current, ...next]);
-      setHasMore(next.length === 100);
+      setHasMore(next.length === SEARCH_PAGE_SIZE);
     } catch {
       setSearchError(t('error.searchFailed'));
     } finally {
@@ -264,6 +276,11 @@ export const SearchPage: React.FC = () => {
   };
 
   const showResults = searched && !loading && filteredProducts.length > 0;
+  const catalogProductCount = useMemo(
+    () => stores.reduce((total, store) => total + (store.productCount ?? 0), 0),
+    [stores]
+  );
+  const numberLocale = country.code === 'nl' ? 'nl-NL' : 'en-GB';
 
   const exampleQueries =
     country.code === 'uk'
@@ -281,18 +298,38 @@ export const SearchPage: React.FC = () => {
   return (
     <>
       <AppNavBar />
-      <Container component="main" maxWidth="lg" sx={{ py: 3 }}>
-        <Typography
-          component="h1"
-          variant="h4"
-          gutterBottom
-          sx={{ fontWeight: 650, color: 'primary.dark' }}
-        >
-          {t('search.browseTitle')}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5, maxWidth: 520 }}>
-          {t('search.browseHint')}
-        </Typography>
+      <Container component="main" maxWidth="lg" sx={{ py: { xs: 2, sm: 3 } }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, alignItems: 'flex-start', flexWrap: 'wrap', mb: 2.5 }}>
+          <Box>
+            <Typography
+              component="h1"
+              variant="h4"
+              gutterBottom
+              sx={{ fontWeight: 650, color: 'primary.dark' }}
+            >
+              {t('search.browseTitle')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 560 }}>
+              {t('search.browseHint')}
+            </Typography>
+          </Box>
+          {catalogProductCount > 0 && (
+            <Paper
+              variant="outlined"
+              sx={{ px: 2, py: 1.25, bgcolor: 'rgba(255,255,255,0.76)', minWidth: { xs: '100%', sm: 'auto' } }}
+              aria-label={t('app.catalogCoverageLabel')}
+            >
+              <Typography variant="body2" fontWeight={750} color="primary.dark">
+                {t('search.catalogCoverage')
+                  .replace('{products}', new Intl.NumberFormat(numberLocale).format(catalogProductCount))
+                  .replace('{stores}', String(stores.length))}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {t('search.catalogCoverageHint')}
+              </Typography>
+            </Paper>
+          )}
+        </Box>
 
         {comparisonCount > 0 && (
           <Alert
@@ -308,7 +345,10 @@ export const SearchPage: React.FC = () => {
           </Alert>
         )}
 
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 2 }}>
+        <Paper
+          variant="outlined"
+          sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 2.5, p: { xs: 1.5, sm: 2 }, bgcolor: 'rgba(255,255,255,0.82)' }}
+        >
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'stretch' }}>
             <Box sx={{ flex: 1, minWidth: 240 }}>
               <ProductSearchBar
@@ -398,7 +438,7 @@ export const SearchPage: React.FC = () => {
               )}
             </Box>
           )}
-        </Box>
+        </Paper>
 
         {loading && (
           <Box role="status" aria-live="polite" aria-label={t('search.searching')} sx={{ py: 2 }}>

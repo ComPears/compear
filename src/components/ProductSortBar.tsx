@@ -20,7 +20,15 @@ export const ProductSortBar: React.FC<ProductSortBarProps> = ({
     : ['relevance', 'price', 'unitPrice'];
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: { xs: 'stretch', sm: 'center' },
+        flexDirection: { xs: 'column', sm: 'row' },
+        gap: 0.75,
+        width: { xs: '100%', sm: 'auto' },
+      }}
+    >
       <Typography variant="body2" color="text.secondary">
         {t('search.sort')}:
       </Typography>
@@ -31,6 +39,14 @@ export const ProductSortBar: React.FC<ProductSortBarProps> = ({
         aria-label={t('search.sort')}
         onChange={(_e, next: SortMode | null) => {
           if (next) onChange(next);
+        }}
+        sx={{
+          width: { xs: '100%', sm: 'auto' },
+          '& .MuiToggleButton-root': {
+            flex: { xs: 1, sm: 'initial' },
+            px: { xs: 1, sm: 1.5 },
+            minHeight: 44,
+          },
         }}
       >
         {modes.map((mode) => (

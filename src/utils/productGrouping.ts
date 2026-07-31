@@ -21,6 +21,27 @@ function tokenize(text: string): string[] {
     .filter((t) => t.length > 1);
 }
 
+const CATEGORY_INTENT_TERMS: Partial<Record<NonNullable<Product['category']>, Set<string>>> = {
+  'Dairy & Eggs': new Set([
+    'milk', 'melk', 'milch', 'yogurt', 'yoghurt', 'joghurt', 'egg', 'eggs',
+    'ei', 'eieren', 'eier', 'cheese', 'kaas', 'käse', 'butter',
+  ]),
+  Bakery: new Set(['bread', 'brood', 'brot', 'croissant', 'bagel']),
+  Beverages: new Set([
+    'coffee', 'koffie', 'kaffee', 'tea', 'thee', 'tee', 'juice', 'sap',
+    'saft', 'water',
+  ]),
+  'Fruits & Vegetables': new Set([
+    'apple', 'apples', 'appel', 'appels', 'apfel', 'banana', 'bananas',
+    'banaan', 'bananen', 'banane', 'tomato', 'tomatoes', 'tomaat', 'tomaten',
+    'tomate',
+  ]),
+  'Meat & Seafood': new Set([
+    'chicken', 'kip', 'huhn', 'beef', 'rund', 'fish', 'vis', 'fisch',
+  ]),
+  Pantry: new Set(['pasta', 'rice', 'rijst', 'reis', 'flour', 'meel', 'mehl']),
+};
+
 export function scoreRelevance(product: Product, query: string): number {
   const fullQuery = query.toLowerCase().trim();
   if (!fullQuery) return 0;
@@ -34,18 +55,30 @@ export function scoreRelevance(product: Product, query: string): number {
     .join(' ')
     .toLowerCase();
 
-  if (haystack.includes(fullQuery)) {
-    return 100 + (haystack.startsWith(fullQuery) ? 10 : 0);
-  }
-
   const queryTokens = tokenize(fullQuery);
   let score = 0;
+  if (haystack.includes(fullQuery)) {
+    score += 100 + (haystack.startsWith(fullQuery) ? 10 : 0);
+  }
+
   for (const token of queryTokens) {
     if (haystack.includes(token)) {
       score += token.length >= 4 ? 3 : 2;
       if (product.productName.toLowerCase().startsWith(token)) score += 2;
       if (product.canonicalName?.startsWith(token)) score += 1;
     }
+  }
+
+  const intentTerms = product.category ? CATEGORY_INTENT_TERMS[product.category] : undefined;
+  if (intentTerms) {
+    for (const token of queryTokens) {
+      if (intentTerms.has(token)) score += 90 / queryTokens.length;
+    }
+  }
+
+  const productTokens = new Set(tokenize(product.productName));
+  if (queryTokens.every((token) => productTokens.has(token))) {
+    score += Math.max(8, 40 - Math.max(0, productTokens.size - queryTokens.length) * 4);
   }
   return score;
 }
@@ -80,9 +113,10 @@ function titleCaseName(name: string): string {
 }
 
 export function formatGroupDisplayName(products: Product[]): string {
-  const canonical = products.find((p) => p.canonicalName?.trim())?.canonicalName?.trim();
-  if (canonical) return titleCaseName(canonical);
-  return products[0]?.productName.trim() ?? '';
+  const representative = [...products].sort((a, b) => a.effectivePrice - b.effectivePrice)[0];
+  if (representative?.productName.trim()) return representative.productName.trim();
+  const canonical = representative?.canonicalName?.trim();
+  return canonical ? titleCaseName(canonical) : '';
 }
 
 export function formatGroupSizeLabel(products: Product[]): string {
