@@ -8,7 +8,6 @@ import {
   Chip,
   CircularProgress,
   Container,
-  Divider,
   IconButton,
   LinearProgress,
   Paper,
@@ -29,6 +28,7 @@ import SavingsIcon from '@mui/icons-material/Savings';
 import StoreIcon from '@mui/icons-material/Store';
 import AppNavBar from '../components/AppNavBar';
 import {
+  ApiCountry,
   correctReceiptLine,
   deleteAllReceipts,
   deleteReceipt,
@@ -42,15 +42,21 @@ import {
 import { getUserId } from '../utils/userId';
 import { useReceiptStore } from '../store/receiptStore';
 import { formatMoney } from '../utils/formatMoney';
+import { useCountry } from '../context/CountryContext';
+import { useLanguage } from '../context/LanguageContext';
 
-function formatEuro(value: number) {
-  return formatMoney(value, 'nl');
-}
-
-function formatDate(iso: string | null) {
+function formatDate(iso: string | null, country: ApiCountry) {
   if (!iso) return '—';
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString('nl-NL');
+  const locale = country === 'uk' ? 'en-GB' : country === 'de' ? 'de-DE' : 'nl-NL';
+  return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString(locale);
+}
+
+function fill(template: string, vars: Record<string, string | number>): string {
+  return Object.entries(vars).reduce(
+    (text, [key, value]) => text.replace(`{${key}}`, String(value)),
+    template
+  );
 }
 
 const LineCorrection: React.FC<{
@@ -61,6 +67,7 @@ const LineCorrection: React.FC<{
     correction: { action: 'rematch'; correctedName: string } | { action: 'unmatched' }
   ) => Promise<void>;
 }> = ({ line, lineIndex, onCorrect }) => {
+  const { t } = useLanguage();
   const [name, setName] = useState(line.correctedName || line.rawName);
   const [saving, setSaving] = useState(false);
   const apply = async (
@@ -78,7 +85,7 @@ const LineCorrection: React.FC<{
     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1, alignItems: 'center' }}>
       <TextField
         size="small"
-        label="Gecorrigeerde productnaam"
+        label={t('receipts.correctedName')}
         value={name}
         onChange={(event) => setName(event.target.value)}
         disabled={saving}
@@ -90,7 +97,7 @@ const LineCorrection: React.FC<{
         disabled={saving || !name.trim()}
         onClick={() => apply({ action: 'rematch', correctedName: name.trim() })}
       >
-        Opnieuw koppelen
+        {t('receipts.rematch')}
       </Button>
       <Button
         size="small"
@@ -98,7 +105,7 @@ const LineCorrection: React.FC<{
         disabled={saving}
         onClick={() => apply({ action: 'unmatched' })}
       >
-        Geen match
+        {t('receipts.unmatch')}
       </Button>
     </Box>
   );
@@ -106,25 +113,37 @@ const LineCorrection: React.FC<{
 
 const ReceiptResults: React.FC<{
   receipt: SavedReceipt;
+  country: ApiCountry;
   onCorrect: (
     receiptId: string,
     lineIndex: number,
     correction: { action: 'rematch'; correctedName: string } | { action: 'unmatched' }
   ) => Promise<void>;
-}> = ({ receipt, onCorrect }) => {
+}> = ({ receipt, country, onCorrect }) => {
+  const { t } = useLanguage();
   const { analysis } = receipt;
+  const money = (value: number) => formatMoney(value, country);
+
   return (
     <Card variant="outlined" sx={{ mb: 3 }}>
       <CardContent>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-          <Chip icon={<StoreIcon />} label={analysis.storeDetected || 'Winkel onbekend'} />
-          <Chip label={formatDate(analysis.purchaseDate || receipt.uploadedAt)} />
-          <Chip color="primary" label={`Betaald: ${formatEuro(analysis.actualTotal)}`} />
+          <Chip
+            icon={<StoreIcon />}
+            label={analysis.storeDetected || t('receipts.storeUnknown')}
+          />
+          <Chip label={formatDate(analysis.purchaseDate || receipt.uploadedAt, country)} />
+          <Chip
+            color="primary"
+            label={fill(t('receipts.paid'), { amount: money(analysis.actualTotal) })}
+          />
           {analysis.potentialSavings > 0 && (
             <Chip
               color="success"
               icon={<SavingsIcon />}
-              label={`Had kunnen besparen: ${formatEuro(analysis.potentialSavings)}`}
+              label={fill(t('receipts.couldSave'), {
+                amount: money(analysis.potentialSavings),
+              })}
             />
           )}
         </Box>
@@ -133,10 +152,10 @@ const ReceiptResults: React.FC<{
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell>Product</TableCell>
-                <TableCell align="right">Betaald</TableCell>
-                <TableCell>Goedkoopste</TableCell>
-                <TableCell align="right">Besparing</TableCell>
+                <TableCell>{t('receipts.product')}</TableCell>
+                <TableCell align="right">{t('receipts.paidCol')}</TableCell>
+                <TableCell>{t('receipts.cheapest')}</TableCell>
+                <TableCell align="right">{t('receipts.savings')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -147,20 +166,25 @@ const ReceiptResults: React.FC<{
                     {line.quantity > 1 ? ` ×${line.quantity}` : ''}
                     {line.correctedName && (
                       <Typography variant="caption" color="text.secondary" display="block">
-                        Op bon: {line.rawName}
+                        {fill(t('receipts.onReceipt'), { name: line.rawName })}
                       </Typography>
                     )}
                     {(line.matchStatus ?? (line.matchedProduct ? 'matched' : 'unmatched')) !==
                       'matched' && (
                       <Typography variant="caption" color="warning.main" display="block">
                         {line.matchStatus === 'needs_review'
-                          ? `Onzekere suggestie: ${line.alternatives[0]?.productName ?? 'onbekend'} (${Math.round((line.matchConfidence ?? 0) * 100)}%) — telt niet mee`
-                          : 'Geen match in catalogus'}
+                          ? fill(t('receipts.uncertain'), {
+                              name: line.alternatives[0]?.productName ?? '—',
+                              pct: Math.round((line.matchConfidence ?? 0) * 100),
+                            })
+                          : t('receipts.noMatch')}
                       </Typography>
                     )}
                     {line.matchStatus === 'matched' && (
                       <Typography variant="caption" color="success.main" display="block">
-                        Matchzekerheid: {Math.round((line.matchConfidence ?? 1) * 100)}%
+                        {fill(t('receipts.matchConfidence'), {
+                          pct: Math.round((line.matchConfidence ?? 1) * 100),
+                        })}
                       </Typography>
                     )}
                     <LineCorrection
@@ -169,19 +193,22 @@ const ReceiptResults: React.FC<{
                       onCorrect={(index, correction) => onCorrect(receipt.id, index, correction)}
                     />
                   </TableCell>
-                  <TableCell align="right">{formatEuro(line.paidLineTotal)}</TableCell>
+                  <TableCell align="right">{money(line.paidLineTotal)}</TableCell>
                   <TableCell>
                     {line.cheapestAlternative ? (
                       <>
                         {line.cheapestAlternative.store} —{' '}
-                        {formatEuro(line.cheapestAlternative.effectivePrice * line.quantity)}
+                        {money(line.cheapestAlternative.effectivePrice * line.quantity)}
                       </>
                     ) : (
                       '—'
                     )}
                   </TableCell>
-                  <TableCell align="right" sx={{ color: line.lineSavings > 0 ? 'success.main' : undefined }}>
-                    {line.lineSavings > 0 ? formatEuro(line.lineSavings) : '—'}
+                  <TableCell
+                    align="right"
+                    sx={{ color: line.lineSavings > 0 ? 'success.main' : undefined }}
+                  >
+                    {line.lineSavings > 0 ? money(line.lineSavings) : '—'}
                   </TableCell>
                 </TableRow>
               ))}
@@ -191,10 +218,14 @@ const ReceiptResults: React.FC<{
 
         {analysis.shoppingPlan && analysis.shoppingPlan.storeCount > 1 && (
           <Alert severity="info" sx={{ mt: 2 }}>
-            Slimste winkelplan: {analysis.shoppingPlan.storeCount} winkels voor{' '}
-            {formatEuro(analysis.shoppingPlan.grandTotal)}
+            {fill(t('receipts.plan'), {
+              count: analysis.shoppingPlan.storeCount,
+              amount: money(analysis.shoppingPlan.grandTotal),
+            })}
             {analysis.shoppingPlan.savingsVsSingleStore > 0 &&
-              ` (bespaart ${formatEuro(analysis.shoppingPlan.savingsVsSingleStore)} vs. één winkel)`}
+              fill(t('receipts.planSavings'), {
+                amount: money(analysis.shoppingPlan.savingsVsSingleStore),
+              })}
           </Alert>
         )}
       </CardContent>
@@ -202,55 +233,71 @@ const ReceiptResults: React.FC<{
   );
 };
 
-const AnalyticsPanel: React.FC<{ analytics: ReceiptAnalytics | null; loading: boolean }> = ({
-  analytics,
-  loading,
-}) => {
+const AnalyticsPanel: React.FC<{
+  analytics: ReceiptAnalytics | null;
+  loading: boolean;
+  country: ApiCountry;
+}> = ({ analytics, loading, country }) => {
+  const { t } = useLanguage();
+  const money = (value: number) => formatMoney(value, country);
+
   if (loading) return <LinearProgress sx={{ my: 2 }} />;
   if (!analytics || analytics.receiptCount === 0) {
     return (
       <Typography color="text.secondary" sx={{ py: 2 }}>
-        Upload bonnen om je uitgaven en besparingen over tijd te zien.
+        {t('receipts.emptyAnalytics')}
       </Typography>
     );
   }
 
   return (
     <Box sx={{ mb: 3 }}>
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr 1fr' }, gap: 2, mb: 2 }}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr 1fr' },
+          gap: 2,
+          mb: 2,
+        }}
+      >
         <Card variant="outlined">
           <CardContent>
             <Typography variant="overline" color="text.secondary">
-              Totaal uitgegeven
+              {t('receipts.totalSpent')}
             </Typography>
-            <Typography variant="h5">{formatEuro(analytics.totalSpent)}</Typography>
+            <Typography variant="h5">{money(analytics.totalSpent)}</Typography>
             <Typography variant="body2" color="text.secondary">
-              {analytics.receiptCount} bonnen
+              {fill(t('receipts.receiptCount'), { count: analytics.receiptCount })}
             </Typography>
           </CardContent>
         </Card>
         <Card variant="outlined">
           <CardContent>
             <Typography variant="overline" color="text.secondary">
-              Had kunnen besparen
+              {t('receipts.couldHaveSaved')}
             </Typography>
             <Typography variant="h5" color="success.main">
-              {formatEuro(analytics.totalCouldHaveSaved)}
+              {money(analytics.totalCouldHaveSaved)}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Gem. {formatEuro(analytics.averageSavingsPerReceipt)} per bon
+              {fill(t('receipts.avgPerReceipt'), {
+                amount: money(analytics.averageSavingsPerReceipt),
+              })}
             </Typography>
           </CardContent>
         </Card>
         <Card variant="outlined">
           <CardContent>
             <Typography variant="overline" color="text.secondary">
-              Per winkel
+              {t('receipts.byStore')}
             </Typography>
             {analytics.byStore.slice(0, 3).map((s) => (
               <Typography key={s.store} variant="body2">
-                {s.store}: {formatEuro(s.totalSpent)} uitgegeven,{' '}
-                {formatEuro(s.totalCouldHaveSaved)} misgelopen
+                {fill(t('receipts.storeLine'), {
+                  store: s.store,
+                  spent: money(s.totalSpent),
+                  missed: money(s.totalCouldHaveSaved),
+                })}
               </Typography>
             ))}
           </CardContent>
@@ -260,16 +307,16 @@ const AnalyticsPanel: React.FC<{ analytics: ReceiptAnalytics | null; loading: bo
       {analytics.byMonth.length > 0 && (
         <Box>
           <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-            Per maand
+            {t('receipts.byMonth')}
           </Typography>
           <TableContainer component={Paper} variant="outlined">
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell>Maand</TableCell>
-                  <TableCell align="right">Bonnen</TableCell>
-                  <TableCell align="right">Uitgegeven</TableCell>
-                  <TableCell align="right">Besparing gemist</TableCell>
+                  <TableCell>{t('receipts.month')}</TableCell>
+                  <TableCell align="right">{t('receipts.receiptsCol')}</TableCell>
+                  <TableCell align="right">{t('receipts.spentCol')}</TableCell>
+                  <TableCell align="right">{t('receipts.missedCol')}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -277,8 +324,8 @@ const AnalyticsPanel: React.FC<{ analytics: ReceiptAnalytics | null; loading: bo
                   <TableRow key={m.month}>
                     <TableCell>{m.month}</TableCell>
                     <TableCell align="right">{m.receiptCount}</TableCell>
-                    <TableCell align="right">{formatEuro(m.totalSpent)}</TableCell>
-                    <TableCell align="right">{formatEuro(m.totalCouldHaveSaved)}</TableCell>
+                    <TableCell align="right">{money(m.totalSpent)}</TableCell>
+                    <TableCell align="right">{money(m.totalCouldHaveSaved)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -291,6 +338,9 @@ const AnalyticsPanel: React.FC<{ analytics: ReceiptAnalytics | null; loading: bo
 };
 
 export const ReceiptPage: React.FC = () => {
+  const { t } = useLanguage();
+  const { country } = useCountry();
+  const apiCountry = country.code as ApiCountry;
   const userId = useMemo(() => getUserId(), []);
   const upsertReceipt = useReceiptStore((s) => s.upsert);
   const removeLocalReceipt = useReceiptStore((s) => s.remove);
@@ -307,23 +357,29 @@ export const ReceiptPage: React.FC = () => {
     setLoadingHistory(true);
     try {
       const [receipts, stats] = await Promise.all([
-        fetchReceipts(userId),
-        fetchReceiptAnalytics(userId),
+        fetchReceipts(userId, apiCountry),
+        fetchReceiptAnalytics(userId, apiCountry),
       ]);
       const localReceipts = useReceiptStore.getState().receipts;
       const merged =
         receipts.length > 0
           ? receipts
-          : localReceipts.filter((r) => r.userId === userId);
+          : localReceipts.filter(
+              (r) => r.userId === userId && (r.country ?? 'nl') === apiCountry
+            );
       setHistory(merged);
+      setLatest((current) => {
+        if (current && (current.country ?? 'nl') === apiCountry) return current;
+        return merged[0] ?? null;
+      });
       if (receipts.length > 0) setAllReceipts(receipts);
       setAnalytics(stats);
     } catch {
-      setError('Kon bonhistorie niet laden.');
+      setError(t('receipts.loadError'));
     } finally {
       setLoadingHistory(false);
     }
-  }, [userId, setAllReceipts]);
+  }, [userId, apiCountry, setAllReceipts, t]);
 
   useEffect(() => {
     refresh();
@@ -334,15 +390,13 @@ export const ReceiptPage: React.FC = () => {
     setUploading(true);
     setError(null);
     try {
-      const saved = await uploadReceipt(file, userId);
+      const saved = await uploadReceipt(file, userId, apiCountry);
       upsertReceipt(saved);
       setLatest(saved);
       setTab(0);
       await refresh();
     } catch (err: unknown) {
-      const msg =
-        axiosMessage(err) ||
-        'Upload mislukt. Controleer de afbeelding en of OPENAI_API_KEY op de backend staat.';
+      const msg = axiosMessage(err) || t('receipts.uploadError');
       setError(msg);
     } finally {
       setUploading(false);
@@ -356,7 +410,7 @@ export const ReceiptPage: React.FC = () => {
       if (latest?.id === id) setLatest(null);
       await refresh();
     } catch {
-      setError('Verwijderen mislukt.');
+      setError(t('receipts.deleteError'));
     }
   };
 
@@ -373,14 +427,14 @@ export const ReceiptPage: React.FC = () => {
         receipts.map((receipt) => (receipt.id === updated.id ? updated : receipt))
       );
       setLatest((receipt) => (receipt?.id === updated.id ? updated : receipt));
-      setAnalytics(await fetchReceiptAnalytics(userId));
+      setAnalytics(await fetchReceiptAnalytics(userId, apiCountry));
     } catch (err: unknown) {
-      setError(axiosMessage(err) || 'Productcorrectie opslaan mislukt.');
+      setError(axiosMessage(err) || t('receipts.correctError'));
     }
   };
 
   const onClearAll = async () => {
-    if (!window.confirm('Alle opgeslagen bonnen en analyses verwijderen?')) return;
+    if (!window.confirm(t('receipts.clearConfirm'))) return;
     setError(null);
     setLoadingHistory(true);
     try {
@@ -390,7 +444,7 @@ export const ReceiptPage: React.FC = () => {
       setLatest(null);
       setAnalytics(null);
     } catch {
-      setError('Bonhistorie wissen mislukt.');
+      setError(t('receipts.clearError'));
     } finally {
       setLoadingHistory(false);
     }
@@ -402,7 +456,7 @@ export const ReceiptPage: React.FC = () => {
       <Container maxWidth="md" sx={{ py: 3 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2 }}>
           <Typography variant="h5" fontWeight={600} gutterBottom>
-            Bonnen & besparingen
+            {t('receipts.title')}
           </Typography>
           {(history.length > 0 || latest) && (
             <Button
@@ -414,21 +468,18 @@ export const ReceiptPage: React.FC = () => {
               disabled={loadingHistory}
               sx={{ flexShrink: 0 }}
             >
-              Alles wissen
+              {t('receipts.clearAll')}
             </Button>
           )}
         </Box>
         <Typography color="text.secondary" sx={{ mb: 3 }}>
-          Upload een bonfoto. AI leest de producten en laat zien waar je goedkoper had kunnen
-          winkelen. Je bonnen worden opgeslagen om uitgaven over tijd te volgen.
+          {t('receipts.subtitle')}
         </Typography>
         <Alert severity="info" sx={{ mb: 3 }}>
-          De bonfoto wordt naar de ingestelde AI-provider gestuurd maar niet als afbeelding door
-          ComPear opgeslagen. Uitgelezen bongegevens en gekoppelde AI-cache worden standaard
-          maximaal één jaar bewaard, of korter als je een bon of alle historie wist.
+          {t('receipts.privacy')}
         </Alert>
 
-        <AnalyticsPanel analytics={analytics} loading={loadingHistory} />
+        <AnalyticsPanel analytics={analytics} loading={loadingHistory} country={apiCountry} />
 
         <Card
           variant="outlined"
@@ -442,12 +493,12 @@ export const ReceiptPage: React.FC = () => {
         >
           <CardContent>
             <UploadFileIcon sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
-            <Typography gutterBottom>Sleep een bonfoto of kies een bestand</Typography>
+            <Typography gutterBottom>{t('receipts.uploadHint')}</Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              JPEG, PNG of WebP — max 8 MB. Maximaal een paar bonnen per uur.
+              {t('receipts.uploadTypes')}
             </Typography>
             <Button variant="contained" component="label" disabled={uploading}>
-              {uploading ? 'Bon wordt gelezen…' : 'Bon uploaden'}
+              {uploading ? t('receipts.reading') : t('receipts.upload')}
               <input
                 type="file"
                 hidden
@@ -458,7 +509,7 @@ export const ReceiptPage: React.FC = () => {
             {uploading && (
               <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', gap: 1 }}>
                 <CircularProgress size={20} />
-                <Typography variant="body2">AI analyseert je bon…</Typography>
+                <Typography variant="body2">{t('receipts.analyzing')}</Typography>
               </Box>
             )}
           </CardContent>
@@ -471,13 +522,15 @@ export const ReceiptPage: React.FC = () => {
         )}
 
         <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2 }}>
-          <Tab label="Laatste analyse" />
-          <Tab label={`Geschiedenis (${history.length})`} />
+          <Tab label={t('receipts.tabLatest')} />
+          <Tab label={fill(t('receipts.tabHistory'), { count: history.length })} />
         </Tabs>
 
-        {tab === 0 && latest && <ReceiptResults receipt={latest} onCorrect={onCorrectLine} />}
+        {tab === 0 && latest && (
+          <ReceiptResults receipt={latest} country={apiCountry} onCorrect={onCorrectLine} />
+        )}
         {tab === 0 && !latest && !uploading && (
-          <Typography color="text.secondary">Upload een bon om aanbevelingen te zien.</Typography>
+          <Typography color="text.secondary">{t('receipts.emptyLatest')}</Typography>
         )}
 
         {tab === 1 && (
@@ -489,15 +542,19 @@ export const ReceiptPage: React.FC = () => {
                   size="small"
                   sx={{ position: 'absolute', right: 8, top: 8, zIndex: 1 }}
                   onClick={() => onDelete(receipt.id)}
-                  aria-label="Verwijder bon"
+                  aria-label={t('receipts.deleteAria')}
                 >
                   <DeleteIcon fontSize="small" />
                 </IconButton>
-                <ReceiptResults receipt={receipt} onCorrect={onCorrectLine} />
+                <ReceiptResults
+                  receipt={receipt}
+                  country={apiCountry}
+                  onCorrect={onCorrectLine}
+                />
               </Box>
             ))}
             {!loadingHistory && history.length === 0 && (
-              <Typography color="text.secondary">Nog geen opgeslagen bonnen.</Typography>
+              <Typography color="text.secondary">{t('receipts.emptyHistory')}</Typography>
             )}
           </>
         )}

@@ -130,6 +130,7 @@ export const StoreLocatorPage: React.FC = () => {
       try {
         const data = await fetchStoreLocations({
           chain: chain || undefined,
+          country: country.code,
           lat,
           lng,
           radius: lat != null ? 25 : undefined,
@@ -145,7 +146,7 @@ export const StoreLocatorPage: React.FC = () => {
         setLoading(false);
       }
     },
-    [chain, country.available, t]
+    [chain, country.available, country.code, t]
   );
 
   useEffect(() => {
@@ -252,7 +253,9 @@ export const StoreLocatorPage: React.FC = () => {
           )}
           {!coords && (
             <Typography variant="caption" color="text.secondary">
-              {t('stores.nearMeHint')}
+              {t(`stores.nearMeHint.${country.code}`) !== `stores.nearMeHint.${country.code}`
+                ? t(`stores.nearMeHint.${country.code}`)
+                : t('stores.nearMeHint')}
             </Typography>
           )}
         </Box>
@@ -273,7 +276,11 @@ export const StoreLocatorPage: React.FC = () => {
             <CircularProgress />
           </Box>
         ) : locations.length === 0 ? (
-          <Typography color="text.secondary">{t('stores.noneFound')}</Typography>
+          <Typography color="text.secondary">
+            {t(`stores.noneFound.${country.code}`) !== `stores.noneFound.${country.code}`
+              ? t(`stores.noneFound.${country.code}`)
+              : t('stores.noneFound')}
+          </Typography>
         ) : (
           <Box className="cp-fade-up" sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {mapUrl && (

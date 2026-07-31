@@ -184,6 +184,7 @@ export interface ReceiptAnalysis {
 export interface SavedReceipt {
   id: string;
   userId: string;
+  country?: ApiCountry;
   uploadedAt: string;
   imageMimeType: string | null;
   analysis: ReceiptAnalysis;
@@ -218,10 +219,15 @@ function userHeaders(userId: string) {
   return { 'x-compear-user-id': userId };
 }
 
-export async function uploadReceipt(file: File, userId: string): Promise<SavedReceipt> {
+export async function uploadReceipt(
+  file: File,
+  userId: string,
+  country: ApiCountry = 'nl'
+): Promise<SavedReceipt> {
   const form = new FormData();
   form.append('receipt', file);
   const { data } = await api.post<SavedReceipt>('/receipts/parse', form, {
+    params: { country },
     headers: {
       ...userHeaders(userId),
       'Content-Type': 'multipart/form-data',
@@ -231,15 +237,23 @@ export async function uploadReceipt(file: File, userId: string): Promise<SavedRe
   return data;
 }
 
-export async function fetchReceipts(userId: string): Promise<SavedReceipt[]> {
+export async function fetchReceipts(
+  userId: string,
+  country: ApiCountry = 'nl'
+): Promise<SavedReceipt[]> {
   const { data } = await api.get<SavedReceipt[]>('/receipts', {
+    params: { country },
     headers: userHeaders(userId),
   });
   return data;
 }
 
-export async function fetchReceiptAnalytics(userId: string): Promise<ReceiptAnalytics> {
+export async function fetchReceiptAnalytics(
+  userId: string,
+  country: ApiCountry = 'nl'
+): Promise<ReceiptAnalytics> {
   const { data } = await api.get<ReceiptAnalytics>('/receipts/analytics', {
+    params: { country },
     headers: userHeaders(userId),
   });
   return data;
@@ -274,6 +288,7 @@ export async function correctReceiptLine(
 export interface StoreLocation {
   id: string;
   chain: string;
+  country?: string;
   name: string;
   address: string;
   city: string;
@@ -285,6 +300,7 @@ export interface StoreLocation {
 export async function fetchStoreLocations(params?: {
   chain?: string;
   city?: string;
+  country?: ApiCountry;
   lat?: number;
   lng?: number;
   radius?: number;
