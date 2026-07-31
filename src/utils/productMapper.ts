@@ -48,6 +48,17 @@ export function productToSupermarketPrice(
     onSale,
     regularPrice: onSale ? product.originalPrice : undefined,
     link: sanitizeProductLink(product.productUrl),
+    updatedAt: product.scrapedAt,
+    loyaltyLabel: getLoyaltyLabel(product),
   };
 }
 
+function getLoyaltyLabel(product: Product): string | undefined {
+  const text = `${product.productName} ${product.promoType ?? ''}`.toLowerCase();
+  if (text.includes('clubcard')) return 'Clubcard';
+  if (text.includes('nectar')) return 'Nectar';
+  if (text.includes('morrisons more')) return 'Morrisons More';
+  if (text.includes('lidl plus')) return 'Lidl Plus';
+  if (text.includes('asda rewards')) return 'Asda Rewards';
+  return undefined;
+}

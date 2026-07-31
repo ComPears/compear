@@ -27,7 +27,18 @@ root.render(
   </React.StrictMode>
 );
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
+reportWebVitals((metric) => {
+  if (!import.meta.env.PROD) return;
+  const apiBase = import.meta.env.VITE_API_URL || 'https://api.compears.shop';
+  const body = JSON.stringify({
+    name: metric.name,
+    value: metric.value,
+    rating: metric.rating,
+    path: window.location.pathname,
+  });
+  if (navigator.sendBeacon) {
+    navigator.sendBeacon(`${apiBase}/health/vitals`, new Blob([body], { type: 'application/json' }));
+  } else {
+    void fetch(`${apiBase}/health/vitals`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true });
+  }
+});

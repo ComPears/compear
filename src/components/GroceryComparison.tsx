@@ -90,6 +90,11 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
   const { country } = useCountry();
   const [expandedAccordions, setExpandedAccordions] = useState<Record<string, boolean>>({});
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const priceLocale = country.code === 'nl' ? 'nl-NL' : 'en-GB';
+  const freshnessLabel = (price: SupermarketPrice) => {
+    if (!price.updatedAt || !Number.isFinite(Date.parse(price.updatedAt))) return null;
+    return `${t('product.checked')} ${new Intl.DateTimeFormat(priceLocale, { day: 'numeric', month: 'short' }).format(new Date(price.updatedAt))}`;
+  };
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -324,7 +329,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
               key={grocery.id} 
               expanded={isExpanded}
               onChange={handleAccordionChange(grocery.id)}
-              sx={{ mb: 1 }}
+              sx={{ mb: 1, position: 'relative' }}
             >
               <AccordionSummary 
                 expandIcon={<ExpandMoreIcon />}
@@ -386,27 +391,30 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                     </Box>
                   )}
 
-                  {/* Delete Button */}
-                  <IconButton 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRemoveGrocery(grocery.id);
-                    }} 
-                    size="small"
-                    aria-label={t('comparison.remove').replace('{product}', grocery.name)}
-                    sx={{
-                      minWidth: 44,
-                      minHeight: 44,
-                      '&:hover': {
-                        backgroundColor: 'error.light',
-                        color: 'error.contrastText'
-                      }
-                    }}
-                  >
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
                 </Box>
               </AccordionSummary>
+              <IconButton
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onRemoveGrocery(grocery.id);
+                }}
+                size="small"
+                aria-label={t('comparison.remove').replace('{product}', grocery.name)}
+                sx={{
+                  position: 'absolute',
+                  top: 8,
+                  right: 48,
+                  zIndex: 1,
+                  minWidth: 44,
+                  minHeight: 44,
+                  '&:hover': {
+                    backgroundColor: 'error.light',
+                    color: 'error.contrastText'
+                  }
+                }}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
               
               <AccordionDetails>
                 {loading[grocery.id] ? (
@@ -462,7 +470,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                                     <a 
                                       href={sanitizeProductLink(price.link)} 
                                       target="_blank" 
-                                      rel="noopener noreferrer" 
+                                      rel="noopener noreferrer nofollow"
                                       style={{ 
                                         fontStyle: 'italic',
                                         color: 'var(--mui-primary-main)',
@@ -480,6 +488,13 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                                       {price.productName || grocery.name}
                                     </Typography>
                                   )}
+                                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.5 }}>
+                                    {price.matchType && (
+                                      <Chip size="small" variant="outlined" label={price.matchType === 'exact' ? t('product.exactMatch') : `${Math.round((price.matchConfidence ?? 0) * 100)}% match`} />
+                                    )}
+                                    {price.loyaltyLabel && <Chip size="small" color="secondary" label={price.loyaltyLabel} />}
+                                    {freshnessLabel(price) && <Typography variant="caption" color="text.secondary">{freshnessLabel(price)}</Typography>}
+                                  </Box>
                                 </TableCell>
                                 <TableCell align="right">
                                   {price.onSale ? (
@@ -581,7 +596,7 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                                   <a 
                                     href={sanitizeProductLink(price.link)} 
                                     target="_blank" 
-                                    rel="noopener noreferrer" 
+                                    rel="noopener noreferrer nofollow"
                                     style={{ 
                                       fontStyle: 'italic',
                                       color: 'var(--mui-primary-main)',
@@ -596,9 +611,16 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
                                   </a>
                                 ) : (
                                   <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
-                                    {price.productName || grocery.name}
-                                  </Typography>
+                                  {price.productName || grocery.name}
+                                </Typography>
+                              )}
+                              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.75 }}>
+                                {price.matchType && (
+                                  <Chip size="small" variant="outlined" label={price.matchType === 'exact' ? t('product.exactMatch') : `${Math.round((price.matchConfidence ?? 0) * 100)}% match`} />
                                 )}
+                                {price.loyaltyLabel && <Chip size="small" color="secondary" label={price.loyaltyLabel} />}
+                                {freshnessLabel(price) && <Typography variant="caption" color="text.secondary" sx={{ alignSelf: 'center' }}>{freshnessLabel(price)}</Typography>}
+                              </Box>
                               </Box>
 
                               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

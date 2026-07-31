@@ -80,16 +80,16 @@ describe('search to comparison and basket critical flow', () => {
 
     await waitFor(() => {
       expect(mockedFetchProducts).toHaveBeenCalledWith(
-        { search: 'melk' },
+        { search: 'melk', limit: 30 },
         'nl',
         expect.objectContaining({ signal: expect.any(AbortSignal) })
       );
     });
-    const groupTitle = await screen.findByText('Halfvolle Melk');
+    const groupTitle = await screen.findByText('Test Halfvolle Melk');
     const productCard = groupTitle.closest('.MuiPaper-root');
     expect(productCard).not.toBeNull();
     const addButton = within(productCard as HTMLElement).getByRole('button', {
-      name: 'Toevoegen',
+      name: 'Vergelijk Test Halfvolle Melk',
     });
     fireEvent.click(addButton);
 
@@ -101,6 +101,6 @@ describe('search to comparison and basket critical flow', () => {
       barcode: '8712345678906',
     });
     expect(useBasketStore.getState().items).toEqual([{ product: result, quantity: 1 }]);
-    expect(screen.queryByText('Halfvolle Melk')).not.toBeInTheDocument();
+    expect(screen.queryByText('Test Halfvolle Melk')).not.toBeInTheDocument();
   });
 });

@@ -32,6 +32,18 @@ export const CATEGORIES: ProductCategory[] = [
   'Other',
 ];
 
+export function categorySlug(category: ProductCategory): string {
+  return category
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+export function categoryFromSlug(slug: string): ProductCategory | null {
+  return CATEGORIES.find((category) => categorySlug(category) === slug.toLowerCase()) ?? null;
+}
+
 export const DEAL_CATEGORY_LABELS: Record<ProductCategory | 'All', string> = {
   All: 'Alle',
   'Fruits & Vegetables': 'Groente & fruit',
@@ -206,4 +218,3 @@ export const groupByCategory = <T extends { category?: string }>(
   
   return grouped as Record<ProductCategory, T[]>;
 };
-

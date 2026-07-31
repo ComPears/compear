@@ -10,6 +10,8 @@ import App from './App';
 
 vi.mock('./api/client', () => ({
   fetchProducts: vi.fn().mockResolvedValue([]),
+  fetchProduct: vi.fn(),
+  fetchStores: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock('./services/supermarketService', async (importOriginal) => {
@@ -40,7 +42,7 @@ function renderApp() {
 describe('App', () => {
   it('renders the ComPear title in the navigation bar', () => {
     renderApp();
-    expect(screen.getByText('ComPear')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Naar home' })).toHaveTextContent('ComPear');
     cleanup();
   });
 });

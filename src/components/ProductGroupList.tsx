@@ -7,10 +7,12 @@ import {
   Collapse,
   IconButton,
   Avatar,
+  Paper,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import { useNavigate } from 'react-router-dom';
+import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { Product } from '../api/client';
 import { ProductGroup } from '../utils/productGrouping';
 import { toSupermarketShortName } from '../utils/productMapper';
@@ -19,6 +21,7 @@ import { useCountry } from '../context/CountryContext';
 import { useBasketStore } from '../store/basketStore';
 import { useLanguage } from '../context/LanguageContext';
 import { formatMoney } from '../utils/formatMoney';
+import { productPath } from '../utils/productSlug';
 
 interface ProductGroupListProps {
   groups: ProductGroup[];
@@ -72,6 +75,11 @@ function StorePriceChip({
           <Box component="span" sx={{ fontWeight: 700 }}>
             {formatMoney(product.effectivePrice, country.code)}
           </Box>
+          {isCheapest && (
+            <Box component="span" sx={{ fontSize: '0.72rem', opacity: 0.86 }}>
+              · {t('label.cheapest')}
+            </Box>
+          )}
           {onSale && (
             <Box component="span" sx={{ opacity: 0.7, textDecoration: 'line-through', ml: 0.25 }}>
               {formatMoney(product.originalPrice, country.code)}
@@ -109,7 +117,8 @@ function CompactProductRow({
     <Box
       sx={{
         display: 'flex',
-        alignItems: 'center',
+        alignItems: { xs: 'stretch', sm: 'center' },
+        flexDirection: { xs: 'column', sm: 'row' },
         gap: 1,
         py: 0.75,
         px: 1,
@@ -118,14 +127,15 @@ function CompactProductRow({
       }}
     >
       <Box
-        component="button"
-        type="button"
+        component={RouterLink}
+        to={productPath(country.code, product)}
         aria-label={t('search.openProduct').replace('{product}', product.productName)}
         sx={{
           flex: 1,
           minWidth: 0,
           cursor: 'pointer',
           border: 0,
+          textDecoration: 'none',
           p: 0,
           bgcolor: 'transparent',
           color: 'inherit',
@@ -141,7 +151,7 @@ function CompactProductRow({
           {product.packageSize} · {formatMoney(product.effectiveUnitPrice, country.code)}/kg
         </Typography>
       </Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexShrink: 0 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 0.75, flexShrink: 0 }}>
         {showDeal && onSale && (
           <Chip size="small" color="secondary" label={product.promoType ?? 'Deal'} />
         )}
@@ -197,7 +207,7 @@ const ProductGroupListComponent: React.FC<ProductGroupListProps> = ({
   }
 
   return (
-    <Box className="cp-fade-up" sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
+    <Box className="cp-fade-up" sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' }, gap: 1.5 }}>
       {groups.map((group) => {
         const isOpen = expanded[group.key] ?? false;
         const offers = group.storeOffers;
@@ -215,20 +225,28 @@ const ProductGroupListComponent: React.FC<ProductGroupListProps> = ({
             : 0;
 
         return (
-          <Box
+          <Paper
             key={group.key}
+            variant="outlined"
             sx={{
               overflow: 'hidden',
-              borderBottom: '1px solid',
+              border: '1px solid',
               borderColor: 'divider',
-              py: 1.5,
-              '&:last-child': { borderBottom: 0 },
+              borderRadius: 2,
+              p: { xs: 1.5, sm: 2 },
+              bgcolor: 'background.paper',
+              boxShadow: '0 10px 30px rgba(20, 35, 28, 0.05)',
+              transition: 'transform 160ms ease, box-shadow 160ms ease',
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                boxShadow: '0 14px 36px rgba(20, 35, 28, 0.09)',
+              },
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', flexDirection: { xs: 'column', sm: 'row' }, gap: 1 }}>
               <Box
-                component="button"
-                type="button"
+                component={RouterLink}
+                to={productPath(country.code, group.cheapest)}
                 aria-label={t('search.openProduct').replace('{product}', group.displayName)}
                 sx={{
                   flex: 1,
@@ -238,10 +256,10 @@ const ProductGroupListComponent: React.FC<ProductGroupListProps> = ({
                   p: 0,
                   bgcolor: 'transparent',
                   color: 'inherit',
+                  textDecoration: 'none',
                   textAlign: 'left',
                   '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 2 },
                 }}
-                onClick={() => navigate(`/${country.code}/product/${group.cheapest.id}`)}
               >
                 <Typography variant="subtitle1" fontWeight={700} sx={{ lineHeight: 1.3 }}>
                   {group.displayName}
@@ -266,55 +284,60 @@ const ProductGroupListComponent: React.FC<ProductGroupListProps> = ({
                   </Typography>
                 )}
               </Box>
-              <Button
-                size="small"
-                variant="contained"
-                onClick={() => handleAdd(group.cheapest)}
-                sx={{ minHeight: 44, flexShrink: 0 }}
-              >
-                {addButtonLabel ?? t('search.compareButton')}
-              </Button>
-              {showExpand && (
-                <IconButton
+              <Box sx={{ display: 'flex', width: { xs: '100%', sm: 'auto' }, gap: 0.5 }}>
+                <Button
                   size="small"
-                  aria-label={t(isOpen ? 'search.collapseGroup' : 'search.expandGroup').replace('{product}', group.displayName)}
-                  aria-expanded={isOpen}
-                  aria-controls={`product-group-${group.key}`}
-                  onClick={() =>
-                    setExpanded((prev) => ({ ...prev, [group.key]: !isOpen }))
-                  }
+                  variant="contained"
+                  startIcon={<CompareArrowsIcon />}
+                  onClick={() => handleAdd(group.cheapest)}
+                  aria-label={t('search.compareProduct').replace('{product}', group.displayName)}
+                  sx={{ minHeight: 44, flex: { xs: 1, sm: 'initial' }, flexShrink: 0 }}
                 >
-                  {isOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                </IconButton>
-              )}
+                  {addButtonLabel ?? t('search.compareButton')}
+                </Button>
+                {showExpand && (
+                  <IconButton
+                    size="small"
+                    aria-label={t(isOpen ? 'search.collapseGroup' : 'search.expandGroup').replace('{product}', group.displayName)}
+                    aria-expanded={isOpen}
+                    aria-controls={`product-group-${group.key}`}
+                    onClick={() =>
+                      setExpanded((prev) => ({ ...prev, [group.key]: !isOpen }))
+                    }
+                    sx={{ minWidth: 44, minHeight: 44 }}
+                  >
+                    {isOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                  </IconButton>
+                )}
+              </Box>
             </Box>
 
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 1.1 }}>
-              {offers.map((product) => (
+              {offers.map((product, offerIndex) => (
                 <StorePriceChip
-                  key={product.id}
+                  key={`${product.id}-${offerIndex}`}
                   product={product}
                   isCheapest={product.id === cheapestId}
                   showSize={showSizeOnChips}
-                  onClick={() => navigate(`/${country.code}/product/${product.id}`)}
+                  onClick={() => navigate(productPath(country.code, product))}
                 />
               ))}
             </Box>
 
             <Collapse in={isOpen}>
               <Box id={`product-group-${group.key}`} sx={{ mt: 1, bgcolor: 'rgba(11, 110, 79, 0.04)', borderRadius: 1 }}>
-                {group.products.map((product) => (
+                {group.products.map((product, productIndex) => (
                   <CompactProductRow
-                    key={product.id}
+                    key={`${product.id}-${productIndex}`}
                     product={product}
                     showDeal={showDeals}
-                    onOpen={() => navigate(`/${country.code}/product/${product.id}`)}
+                    onOpen={() => undefined}
                     onAdd={() => handleAdd(product)}
                   />
                 ))}
               </Box>
             </Collapse>
-          </Box>
+          </Paper>
         );
       })}
     </Box>

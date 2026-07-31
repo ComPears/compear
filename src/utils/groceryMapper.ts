@@ -19,6 +19,8 @@ export function productToGrocery(product: Product): Grocery {
     unit,
     quantity,
     variant: product.store,
+    brand: product.brand ?? undefined,
+    weightInGrams: product.weightInGrams,
     searchKeyword: product.productName,
     canonicalName: product.canonicalName,
     identityKey: product.identityKey,

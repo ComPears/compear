@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   AppBar,
   Toolbar,
@@ -50,12 +50,11 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
   const isHome = location.pathname === base || location.pathname === `${base}/`;
   const isSearch = location.pathname === `${base}/search`;
 
-  const handleLogoClick = () => {
+  const handleLogoClick = (event: React.MouseEvent) => {
     if (isHome && onHomeReset) {
+      event.preventDefault();
       onHomeReset();
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      navigate(base);
     }
   };
 
@@ -75,10 +74,6 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
     setMobileMenuAnchor(null);
   };
 
-  const handleCartClick = () => {
-    navigate(`${base}/basket`);
-  };
-
   const handleSearchNav = () => {
     if (isSearch) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -90,9 +85,11 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
   const navTextButtons = (
     <>
       <Button
+        component={RouterLink}
+        to={`${base}/search`}
         color="inherit"
         startIcon={<SearchIcon />}
-        onClick={handleSearchNav}
+        onClick={isSearch ? (event) => { event.preventDefault(); handleSearchNav(); } : undefined}
         aria-current={isSearch ? 'page' : undefined}
         sx={{
           minWidth: 'auto',
@@ -102,17 +99,19 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
         {t('nav.search')}
       </Button>
       <Button
+        component={RouterLink}
+        to={`${base}/stores`}
         color="inherit"
         startIcon={<PlaceIcon />}
-        onClick={() => navigate(`${base}/stores`)}
         sx={{ minWidth: 'auto' }}
       >
         {t('nav.stores')}
       </Button>
       <Button
+        component={RouterLink}
+        to={`${base}/receipts`}
         color="inherit"
         startIcon={<ReceiptLongIcon />}
-        onClick={() => navigate(`${base}/receipts`)}
         sx={{ minWidth: 'auto' }}
       >
         {t('nav.receipts')}
@@ -144,7 +143,8 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
           >
             <Typography
               variant="h6"
-              component="button"
+              component={RouterLink}
+              to={base}
               onClick={handleLogoClick}
               aria-label={t('nav.home')}
               sx={{
@@ -154,8 +154,7 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
                 fontWeight: 700,
                 letterSpacing: '-0.03em',
                 color: 'inherit',
-                background: 'none',
-                border: 'none',
+                textDecoration: 'none',
                 cursor: 'pointer',
                 p: 0,
                 minHeight: 44,
@@ -186,8 +185,10 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
               {country.available && isMobile && (
                 <Tooltip title={t('nav.search')}>
                   <IconButton
+                    component={RouterLink}
+                    to={`${base}/search`}
                     color="inherit"
-                    onClick={handleSearchNav}
+                    onClick={isSearch ? (event) => { event.preventDefault(); handleSearchNav(); } : undefined}
                     aria-label={t('nav.search')}
                     aria-current={isSearch ? 'page' : undefined}
                     size="small"
@@ -200,8 +201,9 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
 
               {country.available && (
                 <IconButton
+                  component={RouterLink}
+                  to={`${base}/basket`}
                   color="inherit"
-                  onClick={handleCartClick}
                   aria-label={t('nav.openBasket')}
                   size={isMobile ? 'small' : 'medium'}
                   sx={{ minWidth: 44, minHeight: 44 }}
