@@ -48,6 +48,23 @@ export const supermarkets: Supermarket[] = [
   },
 ];
 
+const LOGO_ALIASES: Record<string, string> = {
+  AH: 'AH',
+  'ALBERT HEIJN': 'AH',
+  DIRK: 'DIRK',
+  ALDI: 'ALDI',
+  LIDL: 'LIDL',
+  JUMBO: 'JUMBO',
+  PLUS: 'PLUS',
+  COOP: 'COOP',
+};
+
+/** Resolve a supermarket favicon from a short or full store name. */
+export function getSupermarketLogo(name: string): string | undefined {
+  const key = LOGO_ALIASES[name.trim().toUpperCase()] ?? name.trim().toUpperCase();
+  return supermarkets.find((s) => s.name === key)?.logo;
+}
+
 async function resolveComparableProducts(
   grocery: Grocery,
   country: ApiCountry

@@ -1,9 +1,11 @@
 import React from 'react';
 import { Box, Typography, Container, Link } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
-import FavoriteIcon from '@mui/icons-material/Favorite';
+import { useLanguage } from '../context/LanguageContext';
 
 const Footer: React.FC = () => {
+  const { t } = useLanguage();
+
   return (
     <Box
       component="footer"
@@ -11,31 +13,32 @@ const Footer: React.FC = () => {
         py: 3,
         px: 2,
         mt: 'auto',
-        backgroundColor: (theme) => theme.palette.grey[100],
-        borderTop: (theme) => `1px solid ${theme.palette.grey[300]}`,
+        backgroundColor: 'rgba(11, 110, 79, 0.06)',
+        borderTop: '1px solid rgba(20, 35, 28, 0.08)',
       }}
     >
       <Container maxWidth="lg">
-        <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 1 }}>
-          Compare grocery prices across Europe —{' '}
-          <Link component={RouterLink} to="/nl" color="inherit" underline="hover">NL</Link>
+        <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 0.75 }}>
+          {t('footer.liveIn')}{' '}
+          <Link component={RouterLink} to="/nl" color="inherit" underline="hover" fontWeight={700}>
+            {t('footer.nl')}
+          </Link>
           {' · '}
-          <Link component={RouterLink} to="/de" color="inherit" underline="hover">DE</Link>
+          {t('footer.comingSoonLabel')}{' '}
+          <Link component={RouterLink} to="/de" color="inherit" underline="hover">
+            {t('footer.de')}
+          </Link>
           {' · '}
-          <Link component={RouterLink} to="/uk" color="inherit" underline="hover">UK</Link>
+          <Link component={RouterLink} to="/uk" color="inherit" underline="hover">
+            {t('footer.uk')}
+          </Link>
         </Typography>
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          align="center"
-          sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 0.5 }}
-        >
-          Made with
-          <FavoriteIcon color="error" fontSize="small" sx={{ mx: 0.5 }} />
+        <Typography variant="body2" color="text.secondary" align="center">
+          {t('footer.madeWith')}
         </Typography>
       </Container>
     </Box>
   );
 };
 
-export default Footer; 
+export default Footer;

@@ -1,8 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Box, Typography, CircularProgress, Alert, Chip } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
-import RouteIcon from '@mui/icons-material/Route';
+import { Box, Typography, CircularProgress, Alert, Chip, Skeleton, Button } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 import { Grocery } from '../types';
 import { fetchProducts, Product, ApiCountry } from '../api/client';
 import { fetchProductsByBarcode, isAbortError } from '../utils/barcodeSearch';
@@ -49,7 +47,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
   const addToBasket = useBasketStore((s) => s.add);
   const apiCountry = country.code as ApiCountry;
   const abortControllerRef = useRef<AbortController | null>(null);
-  const debouncedQuery = useDebouncedValue(searchTerm, 350);
+  const debouncedQuery = useDebouncedValue(searchTerm, 250);
 
   const resetForBarcode = useCallback(() => {
     onResetComparison?.();
@@ -179,9 +177,15 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
     );
   };
 
+  const examples = [
+    { label: t('guide.milk'), query: 'melk' },
+    { label: t('guide.coffee'), query: 'koffie' },
+    { label: t('guide.pasta'), query: 'pasta' },
+  ];
+
   return (
     <Box>
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'flex-start' }}>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'stretch' }}>
         <Box sx={{ flex: 1, minWidth: 240 }}>
           <ProductSearchBar
             value={searchTerm}
@@ -201,63 +205,32 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
         <BarcodeScanButton onDetected={handleBarcodeDetected} disabled={loading} />
       </Box>
 
-      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-        {t('search.homeHint')}
-      </Typography>
-
       {showEmptyGuide && !searched && !loading && !searchTerm.trim() && !barcodeQuery && (
-        <Box sx={{ mt: 3, pt: 2.5, borderTop: 1, borderColor: 'divider' }}>
-          <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
-            {t('guide.title')}
-          </Typography>
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
-              gap: { xs: 1.5, sm: 2 },
-            }}
-          >
-            <Box sx={{ display: 'flex', gap: 1.25, alignItems: 'flex-start' }}>
-              <SearchIcon color="primary" sx={{ mt: 0.25 }} />
-              <Box>
-                <Typography variant="body2" fontWeight={600}>{t('guide.searchTitle')}</Typography>
-                <Typography variant="caption" color="text.secondary">{t('guide.searchText')}</Typography>
-              </Box>
-            </Box>
-            <Box sx={{ display: 'flex', gap: 1.25, alignItems: 'flex-start' }}>
-              <CompareArrowsIcon color="primary" sx={{ mt: 0.25 }} />
-              <Box>
-                <Typography variant="body2" fontWeight={600}>{t('guide.compareTitle')}</Typography>
-                <Typography variant="caption" color="text.secondary">{t('guide.compareText')}</Typography>
-              </Box>
-            </Box>
-            <Box sx={{ display: 'flex', gap: 1.25, alignItems: 'flex-start' }}>
-              <RouteIcon color="primary" sx={{ mt: 0.25 }} />
-              <Box>
-                <Typography variant="body2" fontWeight={600}>{t('guide.chooseTitle')}</Typography>
-                <Typography variant="caption" color="text.secondary">{t('guide.chooseText')}</Typography>
-              </Box>
-            </Box>
-          </Box>
-
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center', mt: 2.5 }}>
-            <Typography variant="caption" color="text.secondary">
+        <Box sx={{ mt: 2 }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center', mb: 1.5 }}>
+            <Typography variant="body2" color="text.secondary">
               {t('guide.try')}
             </Typography>
-            {[
-              { label: t('guide.milk'), query: 'melk' },
-              { label: t('guide.coffee'), query: 'koffie' },
-              { label: t('guide.pasta'), query: 'pasta' },
-            ].map((example) => (
+            {examples.map((example) => (
               <Chip
                 key={example.query}
                 label={example.label}
                 size="small"
                 variant="outlined"
+                color="primary"
                 onClick={() => setSearchTerm(example.query)}
+                sx={{ fontWeight: 600 }}
               />
             ))}
           </Box>
+          <Button
+            component={RouterLink}
+            to={`/${country.code}/search`}
+            size="small"
+            sx={{ px: 0, minHeight: 36 }}
+          >
+            {t('search.browseCatalog')}
+          </Button>
         </Box>
       )}
 
@@ -272,11 +245,24 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
       )}
 
       {loading && (
-        <Box role="status" aria-live="polite" sx={{ display: 'flex', alignItems: 'center', mt: 1.5, gap: 1 }}>
-          <CircularProgress size={16} />
-          <Typography variant="caption" color="text.secondary">
-            {t('search.searching')}
-          </Typography>
+        <Box role="status" aria-live="polite" sx={{ mt: 2.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+            <CircularProgress size={16} />
+            <Typography variant="body2" color="text.secondary" className="cp-skeleton-pulse">
+              {t('search.searching')}
+            </Typography>
+          </Box>
+          {[0, 1, 2].map((i) => (
+            <Box key={i} sx={{ mb: 1.5 }}>
+              <Skeleton variant="text" width="55%" height={28} />
+              <Skeleton variant="text" width="35%" height={20} />
+              <Box sx={{ display: 'flex', gap: 1, mt: 0.75 }}>
+                <Skeleton variant="rounded" width={88} height={32} />
+                <Skeleton variant="rounded" width={88} height={32} />
+                <Skeleton variant="rounded" width={88} height={32} />
+              </Box>
+            </Box>
+          ))}
         </Box>
       )}
 
@@ -286,14 +272,8 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
         </Alert>
       )}
 
-      {searched && !loading && products.length > 0 && (
-        <Alert severity="info" sx={{ mt: 2 }}>
-          {t('search.pickProductHint')}
-        </Alert>
-      )}
-
       {showResults && (
-        <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+        <Box sx={{ mt: 2.5, display: 'flex', flexDirection: 'column', gap: 1.25 }}>
           <Typography
             role="status"
             aria-live="polite"
@@ -301,19 +281,23 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
           >
             {t('search.resultsStatus').replace('{count}', String(filteredProducts.length))}
           </Typography>
-          <ProductSortBar value={sort} onChange={setSort} />
-          <FilterChipBar chips={filterChips} active={activeChips} onToggle={toggleChip} />
-          <Chip
-            size="small"
-            variant="outlined"
-            label={t('search.resultCount')
-              .replace('{groups}', String(groups.length))
-              .replace('{results}', String(filteredProducts.length))}
-          />
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
+            <ProductSortBar value={sort} onChange={setSort} />
+            <Chip
+              size="small"
+              variant="outlined"
+              label={t('search.resultCount')
+                .replace('{groups}', String(groups.length))
+                .replace('{results}', String(filteredProducts.length))}
+            />
+          </Box>
+          {filterChips.length > 0 && (
+            <FilterChipBar chips={filterChips} active={activeChips} onToggle={toggleChip} />
+          )}
           <ProductGroupList
             groups={groups}
             onAddProduct={handleAddProduct}
-            addButtonLabel={t('search.addButton')}
+            addButtonLabel={t('search.compareButton')}
           />
         </Box>
       )}

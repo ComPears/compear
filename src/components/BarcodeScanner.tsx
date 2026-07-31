@@ -246,10 +246,12 @@ export const BarcodeScanButton: React.FC<BarcodeScanButtonProps> = ({
   return (
     <>
       <Button
-        variant="outlined"
+        variant="contained"
+        color="secondary"
         startIcon={<QrCodeScannerIcon />}
         onClick={() => setOpen(true)}
         disabled={disabled}
+        sx={{ minHeight: 56, px: 2, flexShrink: 0 }}
       >
         {t('search.scanButton')}
       </Button>

@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -25,6 +26,7 @@ import { useBasketStore, BasketItem } from '../store/basketStore';
 import AppNavBar from '../components/AppNavBar';
 import { ShareListDialog } from '../components/ShareListDialog';
 import { useLanguage } from '../context/LanguageContext';
+import { useCountry } from '../context/CountryContext';
 
 function formatPrice(n: number) {
   return `€${n.toFixed(2)}`;
@@ -51,6 +53,8 @@ function bestSingleStoreTotal(items: BasketItem[]): { total: number; store: stri
 export const BasketPage: React.FC = () => {
   const { items, remove, setQuantity, clear } = useBasketStore();
   const { t } = useLanguage();
+  const { country } = useCountry();
+  const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [shareOpen, setShareOpen] = useState(false);
@@ -78,11 +82,36 @@ export const BasketPage: React.FC = () => {
     return (
       <>
         <AppNavBar />
-        <Container component="main" maxWidth="md" sx={{ py: 4, bgcolor: 'background.default' }}>
-          <Typography component="h1" variant="h5" gutterBottom fontWeight={600}>
-            {t('basket.title')}
-          </Typography>
-          <Typography color="text.secondary">{t('basket.empty')}</Typography>
+        <Container component="main" maxWidth="md" sx={{ py: { xs: 5, md: 7 } }}>
+          <Box className="cp-fade-up" sx={{ textAlign: 'center', maxWidth: 420, mx: 'auto' }}>
+            <Typography
+              component="h1"
+              variant="h3"
+              gutterBottom
+              sx={{ color: 'primary.dark', fontSize: { xs: '2rem', sm: '2.5rem' } }}
+            >
+              {t('basket.title')}
+            </Typography>
+            <Typography color="text.secondary" sx={{ mb: 3 }}>
+              {t('basket.empty')}
+            </Typography>
+            <Button
+              variant="contained"
+              size="large"
+              onClick={() => navigate(`/${country.code}`)}
+              sx={{ mr: 1, mb: 1 }}
+            >
+              {t('basket.emptyCta')}
+            </Button>
+            <Button
+              variant="outlined"
+              size="large"
+              onClick={() => navigate(`/${country.code}/search`)}
+              sx={{ mb: 1 }}
+            >
+              {t('basket.emptyBrowse')}
+            </Button>
+          </Box>
         </Container>
       </>
     );

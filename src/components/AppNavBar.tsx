@@ -149,9 +149,10 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
               aria-label={t('nav.home')}
               sx={{
                 flexShrink: 0,
-                fontSize: { xs: '1rem', sm: '1.35rem' },
+                fontFamily: '"Fraunces", Georgia, serif',
+                fontSize: { xs: '1.15rem', sm: '1.45rem' },
                 fontWeight: 700,
-                letterSpacing: '-0.02em',
+                letterSpacing: '-0.03em',
                 color: 'inherit',
                 background: 'none',
                 border: 'none',

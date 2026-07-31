@@ -15,6 +15,8 @@ import {
   Snackbar,
   Alert,
   Button,
+  Skeleton,
+  Collapse,
 } from '@mui/material';
 import { fetchProducts, fetchStores, Product, StoreInfo, ApiCountry } from '../api/client';
 import { fetchProductsByBarcode, isAbortError } from '../utils/barcodeSearch';
@@ -62,9 +64,10 @@ export const SearchPage: React.FC = () => {
   const [dietaryLabels, setDietaryLabels] = useState<string[]>([]);
   const [addedSnackbar, setAddedSnackbar] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const debouncedQuery = useDebouncedValue(query, 300);
+  const debouncedQuery = useDebouncedValue(query, 250);
 
   useEffect(() => {
     let cancelled = false;
@@ -262,15 +265,26 @@ export const SearchPage: React.FC = () => {
 
   const showResults = searched && !loading && filteredProducts.length > 0;
 
+  const exampleQueries = [
+    { label: t('guide.milk'), query: 'melk' },
+    { label: t('guide.coffee'), query: 'koffie' },
+    { label: t('guide.pasta'), query: 'pasta' },
+  ];
+
   return (
     <>
       <AppNavBar />
-      <Container component="main" maxWidth="lg" sx={{ py: 3, bgcolor: 'background.default' }}>
-        <Typography component="h1" variant="h5" gutterBottom fontWeight={600}>
-          {t('search.title')}
+      <Container component="main" maxWidth="lg" sx={{ py: 3 }}>
+        <Typography
+          component="h1"
+          variant="h4"
+          gutterBottom
+          sx={{ fontWeight: 650, color: 'primary.dark' }}
+        >
+          {t('search.browseTitle')}
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {t('search.pageHint')}
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5, maxWidth: 520 }}>
+          {t('search.browseHint')}
         </Typography>
 
         {comparisonCount > 0 && (
@@ -287,8 +301,8 @@ export const SearchPage: React.FC = () => {
           </Alert>
         )}
 
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'flex-start' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 2 }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'stretch' }}>
             <Box sx={{ flex: 1, minWidth: 240 }}>
               <ProductSearchBar
                 value={query}
@@ -316,37 +330,45 @@ export const SearchPage: React.FC = () => {
             />
           )}
 
-          <DietaryFilterBar selected={dietaryLabels} onChange={setDietaryLabels} />
-
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
-            <FormControl size="small" sx={{ minWidth: 180 }}>
-              <InputLabel>{t('search.storeFilter')}</InputLabel>
-              <Select
-                value={storeFilter}
-                label={t('search.storeFilter')}
-                onChange={(e) => setStoreFilter(e.target.value)}
-              >
-                <MenuItem value="">{t('search.allStores')}</MenuItem>
-                {stores.map((s) => (
-                  <MenuItem key={s.id} value={s.slug}>
-                    {s.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={dealsOnly}
-                  onChange={(e) => setDealsOnly(e.target.checked)}
-                />
-              }
-              label={t('search.dealsOnly')}
-            />
+          <Box>
+            <Button size="small" onClick={() => setFiltersOpen((o) => !o)} sx={{ px: 0 }}>
+              {filtersOpen ? t('search.hideFilters') : t('search.showFilters')}
+            </Button>
+            <Collapse in={filtersOpen || searched}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1 }}>
+                <DietaryFilterBar selected={dietaryLabels} onChange={setDietaryLabels} />
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
+                  <FormControl size="small" sx={{ minWidth: 180 }}>
+                    <InputLabel>{t('search.storeFilter')}</InputLabel>
+                    <Select
+                      value={storeFilter}
+                      label={t('search.storeFilter')}
+                      onChange={(e) => setStoreFilter(e.target.value)}
+                    >
+                      <MenuItem value="">{t('search.allStores')}</MenuItem>
+                      {stores.map((s) => (
+                        <MenuItem key={s.id} value={s.slug}>
+                          {s.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={dealsOnly}
+                        onChange={(e) => setDealsOnly(e.target.checked)}
+                      />
+                    }
+                    label={t('search.dealsOnly')}
+                  />
+                </Box>
+              </Box>
+            </Collapse>
           </Box>
 
           {searched && !loading && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
               <Typography
                 role="status"
                 aria-live="polite"
@@ -354,27 +376,65 @@ export const SearchPage: React.FC = () => {
               >
                 {t('search.resultsStatus').replace('{count}', String(filteredProducts.length))}
               </Typography>
-              <ProductSortBar value={sort} onChange={setSort} />
-              <FilterChipBar chips={filterChips} active={activeChips} onToggle={toggleChip} />
-              <Chip
-                size="small"
-                variant="outlined"
-                label={t('search.resultCount')
-                  .replace('{groups}', String(groups.length))
-                  .replace('{results}', String(filteredProducts.length))}
-              />
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
+                <ProductSortBar value={sort} onChange={setSort} />
+                <Chip
+                  size="small"
+                  variant="outlined"
+                  label={t('search.resultCount')
+                    .replace('{groups}', String(groups.length))
+                    .replace('{results}', String(filteredProducts.length))}
+                />
+              </Box>
+              {filterChips.length > 0 && (
+                <FilterChipBar chips={filterChips} active={activeChips} onToggle={toggleChip} />
+              )}
             </Box>
           )}
         </Box>
 
         {loading && (
-          <Box role="status" aria-live="polite" aria-label={t('search.searching')} sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-            <CircularProgress />
+          <Box role="status" aria-live="polite" aria-label={t('search.searching')} sx={{ py: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+              <CircularProgress size={18} />
+              <Typography variant="body2" color="text.secondary" className="cp-skeleton-pulse">
+                {t('search.searching')}
+              </Typography>
+            </Box>
+            {[0, 1, 2, 3].map((i) => (
+              <Box key={i} sx={{ mb: 1.5 }}>
+                <Skeleton variant="text" width="50%" height={28} />
+                <Box sx={{ display: 'flex', gap: 1, mt: 0.75 }}>
+                  <Skeleton variant="rounded" width={90} height={32} />
+                  <Skeleton variant="rounded" width={90} height={32} />
+                  <Skeleton variant="rounded" width={90} height={32} />
+                </Box>
+              </Box>
+            ))}
           </Box>
         )}
 
         {!loading && !searched && (
-          <Typography color="text.secondary">{t('search.emptyPrompt')}</Typography>
+          <Box className="cp-fade-up" sx={{ py: 2 }}>
+            <Typography color="text.secondary" sx={{ mb: 1.5 }}>
+              {t('search.emptyPrompt')}
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
+              <Typography variant="body2" color="text.secondary">
+                {t('guide.try')}
+              </Typography>
+              {exampleQueries.map((example) => (
+                <Chip
+                  key={example.query}
+                  label={example.label}
+                  size="small"
+                  variant="outlined"
+                  color="primary"
+                  onClick={() => setQuery(example.query)}
+                />
+              ))}
+            </Box>
+          </Box>
         )}
 
         {!loading && searchError && (
@@ -388,7 +448,7 @@ export const SearchPage: React.FC = () => {
             <ProductGroupList
               groups={groups}
               onAddProduct={handleAddProduct}
-              addButtonLabel={t('search.addButton')}
+              addButtonLabel={t('search.compareButton')}
               emptyMessage={
                 barcodeQuery
                   ? t('search.barcodeNotFound').replace('{barcode}', barcodeQuery)

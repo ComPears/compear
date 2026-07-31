@@ -39,8 +39,8 @@
   "display": "standalone",
   "lang": "nl",
   "dir": "ltr",
-  "theme_color": "#0d9488",
-  "background_color": "#f5f5f5",
+  "theme_color": "#0b6e4f",
+  "background_color": "#eef4f0",
   "categories": ["shopping", "food"],
   "orientation": "portrait-primary",
   "shortcuts": [

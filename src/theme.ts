@@ -3,45 +3,74 @@ import { createTheme } from '@mui/material/styles';
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#0f766e', // Darker teal keeps white text at accessible contrast.
-      light: '#2dd4bf',
-      dark: '#115e59',
+      main: '#0b6e4f',
+      light: '#2a9d7a',
+      dark: '#084c37',
+      contrastText: '#ffffff',
     },
     secondary: {
-      main: '#c2410c', // Darker orange keeps white text at accessible contrast.
-      light: '#fb923c',
-      dark: '#9a3412',
+      main: '#c45c26',
+      light: '#e07a45',
+      dark: '#9a4214',
+      contrastText: '#ffffff',
     },
     success: {
-      main: '#059669',
-      light: '#34d399',
-      dark: '#047857',
+      main: '#0b7a4b',
+      light: '#34b87a',
+      dark: '#055c38',
     },
     error: {
-      main: '#dc2626',
+      main: '#c0392b',
     },
     warning: {
-      main: '#f59e0b',
+      main: '#d97706',
     },
     info: {
-      main: '#0ea5e9',
+      main: '#0e7490',
     },
     background: {
-      default: '#f8fafc',
+      default: '#eef4f0',
       paper: '#ffffff',
+    },
+    text: {
+      primary: '#14231c',
+      secondary: '#4a5c52',
     },
   },
   typography: {
-    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-    h1: { fontWeight: 600 },
-    h2: { fontWeight: 600 },
-    h3: { fontWeight: 600 },
-    h4: { fontWeight: 600 },
-    h5: { fontWeight: 600 },
-    h6: { fontWeight: 600 },
+    fontFamily: '"Figtree", "Helvetica Neue", sans-serif',
+    h1: {
+      fontFamily: '"Fraunces", Georgia, serif',
+      fontWeight: 650,
+      letterSpacing: '-0.03em',
+    },
+    h2: {
+      fontFamily: '"Fraunces", Georgia, serif',
+      fontWeight: 650,
+      letterSpacing: '-0.02em',
+    },
+    h3: {
+      fontFamily: '"Fraunces", Georgia, serif',
+      fontWeight: 600,
+    },
+    h4: {
+      fontFamily: '"Fraunces", Georgia, serif',
+      fontWeight: 600,
+    },
+    h5: {
+      fontFamily: '"Fraunces", Georgia, serif',
+      fontWeight: 600,
+    },
+    h6: {
+      fontFamily: '"Fraunces", Georgia, serif',
+      fontWeight: 600,
+    },
+    button: {
+      fontWeight: 650,
+    },
   },
   shape: {
-    borderRadius: 12,
+    borderRadius: 10,
   },
   components: {
     MuiButton: {
@@ -49,35 +78,40 @@ const theme = createTheme({
         root: {
           borderRadius: 10,
           textTransform: 'none',
-          fontWeight: 600,
+          fontWeight: 650,
           minHeight: 44,
+          boxShadow: 'none',
+          '&:hover': {
+            boxShadow: 'none',
+          },
         },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
-          boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-          transition: 'box-shadow 0.2s ease',
-          '&:hover': {
-            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-          },
+          borderRadius: 10,
+          boxShadow: 'none',
+          border: '1px solid rgba(20, 35, 28, 0.08)',
         },
       },
     },
     MuiPaper: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
-          boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+          borderRadius: 10,
+          backgroundImage: 'none',
+        },
+        elevation1: {
+          boxShadow: 'none',
+          border: '1px solid rgba(20, 35, 28, 0.08)',
         },
       },
     },
     MuiAppBar: {
       styleOverrides: {
         root: {
-          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          boxShadow: 'none',
           borderRadius: 0,
         },
       },
@@ -86,7 +120,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 8,
-          fontWeight: 500,
+          fontWeight: 600,
         },
       },
     },
