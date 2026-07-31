@@ -13,7 +13,7 @@ export interface CountryInfo {
 
 export const countries: CountryInfo[] = [
   { code: 'nl', name: 'Netherlands', available: true },
-  { code: 'uk', name: 'United Kingdom', available: false },
+  { code: 'uk', name: 'United Kingdom', available: true },
   { code: 'de', name: 'Germany', available: false }
 ];
 

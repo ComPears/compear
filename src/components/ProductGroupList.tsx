@@ -18,6 +18,7 @@ import { getSupermarketLogo } from '../services/supermarketService';
 import { useCountry } from '../context/CountryContext';
 import { useBasketStore } from '../store/basketStore';
 import { useLanguage } from '../context/LanguageContext';
+import { formatMoney } from '../utils/formatMoney';
 
 interface ProductGroupListProps {
   groups: ProductGroup[];
@@ -25,10 +26,6 @@ interface ProductGroupListProps {
   emptyMessage?: string;
   onAddProduct?: (product: Product) => void;
   addButtonLabel?: string;
-}
-
-function formatPrice(n: number): string {
-  return `€${n.toFixed(2)}`;
 }
 
 function StorePriceChip({
@@ -43,6 +40,7 @@ function StorePriceChip({
   onClick: () => void;
 }) {
   const { t } = useLanguage();
+  const { country } = useCountry();
   const short = toSupermarketShortName(product.store);
   const logo = getSupermarketLogo(short);
   const onSale = product.promoType != null && product.effectivePrice < product.originalPrice;
@@ -72,11 +70,11 @@ function StorePriceChip({
             </Box>
           )}
           <Box component="span" sx={{ fontWeight: 700 }}>
-            {formatPrice(product.effectivePrice)}
+            {formatMoney(product.effectivePrice, country.code)}
           </Box>
           {onSale && (
             <Box component="span" sx={{ opacity: 0.7, textDecoration: 'line-through', ml: 0.25 }}>
-              {formatPrice(product.originalPrice)}
+              {formatMoney(product.originalPrice, country.code)}
             </Box>
           )}
         </Box>
@@ -105,6 +103,7 @@ function CompactProductRow({
   onAdd: () => void;
 }) {
   const { t } = useLanguage();
+  const { country } = useCountry();
   const onSale = product.promoType != null && product.effectivePrice < product.originalPrice;
   return (
     <Box
@@ -139,7 +138,7 @@ function CompactProductRow({
           {toSupermarketShortName(product.store)} · {product.productName}
         </Typography>
         <Typography variant="caption" color="text.secondary">
-          {product.packageSize} · {formatPrice(product.effectiveUnitPrice)}/kg
+          {product.packageSize} · {formatMoney(product.effectiveUnitPrice, country.code)}/kg
         </Typography>
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexShrink: 0 }}>
@@ -148,11 +147,11 @@ function CompactProductRow({
         )}
         {onSale && (
           <Typography variant="caption" sx={{ textDecoration: 'line-through', color: 'text.secondary' }}>
-            {formatPrice(product.originalPrice)}
+            {formatMoney(product.originalPrice, country.code)}
           </Typography>
         )}
         <Typography variant="body2" fontWeight={700} color="primary.main">
-          {formatPrice(product.effectivePrice)}
+          {formatMoney(product.effectivePrice, country.code)}
         </Typography>
         <Button
           size="small"
@@ -249,7 +248,7 @@ const ProductGroupListComponent: React.FC<ProductGroupListProps> = ({
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
                   {group.packageSize && `${group.packageSize} · `}
-                  {t('search.fromPrice').replace('{price}', formatPrice(group.cheapest.effectivePrice))}
+                  {t('search.fromPrice').replace('{price}', formatMoney(group.cheapest.effectivePrice, country.code))}
                   {hasMultipleStores
                     ? ` · ${t('search.storeCount').replace('{count}', String(offers.length))}`
                     : ` · ${toSupermarketShortName(group.cheapest.store)}`}
@@ -257,7 +256,7 @@ const ProductGroupListComponent: React.FC<ProductGroupListProps> = ({
                 {spread > 0.01 && (
                   <Typography variant="caption" color="secondary.main" fontWeight={700} sx={{ display: 'block', mt: 0.35 }}>
                     {t('search.saveVsNext')
-                      .replace('{amount}', formatPrice(spread))
+                      .replace('{amount}', formatMoney(spread, country.code))
                       .replace('{store}', toSupermarketShortName(group.cheapest.store))}
                   </Typography>
                 )}

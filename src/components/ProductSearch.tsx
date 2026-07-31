@@ -177,11 +177,18 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
     );
   };
 
-  const examples = [
-    { label: t('guide.milk'), query: 'melk' },
-    { label: t('guide.coffee'), query: 'koffie' },
-    { label: t('guide.pasta'), query: 'pasta' },
-  ];
+  const examples =
+    country.code === 'uk'
+      ? [
+          { label: t('guide.milk'), query: 'milk' },
+          { label: t('guide.coffee'), query: 'coffee' },
+          { label: t('guide.pasta'), query: 'pasta' },
+        ]
+      : [
+          { label: t('guide.milk'), query: 'melk' },
+          { label: t('guide.coffee'), query: 'koffie' },
+          { label: t('guide.pasta'), query: 'pasta' },
+        ];
 
   return (
     <Box>

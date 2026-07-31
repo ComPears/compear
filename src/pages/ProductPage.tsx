@@ -15,6 +15,7 @@ import { fetchProduct, fetchCompare, Product } from '../api/client';
 import { useCountry } from '../context/CountryContext';
 import AppNavBar from '../components/AppNavBar';
 import { useBasketStore } from '../store/basketStore';
+import { formatMoney } from '../utils/formatMoney';
 
 export const ProductPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -38,7 +39,7 @@ export const ProductPage: React.FC = () => {
       .finally(() => setLoading(false));
   }, [id, country.code]);
 
-  const formatPrice = (n: number) => `€${n.toFixed(2)}`;
+  const formatPrice = (n: number) => formatMoney(n, country.code);
 
   if (loading) {
     return (

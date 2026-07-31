@@ -20,10 +20,11 @@ import RouteIcon from '@mui/icons-material/Route';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import ShareIcon from '@mui/icons-material/Share';
 import { GroceryWithPrices } from '../types';
-import { supermarkets } from '../services/supermarketService';
+import { getSupermarketLogo as resolveStoreLogo } from '../services/supermarketService';
 import { useLanguage } from '../context/LanguageContext';
 import { useCountry } from '../context/CountryContext';
 import { optimizeShoppingPlan, DEFAULT_TRIP_PENALTY_EUR } from '../utils/shoppingOptimizer';
+import { formatMoney } from '../utils/formatMoney';
 
 interface OptimalShoppingStrategyProps {
   groceriesWithPrices: GroceryWithPrices[];
@@ -33,18 +34,10 @@ const OptimalShoppingStrategy: React.FC<OptimalShoppingStrategyProps> = ({ groce
   const { t } = useLanguage();
   const { country } = useCountry();
   
-  // Find the logo URL for a supermarket by name
-  const getSupermarketLogo = (name: string): string => {
-    const supermarket = supermarkets.find(s => s.name === name);
-    return supermarket?.logo || '';
-  };
+  const getSupermarketLogo = (name: string): string => resolveStoreLogo(name) || '';
 
-  // Format currency values
-  const formatCurrency = (amount: number | string | undefined | null) => {
-    const num = typeof amount === 'number' ? amount : Number(amount);
-    if (isNaN(num)) return '-';
-    return `€${num.toFixed(2)}`;
-  };
+  const formatCurrency = (amount: number | string | undefined | null) =>
+    formatMoney(amount, country.code);
 
   // Calculate the optimal shopping strategy
   const optimalStrategy = useMemo(() => {

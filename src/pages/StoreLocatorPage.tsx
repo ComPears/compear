@@ -20,8 +20,10 @@ import { fetchStoreLocations, StoreLocation } from '../api/client';
 import { useLanguage } from '../context/LanguageContext';
 import { useCountry } from '../context/CountryContext';
 
-const CHAINS = [
-  { slug: '', labelKey: 'search.allStores' as const },
+type ChainOption = { slug: string; label?: string; labelKey?: 'search.allStores' };
+
+const NL_CHAINS: ChainOption[] = [
+  { slug: '', labelKey: 'search.allStores' },
   { slug: 'albert-heijn', label: 'Albert Heijn' },
   { slug: 'jumbo', label: 'Jumbo' },
   { slug: 'aldi', label: 'ALDI' },
@@ -29,6 +31,16 @@ const CHAINS = [
   { slug: 'lidl', label: 'Lidl' },
   { slug: 'coop', label: 'Coop' },
   { slug: 'plus', label: 'PLUS' },
+];
+
+const UK_CHAINS: ChainOption[] = [
+  { slug: '', labelKey: 'search.allStores' },
+  { slug: 'tesco', label: 'Tesco' },
+  { slug: 'sainsburys', label: "Sainsbury's" },
+  { slug: 'asda', label: 'Asda' },
+  { slug: 'morrisons', label: 'Morrisons' },
+  { slug: 'aldi-uk', label: 'Aldi' },
+  { slug: 'lidl-uk', label: 'Lidl' },
 ];
 
 const CHAIN_LABELS: Record<string, string> = {
@@ -39,6 +51,12 @@ const CHAIN_LABELS: Record<string, string> = {
   lidl: 'Lidl',
   coop: 'Coop',
   plus: 'PLUS',
+  tesco: 'Tesco',
+  sainsburys: "Sainsbury's",
+  asda: 'Asda',
+  morrisons: 'Morrisons',
+  'aldi-uk': 'Aldi',
+  'lidl-uk': 'Lidl',
 };
 
 function chainLabel(chain: string, fallback: string): string {
@@ -102,6 +120,7 @@ export const StoreLocatorPage: React.FC = () => {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const chains = country.code === 'uk' ? UK_CHAINS : NL_CHAINS;
 
   const loadLocations = useCallback(
     async (lat?: number, lng?: number) => {
@@ -196,8 +215,8 @@ export const StoreLocatorPage: React.FC = () => {
         </Typography>
 
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2, alignItems: 'center' }}>
-          {CHAINS.map((c) => {
-            const label = 'labelKey' in c && c.labelKey ? t(c.labelKey) : c.label;
+          {chains.map((c) => {
+            const label = c.labelKey ? t(c.labelKey) : c.label;
             const active = chain === c.slug;
             return (
               <Chip

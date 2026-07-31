@@ -9,6 +9,8 @@ const en: Translations = {
   'app.clearAllConfirm': 'Clear all comparison and basket items?',
   'app.heroHeadline': 'See every supermarket price before you shop.',
   'app.heroSupport': 'Search a product once — compare AH, Jumbo, Lidl and more in seconds.',
+  'app.heroSupport.nl': 'Search a product once — compare AH, Jumbo, Lidl and more in seconds.',
+  'app.heroSupport.uk': 'Search a product once — compare Tesco, Sainsbury’s, Asda, Morrisons, Aldi and Lidl.',
   'app.storesCovered': 'Supermarkets we compare',
   'pwa.install.title': 'Install ComPear',
   'pwa.install.body': 'Add ComPear to your home screen for faster access and offline use.',
@@ -31,7 +33,7 @@ const en: Translations = {
   // Main Content
   'app.description': 'Add grocery items to compare prices across {country} supermarkets. Prices from supermarkets without APIs are estimated using advanced algorithms.',
   'app.description.nl': 'Search or scan a product, add it to your list, and compare the same item across Dutch supermarkets.',
-  'app.description.uk': 'Add grocery items to compare prices across UK supermarkets. Prices from supermarkets without APIs are estimated using advanced algorithms.',
+  'app.description.uk': 'Search or scan a product, add it to your list, and compare the same item across Tesco, Sainsbury’s, Asda, Morrisons, Aldi and Lidl.',
   'app.description.de': 'Add grocery items to compare prices across German supermarkets. Prices from supermarkets without APIs are estimated using advanced algorithms.',
 
   'footer.liveIn': 'Live in',
@@ -340,6 +342,8 @@ const nl: Translations = {
   'app.clearAllConfirm': 'Alle vergelijkings- en winkelmanditems wissen?',
   'app.heroHeadline': 'Zie elke supermarktprijs vóór je boodschappen doet.',
   'app.heroSupport': 'Zoek één keer — vergelijk AH, Jumbo, Lidl en meer in seconden.',
+  'app.heroSupport.nl': 'Zoek één keer — vergelijk AH, Jumbo, Lidl en meer in seconden.',
+  'app.heroSupport.uk': 'Zoek één keer — vergelijk Tesco, Sainsbury’s, Asda, Morrisons, Aldi en Lidl.',
   'app.storesCovered': 'Supermarkten die we vergelijken',
   'pwa.install.title': 'ComPear installeren',
   'pwa.install.body': 'Zet ComPear op je startscherm voor snellere toegang en offline gebruik.',

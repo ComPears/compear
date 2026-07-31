@@ -24,13 +24,13 @@ const Footer: React.FC = () => {
             {t('footer.nl')}
           </Link>
           {' · '}
+          <Link component={RouterLink} to="/uk" color="inherit" underline="hover" fontWeight={700}>
+            {t('footer.uk')}
+          </Link>
+          {' · '}
           {t('footer.comingSoonLabel')}{' '}
           <Link component={RouterLink} to="/de" color="inherit" underline="hover">
             {t('footer.de')}
-          </Link>
-          {' · '}
-          <Link component={RouterLink} to="/uk" color="inherit" underline="hover">
-            {t('footer.uk')}
           </Link>
         </Typography>
         <Typography variant="body2" color="text.secondary" align="center">

@@ -21,6 +21,7 @@ import { fetchSharedList, SharedList } from '../api/client';
 import { useBasketStore } from '../store/basketStore';
 import { useLanguage } from '../context/LanguageContext';
 import { useCountry } from '../context/CountryContext';
+import { formatMoney } from '../utils/formatMoney';
 
 export const SharedListPage: React.FC = () => {
   const { listId } = useParams<{ listId: string }>();
@@ -128,7 +129,7 @@ export const SharedListPage: React.FC = () => {
                 <ListItem key={`${item.productId}-${item.store}`} divider>
                   <ListItemText
                     primary={item.productName}
-                    secondary={`${item.store} · ${item.quantity}× · €${item.effectivePrice.toFixed(2)}`}
+                    secondary={`${item.store} · ${item.quantity}× · ${formatMoney(item.effectivePrice, country.code)}`}
                   />
                 </ListItem>
               ))}

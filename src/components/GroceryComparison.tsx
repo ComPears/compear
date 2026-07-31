@@ -30,12 +30,13 @@ import CompareIcon from '@mui/icons-material/Compare';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { sanitizeProductLink } from '../utils/safeLink';
 import { Grocery, GroceryWithPrices, SupermarketPrice } from '../types';
-import { fetchPricesForGrocery, supermarkets } from '../services/supermarketService';
+import { fetchPricesForGrocery, getSupermarketLogo } from '../services/supermarketService';
 import OptimalShoppingStrategy from './OptimalShoppingStrategy';
 import { useLanguage } from '../context/LanguageContext';
 import { useCountry } from '../context/CountryContext';
 import CategoryFilter from './CategoryFilter';
 import { ProductCategory, extractCategories, filterByCategory, getCategoryIcon } from '../services/categoryService';
+import { formatMoney } from '../utils/formatMoney';
 
 interface GroceryComparisonProps {
   groceries: Grocery[];
@@ -164,12 +165,6 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
     }
   }, [groceriesWithPrices, onGroceriesWithPricesChange]);
 
-  // Find the logo URL for a supermarket by name
-  const getSupermarketLogo = (name: string): string | undefined => {
-    const supermarket = supermarkets.find(s => s.name === name);
-    return supermarket?.logo;
-  };
-
   // Calculate total savings from regular price if on sale
   const calculateSavings = (price: SupermarketPrice): number => {
     if (price.onSale && price.regularPrice) {
@@ -178,11 +173,8 @@ const GroceryComparison: React.FC<GroceryComparisonProps> = ({ groceries, onRemo
     return 0;
   };
 
-  const formatCurrency = (amount: number | string | undefined | null) => {
-    const num = typeof amount === 'number' ? amount : Number(amount);
-    if (isNaN(num)) return '-';
-    return `€${num.toFixed(2)}`;
-  };
+  const formatCurrency = (amount: number | string | undefined | null) =>
+    formatMoney(amount, country.code);
 
   const getLowestPriceSupermarket = (prices: SupermarketPrice[]) => {
     if (prices.length === 0) return null;

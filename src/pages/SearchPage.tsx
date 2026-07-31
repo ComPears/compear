@@ -265,11 +265,18 @@ export const SearchPage: React.FC = () => {
 
   const showResults = searched && !loading && filteredProducts.length > 0;
 
-  const exampleQueries = [
-    { label: t('guide.milk'), query: 'melk' },
-    { label: t('guide.coffee'), query: 'koffie' },
-    { label: t('guide.pasta'), query: 'pasta' },
-  ];
+  const exampleQueries =
+    country.code === 'uk'
+      ? [
+          { label: t('guide.milk'), query: 'milk' },
+          { label: t('guide.coffee'), query: 'coffee' },
+          { label: t('guide.pasta'), query: 'pasta' },
+        ]
+      : [
+          { label: t('guide.milk'), query: 'melk' },
+          { label: t('guide.coffee'), query: 'koffie' },
+          { label: t('guide.pasta'), query: 'pasta' },
+        ];
 
   return (
     <>

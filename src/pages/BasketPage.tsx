@@ -27,10 +27,7 @@ import AppNavBar from '../components/AppNavBar';
 import { ShareListDialog } from '../components/ShareListDialog';
 import { useLanguage } from '../context/LanguageContext';
 import { useCountry } from '../context/CountryContext';
-
-function formatPrice(n: number) {
-  return `€${n.toFixed(2)}`;
-}
+import { formatMoney } from '../utils/formatMoney';
 
 function totalCheapestPerItem(items: BasketItem[]): number {
   return items.reduce((sum, i) => sum + i.product.effectivePrice * i.quantity, 0);
@@ -77,6 +74,7 @@ export const BasketPage: React.FC = () => {
   const savings = singleStoreTotal > 0 && cheapestPerItemTotal < singleStoreTotal
     ? singleStoreTotal - cheapestPerItemTotal
     : 0;
+  const money = (n: number) => formatMoney(n, country.code);
 
   if (items.length === 0) {
     return (
@@ -138,7 +136,7 @@ export const BasketPage: React.FC = () => {
                       {product.store}
                     </Typography>
                     <Typography variant="h6" color="success.main" fontWeight={700}>
-                      {formatPrice(product.effectivePrice * quantity)}
+                      {money(product.effectivePrice * quantity)}
                     </Typography>
                   </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -163,7 +161,7 @@ export const BasketPage: React.FC = () => {
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Typography variant="caption" color="text.secondary">
-                        {formatPrice(product.effectivePrice)} {t('basket.each')}
+                        {money(product.effectivePrice)} {t('basket.each')}
                       </Typography>
                       <IconButton
                         size="small"
@@ -197,7 +195,7 @@ export const BasketPage: React.FC = () => {
                   <TableRow key={product.id}>
                     <TableCell>{product.productName}</TableCell>
                     <TableCell>{product.store}</TableCell>
-                    <TableCell align="right">{formatPrice(product.effectivePrice)}</TableCell>
+                    <TableCell align="right">{money(product.effectivePrice)}</TableCell>
                     <TableCell align="center">
                       <IconButton
                         size="small"
@@ -218,7 +216,7 @@ export const BasketPage: React.FC = () => {
                       </IconButton>
                     </TableCell>
                     <TableCell align="right">
-                      {formatPrice(product.effectivePrice * quantity)}
+                      {money(product.effectivePrice * quantity)}
                     </TableCell>
                     <TableCell>
                       <IconButton
@@ -242,14 +240,14 @@ export const BasketPage: React.FC = () => {
             <Typography variant="subtitle2" gutterBottom>
               {t('basket.optionSplit')}
             </Typography>
-            <Typography variant="h6">{formatPrice(cheapestPerItemTotal)}</Typography>
+            <Typography variant="h6">{money(cheapestPerItemTotal)}</Typography>
             <Typography variant="subtitle2" sx={{ mt: 2 }} gutterBottom>
               {t('basket.optionSingle')} {singleStore ? `(${singleStore.store})` : ''}
             </Typography>
-            <Typography variant="h6">{formatPrice(singleStoreTotal)}</Typography>
+            <Typography variant="h6">{money(singleStoreTotal)}</Typography>
             {savings > 0 && (
               <Typography color="primary" sx={{ mt: 2 }} fontWeight="bold">
-                {t('basket.savings').replace('{amount}', formatPrice(savings))}
+                {t('basket.savings').replace('{amount}', money(savings))}
               </Typography>
             )}
           </CardContent>

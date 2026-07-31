@@ -23,9 +23,10 @@ import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import ShareIcon from '@mui/icons-material/Share';
 import { GroceryWithPrices, SupermarketPrice } from '../types';
-import { supermarkets } from '../services/supermarketService';
+import { getSupermarketLogo } from '../services/supermarketService';
 import { useCountry } from '../context/CountryContext';
 import { useLanguage } from '../context/LanguageContext';
+import { formatMoney } from '../utils/formatMoney';
 
 
 interface CheapestDialogProps {
@@ -47,19 +48,8 @@ const CheapestDialog: React.FC<CheapestDialogProps> = ({ open, onClose, grocerie
   const { country } = useCountry();
   const { t } = useLanguage();
 
-
-
-  const formatCurrency = (amount: number | string | undefined | null) => {
-    const num = typeof amount === 'number' ? amount : Number(amount);
-    if (isNaN(num)) return '-';
-    return `€${num.toFixed(2)}`;
-  };
-
-  // Find the logo URL for a supermarket by name
-  const getSupermarketLogo = (name: string): string | undefined => {
-    const supermarket = supermarkets.find(s => s.name === name);
-    return supermarket?.logo;
-  };
+  const formatCurrency = (amount: number | string | undefined | null) =>
+    formatMoney(amount, country.code);
 
   // Calculate summary of prices across all supermarkets
   const supermarketSummaries = React.useMemo(() => {

@@ -41,9 +41,10 @@ import {
 } from '../api/client';
 import { getUserId } from '../utils/userId';
 import { useReceiptStore } from '../store/receiptStore';
+import { formatMoney } from '../utils/formatMoney';
 
 function formatEuro(value: number) {
-  return `€${value.toFixed(2)}`;
+  return formatMoney(value, 'nl');
 }
 
 function formatDate(iso: string | null) {

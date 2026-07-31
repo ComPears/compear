@@ -17,12 +17,13 @@ import { useLanguage } from './context/LanguageContext';
 import { useComparisonStore } from './store/comparisonStore';
 import { useBasketStore } from './store/basketStore';
 import { fetchProduct } from './api/client';
-import { supermarkets } from './services/supermarketService';
+import { getSupermarketsForCountry } from './services/supermarketService';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 
 const App: React.FC = () => {
   const { country, setCountry } = useCountry();
   const { t } = useLanguage();
+  const storeMarks = getSupermarketsForCountry(country.code);
   const groceries = useComparisonStore((s) => s.items);
   const addGrocery = useComparisonStore((s) => s.add);
   const removeGrocery = useComparisonStore((s) => s.remove);
@@ -126,7 +127,7 @@ const App: React.FC = () => {
             </Typography>
 
             <Stack direction="row" spacing={1.25} justifyContent="center" sx={{ mb: 3.5, flexWrap: 'wrap', rowGap: 1 }}>
-              {supermarkets.map((store) => (
+              {storeMarks.map((store) => (
                 <Avatar
                   key={store.id}
                   src={store.logo}
@@ -205,7 +206,7 @@ const App: React.FC = () => {
                   {t('app.heroHeadline')}
                 </Typography>
                 <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 440, mx: 'auto', mb: 2 }}>
-                  {t('app.heroSupport')}
+                  {t(`app.heroSupport.${country.code}`) || t('app.heroSupport')}
                 </Typography>
                 <Stack
                   direction="row"
@@ -214,7 +215,7 @@ const App: React.FC = () => {
                   sx={{ flexWrap: 'wrap', rowGap: 1, mb: 0.5 }}
                   aria-label={t('app.storesCovered')}
                 >
-                  {supermarkets.map((store) => (
+                  {storeMarks.map((store) => (
                     <Avatar
                       key={store.id}
                       src={store.logo}

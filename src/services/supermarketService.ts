@@ -2,67 +2,59 @@ import { Grocery, SupermarketPrice, Supermarket } from '../types';
 import { fetchCompare, fetchProducts, Product, ApiCountry } from '../api/client';
 import { productToSupermarketPrice } from '../utils/productMapper';
 import { filterBySearch } from '../utils/productGrouping';
+import { CountryCode } from '../context/CountryContext';
 
-export const supermarkets: Supermarket[] = [
-  {
-    name: 'AH',
-    logo: 'https://www.ah.nl/favicon.ico',
-    id: '1',
-    hasAPI: true,
-  },
-  {
-    name: 'DIRK',
-    logo: 'https://www.dirk.nl/favicon.ico',
-    id: '2',
-    hasAPI: true,
-  },
-  {
-    name: 'ALDI',
-    logo: 'https://www.aldi.nl/favicon.ico',
-    id: '3',
-    hasAPI: true,
-  },
-  {
-    name: 'LIDL',
-    logo: 'https://www.lidl.nl/favicon.ico',
-    id: '4',
-    hasAPI: true,
-  },
-  {
-    name: 'JUMBO',
-    logo: 'https://www.jumbo.com/favicon.ico',
-    id: '5',
-    hasAPI: true,
-  },
-  {
-    name: 'PLUS',
-    logo: 'https://www.plus.nl/favicon.ico',
-    id: '6',
-    hasAPI: true,
-  },
-  {
-    name: 'COOP',
-    logo: 'https://www.coop.nl/favicon.ico',
-    id: '7',
-    hasAPI: true,
-  },
+export const nlSupermarkets: Supermarket[] = [
+  { name: 'AH', logo: 'https://www.ah.nl/favicon.ico', id: '1', hasAPI: true },
+  { name: 'DIRK', logo: 'https://www.dirk.nl/favicon.ico', id: '2', hasAPI: true },
+  { name: 'ALDI', logo: 'https://www.aldi.nl/favicon.ico', id: '3', hasAPI: true },
+  { name: 'LIDL', logo: 'https://www.lidl.nl/favicon.ico', id: '4', hasAPI: true },
+  { name: 'JUMBO', logo: 'https://www.jumbo.com/favicon.ico', id: '5', hasAPI: true },
+  { name: 'PLUS', logo: 'https://www.plus.nl/favicon.ico', id: '6', hasAPI: true },
+  { name: 'COOP', logo: 'https://www.coop.nl/favicon.ico', id: '7', hasAPI: true },
 ];
 
-const LOGO_ALIASES: Record<string, string> = {
-  AH: 'AH',
-  'ALBERT HEIJN': 'AH',
-  DIRK: 'DIRK',
-  ALDI: 'ALDI',
-  LIDL: 'LIDL',
-  JUMBO: 'JUMBO',
-  PLUS: 'PLUS',
-  COOP: 'COOP',
+export const ukSupermarkets: Supermarket[] = [
+  { name: 'TESCO', logo: 'https://www.tesco.com/favicon.ico', id: 'uk-1', hasAPI: true },
+  { name: "SAINSBURY'S", logo: 'https://www.sainsburys.co.uk/favicon.ico', id: 'uk-2', hasAPI: true },
+  { name: 'ASDA', logo: 'https://www.asda.com/favicon.ico', id: 'uk-3', hasAPI: true },
+  { name: 'MORRISONS', logo: 'https://groceries.morrisons.com/favicon.ico', id: 'uk-4', hasAPI: true },
+  { name: 'ALDI', logo: 'https://www.aldi.co.uk/favicon.ico', id: 'uk-5', hasAPI: true },
+  { name: 'LIDL', logo: 'https://www.lidl.co.uk/favicon.ico', id: 'uk-6', hasAPI: true },
+];
+
+/** NL list kept as `supermarkets` for existing imports. */
+export const supermarkets: Supermarket[] = nlSupermarkets;
+
+const LOGO_BY_KEY: Record<string, string> = {
+  AH: 'https://www.ah.nl/favicon.ico',
+  'ALBERT HEIJN': 'https://www.ah.nl/favicon.ico',
+  DIRK: 'https://www.dirk.nl/favicon.ico',
+  ALDI: 'https://www.aldi.nl/favicon.ico',
+  'ALDI-UK': 'https://www.aldi.co.uk/favicon.ico',
+  LIDL: 'https://www.lidl.nl/favicon.ico',
+  'LIDL-UK': 'https://www.lidl.co.uk/favicon.ico',
+  JUMBO: 'https://www.jumbo.com/favicon.ico',
+  PLUS: 'https://www.plus.nl/favicon.ico',
+  COOP: 'https://www.coop.nl/favicon.ico',
+  TESCO: 'https://www.tesco.com/favicon.ico',
+  SAINSBURYS: 'https://www.sainsburys.co.uk/favicon.ico',
+  "SAINSBURY'S": 'https://www.sainsburys.co.uk/favicon.ico',
+  ASDA: 'https://www.asda.com/favicon.ico',
+  MORRISONS: 'https://groceries.morrisons.com/favicon.ico',
 };
+
+export function getSupermarketsForCountry(country: CountryCode | ApiCountry): Supermarket[] {
+  if (country === 'uk') return ukSupermarkets;
+  return nlSupermarkets;
+}
 
 /** Resolve a supermarket favicon from a short or full store name. */
 export function getSupermarketLogo(name: string): string | undefined {
-  const key = LOGO_ALIASES[name.trim().toUpperCase()] ?? name.trim().toUpperCase();
-  return supermarkets.find((s) => s.name === key)?.logo;
+  const key = name.trim().toUpperCase();
+  if (LOGO_BY_KEY[key]) return LOGO_BY_KEY[key];
+  const match = [...nlSupermarkets, ...ukSupermarkets].find((s) => s.name.toUpperCase() === key);
+  return match?.logo;
 }
 
 async function resolveComparableProducts(
