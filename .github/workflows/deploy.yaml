@@ -21,10 +21,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -45,7 +45,7 @@ jobs:
         run: npm run build
 
       - name: Upload verified production artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: frontend-dist
           path: dist
@@ -66,10 +66,10 @@ jobs:
 
     steps:
       - name: Checkout deployment configuration
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Download verified production artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: frontend-dist
           path: dist
@@ -82,7 +82,7 @@ jobs:
         run: |
           prod_flag=""
           if [ "${{ github.event_name }}" = "push" ]; then prod_flag="--prod"; fi
-          npx --yes netlify-cli@20.1.1 deploy \
+          npx --yes netlify-cli@27.0.1 deploy \
             --no-build \
             --dir dist \
             --site "$NETLIFY_SITE_ID" \
@@ -93,7 +93,7 @@ jobs:
 
       - name: Publish preview URL
         if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
