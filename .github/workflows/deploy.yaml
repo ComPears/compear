@@ -1,95 +1,126 @@
-name: Deploy webapp
+name: Validate and deploy webapp
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 permissions:
   contents: read
 
-env:
-  BRANCH_NAME: ${{ github.ref_name }}
+concurrency:
+  group: webapp-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    # Dependabot grouped bumps can break the build; validate on main only.
-    if: github.actor != 'dependabot[bot]'
-    permissions:
-      contents: read
-      pull-requests: write
+  validate:
+    name: Test and build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
     steps:
-      - name: Repository Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup NodeJS
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: "npm"
+          cache: npm
 
-      - name: Install Netlify
-        run: npm install netlify-cli@20.1.1 -g
-
-      - name: Install Dependencies
+      - name: Install locked dependencies
         run: npm ci
 
-      - name: Build project
+      - name: Run tests
+        run: npm run test:run
+
+      - name: Build production artifact
         env:
-          VITE_API_URL: https://compear-backend.onrender.com
+          VITE_API_URL: https://compear-backend.onrender.com/api
+          VITE_SITE_URL: https://www.compears.shop
           VITE_EMAILJS_SERVICE_ID: ${{ secrets.EMAILJS_SERVICE_ID }}
           VITE_EMAILJS_TEMPLATE_ID: ${{ secrets.EMAILJS_TEMPLATE_ID }}
           VITE_EMAILJS_PUBLIC_KEY: ${{ secrets.EMAILJS_PUBLIC_KEY }}
         run: npm run build
 
+      - name: Upload verified production artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: dist
+          if-no-files-found: error
+          retention-days: 7
+
+  deploy:
+    name: Deploy verified artifact
+    needs: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    if: >-
+      github.event_name == 'push' ||
+      (github.actor != 'dependabot[bot]' && github.event.pull_request.head.repo.full_name == github.repository)
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout deployment configuration
+        uses: actions/checkout@v4
+
+      - name: Download verified production artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: dist
+
       - name: Deploy to Netlify
         id: netlify_deploy
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_API_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
         run: |
           prod_flag=""
-          if [ "$BRANCH_NAME" = "main" ]; then prod_flag="--prod"; fi
-
-          netlify deploy \
+          if [ "${{ github.event_name }}" = "push" ]; then prod_flag="--prod"; fi
+          npx --yes netlify-cli@20.1.1 deploy \
+            --no-build \
             --dir dist \
-            --site ${{ secrets.NETLIFY_SITE_ID }} \
-            --auth ${{ secrets.NETLIFY_API_TOKEN }} \
+            --site "$NETLIFY_SITE_ID" \
+            --auth "$NETLIFY_AUTH_TOKEN" \
             $prod_flag \
-            --json \
-            > deploy_output.json
+            --json > deploy_output.json
+          jq . deploy_output.json
 
-      - name: Generate Preview URL
-        id: url_preview
+      - name: Publish preview URL
         if: github.event_name == 'pull_request'
-        run: |
-          NETLIFY_PREVIEW_URL=$(jq -r '.deploy_url' deploy_output.json)
-          echo "NETLIFY_PREVIEW_URL=$NETLIFY_PREVIEW_URL" >> "$GITHUB_OUTPUT"
-
-      - name: Comment Preview URL on PR
         uses: actions/github-script@v7
-        if: github.event_name == 'pull_request'
-        env:
-          NETLIFY_PREVIEW_URL: ${{ steps.url_preview.outputs.NETLIFY_PREVIEW_URL }}
         with:
           script: |
-            async function comment(){
-              const result = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+            const fs = require('fs');
+            const result = JSON.parse(fs.readFileSync('deploy_output.json', 'utf8'));
+            const marker = '<!-- compear-netlify-preview -->';
+            const body = `${marker}\nPreview URL: ${result.deploy_url}`;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              per_page: 100,
+            });
+            const existing = comments.find((comment) =>
+              comment.user?.type === 'Bot' && comment.body?.includes(marker)
+            );
+            if (existing) {
+              await github.rest.issues.updateComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                commit_sha: context.sha,
-              })
-              const issueNumber = (Array.isArray(result.data) && result.data.length > 0) ? result.data[0].number : null;
-              if(issueNumber){
-                await github.rest.issues.createComment({
-                  issue_number: issueNumber,
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  body: 'Preview URL: ' + process.env.NETLIFY_PREVIEW_URL
-                })
-              }else{
-                console.log('No PR found for commit ' + context.sha)
-              }
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
             }
-            comment()
