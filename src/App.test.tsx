@@ -22,13 +22,13 @@ vi.mock('./services/supermarketService', async (importOriginal) => {
   };
 });
 
-function renderApp() {
+function renderApp(countryCode: 'nl' | 'uk' | 'de' = 'nl', language: 'en' | 'nl' | 'de' = 'nl') {
   return render(
-    <MemoryRouter initialEntries={['/nl']}>
+    <MemoryRouter initialEntries={[`/${countryCode}`]}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <CountryProvider initialCountryCode="nl">
-          <LanguageProvider initialLanguage="nl">
+        <CountryProvider initialCountryCode={countryCode}>
+          <LanguageProvider initialLanguage={language}>
             <Routes>
               <Route path="/:countryCode" element={<App />} />
             </Routes>
@@ -43,6 +43,15 @@ describe('App', () => {
   it('renders the ComPear title in the navigation bar', () => {
     renderApp();
     expect(screen.getByRole('link', { name: 'Naar home' })).toHaveTextContent('ComPear');
+    cleanup();
+  });
+
+  it('shows both live markets on the German coming-soon page', () => {
+    renderApp('de', 'de');
+
+    expect(screen.getByText(/Niederlanden und im Vereinigten Königreich verfügbar/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Preise in den Niederlanden vergleichen' })).toHaveAttribute('href', '/nl/');
+    expect(screen.getByRole('link', { name: 'Preise im Vereinigten Königreich vergleichen' })).toHaveAttribute('href', '/uk/');
     cleanup();
   });
 });

@@ -24,7 +24,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { CATEGORIES, categorySlug, getCategoryDisplayName } from './services/categoryService';
 
 const App: React.FC = () => {
-  const { country, setCountry } = useCountry();
+  const { country } = useCountry();
   const { t } = useLanguage();
   const storeMarks = getSupermarketsForCountry(country.code);
   const groceries = useComparisonStore((s) => s.items);
@@ -201,9 +201,19 @@ const App: React.FC = () => {
               </Box>
             )}
 
-            <Button variant="outlined" color="primary" onClick={() => setCountry('nl')}>
-              {t('app.switchToNetherlands')}
-            </Button>
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={1.25}
+              justifyContent="center"
+              sx={{ width: { xs: '100%', sm: 'auto' } }}
+            >
+              <Button component={RouterLink} to="/nl/" variant="outlined" color="primary">
+                {t('app.switchToNetherlands')}
+              </Button>
+              <Button component={RouterLink} to="/uk/" variant="contained" color="primary">
+                {t('app.switchToUnitedKingdom')}
+              </Button>
+            </Stack>
           </Box>
         ) : (
           <>
