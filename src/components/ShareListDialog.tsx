@@ -16,6 +16,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { createSharedList, SharedListItem } from '../api/client';
 import { useLanguage } from '../context/LanguageContext';
 import { useCountry } from '../context/CountryContext';
+import { storeListEditToken } from '../utils/listEditToken';
 
 interface ShareListDialogProps {
   open: boolean;
@@ -43,6 +44,10 @@ export const ShareListDialog: React.FC<ShareListDialogProps> = ({
     setError(null);
     try {
       const list = await createSharedList(name, items);
+      // Keep edit token locally; share URL is id-only (read-only for recipients).
+      if (list.editToken) {
+        storeListEditToken(list.id, list.editToken);
+      }
       const url = `${window.location.origin}/${country.code}/shared/${list.id}`;
       setShareUrl(url);
     } catch {
@@ -91,7 +96,7 @@ export const ShareListDialog: React.FC<ShareListDialogProps> = ({
         ) : (
           <>
             <Alert severity="success" sx={{ mb: 2 }}>
-              {t('shared.created')}
+              {t('shared.created')} {t('shared.editorHint')}
             </Alert>
             <Box sx={{ display: 'flex', gap: 1 }}>
               <TextField fullWidth size="small" value={shareUrl} InputProps={{ readOnly: true }} />

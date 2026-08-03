@@ -1,5 +1,11 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { ProductCategory } from '../services/categoryService';
+import {
+  clearReceiptCredentials,
+  ensureReceiptCredentials,
+  ReceiptCredentials,
+} from '../utils/userId';
+import { listEditHeaders, storeListEditToken } from '../utils/listEditToken';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -232,59 +238,86 @@ export interface ReceiptAnalytics {
   }>;
 }
 
-function userHeaders(userId: string) {
-  return { 'x-compear-user-id': userId };
+function userHeaders(creds: ReceiptCredentials) {
+  return {
+    'x-compear-user-id': creds.userId,
+    'x-compear-user-token': creds.token,
+  };
+}
+
+function isUnauthorized(error: unknown): boolean {
+  return error instanceof AxiosError && error.response?.status === 401;
+}
+
+async function withReceiptAuth<T>(
+  request: (headers: Record<string, string>) => Promise<T>
+): Promise<T> {
+  const creds = await ensureReceiptCredentials(API_BASE);
+  try {
+    return await request(userHeaders(creds));
+  } catch (error) {
+    if (!isUnauthorized(error)) throw error;
+    clearReceiptCredentials();
+    const fresh = await ensureReceiptCredentials(API_BASE);
+    return await request(userHeaders(fresh));
+  }
 }
 
 export async function uploadReceipt(
   file: File,
-  userId: string,
+  _userId: string,
   country: ApiCountry = 'nl'
 ): Promise<SavedReceipt> {
   const form = new FormData();
   form.append('receipt', file);
-  const { data } = await api.post<SavedReceipt>('/receipts/parse', form, {
-    params: { country },
-    headers: {
-      ...userHeaders(userId),
-      'Content-Type': 'multipart/form-data',
-    },
-    timeout: 120000,
+  return withReceiptAuth(async (headers) => {
+    const { data } = await api.post<SavedReceipt>('/receipts/parse', form, {
+      params: { country },
+      headers: {
+        ...headers,
+        'Content-Type': 'multipart/form-data',
+      },
+      timeout: 120000,
+    });
+    return data;
   });
-  return data;
 }
 
 export async function fetchReceipts(
-  userId: string,
+  _userId: string,
   country: ApiCountry = 'nl'
 ): Promise<SavedReceipt[]> {
-  const { data } = await api.get<SavedReceipt[]>('/receipts', {
-    params: { country },
-    headers: userHeaders(userId),
+  return withReceiptAuth(async (headers) => {
+    const { data } = await api.get<SavedReceipt[]>('/receipts', {
+      params: { country },
+      headers,
+    });
+    return data;
   });
-  return data;
 }
 
 export async function fetchReceiptAnalytics(
-  userId: string,
+  _userId: string,
   country: ApiCountry = 'nl'
 ): Promise<ReceiptAnalytics> {
-  const { data } = await api.get<ReceiptAnalytics>('/receipts/analytics', {
-    params: { country },
-    headers: userHeaders(userId),
-  });
-  return data;
-}
-
-export async function deleteReceipt(receiptId: string, userId: string): Promise<void> {
-  await api.delete(`/receipts/${encodeURIComponent(receiptId)}`, {
-    headers: userHeaders(userId),
+  return withReceiptAuth(async (headers) => {
+    const { data } = await api.get<ReceiptAnalytics>('/receipts/analytics', {
+      params: { country },
+      headers,
+    });
+    return data;
   });
 }
 
-export async function deleteAllReceipts(userId: string): Promise<void> {
-  await api.delete('/receipts', {
-    headers: userHeaders(userId),
+export async function deleteReceipt(receiptId: string, _userId: string): Promise<void> {
+  await withReceiptAuth(async (headers) => {
+    await api.delete(`/receipts/${encodeURIComponent(receiptId)}`, { headers });
+  });
+}
+
+export async function deleteAllReceipts(_userId: string): Promise<void> {
+  await withReceiptAuth(async (headers) => {
+    await api.delete('/receipts', { headers });
   });
 }
 
@@ -292,14 +325,16 @@ export async function correctReceiptLine(
   receiptId: string,
   lineIndex: number,
   correction: { action: 'rematch'; correctedName: string } | { action: 'unmatched' },
-  userId: string
+  _userId: string
 ): Promise<SavedReceipt> {
-  const { data } = await api.patch<SavedReceipt>(
-    `/receipts/${encodeURIComponent(receiptId)}/lines/${lineIndex}`,
-    correction,
-    { headers: userHeaders(userId) }
-  );
-  return data;
+  return withReceiptAuth(async (headers) => {
+    const { data } = await api.patch<SavedReceipt>(
+      `/receipts/${encodeURIComponent(receiptId)}/lines/${lineIndex}`,
+      correction,
+      { headers }
+    );
+    return data;
+  });
 }
 
 export interface StoreLocation {
@@ -342,6 +377,9 @@ export interface SharedList {
   createdAt: string;
   updatedAt: string;
   expiresAt: string;
+  editToken?: string;
+  /** Present on public GET when the list has no owner token yet (legacy). */
+  claimable?: boolean;
 }
 
 export async function createSharedList(
@@ -349,6 +387,9 @@ export async function createSharedList(
   items: SharedListItem[]
 ): Promise<SharedList> {
   const { data } = await api.post<SharedList>('/lists', { name, items });
+  if (data.editToken) {
+    storeListEditToken(data.id, data.editToken);
+  }
   return data;
 }
 
@@ -357,12 +398,31 @@ export async function fetchSharedList(id: string): Promise<SharedList> {
   return data;
 }
 
+export async function updateSharedList(
+  id: string,
+  name: string,
+  items: SharedListItem[]
+): Promise<SharedList> {
+  const { data } = await api.patch<SharedList>(
+    `/lists/${encodeURIComponent(id)}`,
+    { name, items },
+    { headers: listEditHeaders(id) }
+  );
+  if (data.editToken) {
+    storeListEditToken(data.id, data.editToken);
+  }
+  return data;
+}
+
 export interface PublicApiDocs {
   version: string;
   description: string;
   endpoints: Array<{ method: string; path: string; query?: string; description?: string }>;
+  authentication?: string;
+  surfaces?: { partnerApi?: string; consumerApi?: string };
 }
 
+/** Open discovery document — /api/v1/docs does not require PUBLIC_API_KEY. */
 export async function fetchPublicApiDocs(): Promise<PublicApiDocs> {
   const { data } = await api.get<PublicApiDocs>('/api/v1/docs');
   return data;
