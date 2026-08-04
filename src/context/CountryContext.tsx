@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 export type CountryCode = 'nl' | 'uk' | 'de';
 
@@ -26,6 +26,10 @@ interface CountryContextType {
 
 const CountryContext = createContext<CountryContextType | undefined>(undefined);
 
+function resolveCountry(countryCode: CountryCode): CountryInfo {
+  return countries.find((c) => c.code === countryCode) || countries[0];
+}
+
 export const useCountry = () => {
   const context = useContext(CountryContext);
   if (context === undefined) {
@@ -49,26 +53,21 @@ export const CountryProvider: React.FC<CountryProviderProps> = ({
   children,
   initialCountryCode = 'nl' // Default to Netherlands if not specified
 }) => {
-  // Find initial country without any URL or localStorage side effects
-  const getInitialCountry = (): CountryInfo => {
-    // Use the provided initialCountryCode prop
-    return countries.find(c => c.code === initialCountryCode) || countries[0];
-  };
-  
-  const [country, setCountryState] = useState<CountryInfo>(() => getInitialCountry());
+  const [country, setCountryState] = useState<CountryInfo>(() => resolveCountry(initialCountryCode));
 
-  // Update country state, localStorage, and URL
+  // Keep context in sync when the route param changes (e.g. footer / deep links).
+  // CountryLayout reuses this provider instance across /nl → /uk navigations.
+  useEffect(() => {
+    const selected = resolveCountry(initialCountryCode);
+    setCountryState(selected);
+    localStorage.setItem('countryCode', selected.code);
+  }, [initialCountryCode]);
+
+  // State + persistence only. Callers (nav/footer) own React Router navigation.
   const setCountry = (countryCode: CountryCode) => {
-    const selectedCountry = countries.find(c => c.code === countryCode) || countries[0];
+    const selectedCountry = resolveCountry(countryCode);
     setCountryState(selectedCountry);
-    
-    // Only update localStorage when user explicitly changes country (not from URL)
     localStorage.setItem('countryCode', countryCode);
-    
-    // Update URL to match the selected country
-    if (window.location.pathname !== `/${countryCode}`) {
-      window.history.pushState(null, '', `/${countryCode}`);
-    }
   };
   
   const isCountryAvailable = (countryCode: CountryCode): boolean => {
