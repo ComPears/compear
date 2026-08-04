@@ -1,3 +1,9 @@
+/**
+ * EmailJS public keys are safe in the browser by design.
+ * Operator checklist (EmailJS dashboard → Security):
+ * - Restrict allowed domains to compears.shop / www.compears.shop / localhost
+ * - Keep rate limits enabled
+ */
 export const EMAILJS_CONFIG = {
   SERVICE_ID: import.meta.env.VITE_EMAILJS_SERVICE_ID || '',
   TEMPLATE_ID: import.meta.env.VITE_EMAILJS_TEMPLATE_ID || '',

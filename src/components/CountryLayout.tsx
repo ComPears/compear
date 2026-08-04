@@ -1,8 +1,9 @@
 import React, { useLayoutEffect } from 'react';
-import { Outlet, useParams, Navigate, useLocation } from 'react-router-dom';
+import { Outlet, useParams, useLocation } from 'react-router-dom';
 import { CountryProvider, VALID_COUNTRY_CODES, CountryCode } from '../context/CountryContext';
 import { LanguageProvider, LanguageCode } from '../context/LanguageContext';
 import InstallPrompt from './InstallPrompt';
+import NotFoundPage from './NotFoundPage';
 import { useComparisonStore } from '../store/comparisonStore';
 import { useBasketStore } from '../store/basketStore';
 import { Seo, SITE_URL, sitePath } from './Seo';
@@ -46,12 +47,17 @@ const DefaultRouteSeo: React.FC<{ countryCode: CountryCode }> = ({ countryCode }
 
   const privateRoute = /^\/(basket|receipts|shared|search)(\/|$)/.test(routeTail);
   const isUk = countryCode === 'uk';
+  const isDe = countryCode === 'de';
   const title = isUk
     ? 'Compare UK Supermarket Prices | ComPear'
-    : 'Vergelijk Supermarktprijzen | ComPear';
+    : isDe
+      ? 'Supermarktpreise vergleichen | ComPear'
+      : 'Vergelijk Supermarktprijzen | ComPear';
   const description = isUk
     ? 'Compare current grocery prices across Tesco, Sainsbury’s, Asda, Morrisons, Aldi and Lidl, then build the cheapest shopping plan.'
-    : 'Vergelijk actuele boodschappenprijzen van Nederlandse supermarkten en maak de voordeligste boodschappenplanning.';
+    : isDe
+      ? 'ComPear kommt bald nach Deutschland. Tragen Sie sich in die Warteliste ein.'
+      : 'Vergelijk actuele boodschappenprijzen van Nederlandse supermarkten en maak de voordeligste boodschappenplanning.';
   const structuredData = routeTail === '' || routeTail === '/'
     ? [
         {
@@ -91,7 +97,7 @@ export const CountryLayout: React.FC = () => {
   const { countryCode } = useParams<{ countryCode: string }>();
 
   if (!countryCode || !VALID_COUNTRY_CODES.includes(countryCode)) {
-    return <Navigate to="/nl" replace />;
+    return <NotFoundPage />;
   }
 
   const language: LanguageCode =

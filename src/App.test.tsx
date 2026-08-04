@@ -5,6 +5,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { CountryProvider } from './context/CountryContext';
 import { LanguageProvider } from './context/LanguageContext';
+import { countries } from './context/CountryContext';
 import theme from './theme';
 import App from './App';
 
@@ -46,12 +47,11 @@ describe('App', () => {
     cleanup();
   });
 
-  it('shows both live markets on the German coming-soon page', () => {
+  it('marks Germany as an available live market', () => {
+    expect(countries.find((c) => c.code === 'de')?.available).toBe(true);
     renderApp('de', 'de');
-
-    expect(screen.getByText(/Niederlanden und im Vereinigten Königreich verfügbar/)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Preise in den Niederlanden vergleichen' })).toHaveAttribute('href', '/nl/');
-    expect(screen.getByRole('link', { name: 'Preise im Vereinigten Königreich vergleichen' })).toHaveAttribute('href', '/uk/');
+    expect(screen.queryByText(/kommt bald/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Zur Startseite' })).toHaveTextContent('ComPear');
     cleanup();
   });
 });

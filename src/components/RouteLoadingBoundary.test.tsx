@@ -24,7 +24,7 @@ describe('RouteLoadingBoundary', () => {
       </RouteLoadingBoundary>
     );
 
-    expect(screen.getByRole('status', { name: 'Loading page' })).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: 'Loading…' })).toBeInTheDocument();
 
     await act(async () => {
       resolveRoute({ default: () => <div>Loaded route</div> });
@@ -45,7 +45,7 @@ describe('RouteLoadingBoundary', () => {
       </RouteLoadingBoundary>
     );
 
-    expect(screen.getByText('This page could not be loaded.')).toBeInTheDocument();
+    expect(screen.getByText('Could not load this page.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Reload' })).toBeInTheDocument();
   });
 });

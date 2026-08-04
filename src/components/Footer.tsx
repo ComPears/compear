@@ -33,6 +33,10 @@ const Footer: React.FC = () => {
             {t('footer.methodology')}
           </Link>
           {' · '}
+          <Link component={RouterLink} to={`/${country.code}/privacy`} color="inherit" underline="hover" fontWeight={700} sx={countryLinkSx}>
+            {t('footer.privacy')}
+          </Link>
+          {' · '}
           {t('footer.liveIn')}{' '}
           <Link component={RouterLink} to="/nl" color="inherit" underline="hover" fontWeight={700} sx={countryLinkSx}>
             {t('footer.nl')}
@@ -42,8 +46,7 @@ const Footer: React.FC = () => {
             {t('footer.uk')}
           </Link>
           {' · '}
-          {t('footer.comingSoonLabel')}{' '}
-          <Link component={RouterLink} to="/de" color="inherit" underline="hover" sx={countryLinkSx}>
+          <Link component={RouterLink} to="/de" color="inherit" underline="hover" fontWeight={700} sx={countryLinkSx}>
             {t('footer.de')}
           </Link>
         </Typography>

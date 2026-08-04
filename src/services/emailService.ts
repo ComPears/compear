@@ -80,3 +80,25 @@ export const sendSuggestion = async (data: SuggestionData) => {
 
   return sendWithEmailJS(data);
 };
+
+interface WaitlistSignupData {
+  email: string;
+  country: string;
+}
+
+/** Notify admin of a country waitlist signup via the existing EmailJS template. */
+export const sendWaitlistSignup = async ({ email, country }: WaitlistSignupData) => {
+  if (!isEmailJSConfigured) {
+    throw new Error(
+      'EmailJS is not properly configured. Please check your environment variables.'
+    );
+  }
+
+  return sendWithEmailJS({
+    name: 'Waitlist',
+    email: email.trim(),
+    suggestion: `Waitlist signup for ${country}`,
+  });
+};
+
+export { isEmailJSConfigured };

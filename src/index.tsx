@@ -29,7 +29,7 @@ root.render(
 
 reportWebVitals((metric) => {
   if (!import.meta.env.PROD) return;
-  const apiBase = import.meta.env.VITE_API_URL || 'https://api.compears.shop';
+  const apiBase = import.meta.env.VITE_API_URL || 'https://compear-backend.onrender.com';
   const body = JSON.stringify({
     name: metric.name,
     value: metric.value,

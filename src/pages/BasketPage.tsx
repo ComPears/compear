@@ -27,6 +27,7 @@ import RemoveIcon from '@mui/icons-material/Remove';
 import ShareIcon from '@mui/icons-material/Share';
 import { useBasketStore, BasketItem } from '../store/basketStore';
 import AppNavBar from '../components/AppNavBar';
+import Footer from '../components/Footer';
 import { ShareListDialog } from '../components/ShareListDialog';
 import { useLanguage } from '../context/LanguageContext';
 import { useCountry } from '../context/CountryContext';
@@ -94,9 +95,9 @@ export const BasketPage: React.FC = () => {
 
   if (items.length === 0) {
     return (
-      <>
+      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <AppNavBar />
-        <Container component="main" maxWidth="md" sx={{ py: { xs: 5, md: 7 } }}>
+        <Container component="main" maxWidth="md" sx={{ flex: '1 0 auto', py: { xs: 5, md: 7 } }}>
           <Box className="cp-fade-up" sx={{ textAlign: 'center', maxWidth: 420, mx: 'auto' }}>
             <Typography
               component="h1"
@@ -127,14 +128,15 @@ export const BasketPage: React.FC = () => {
             </Button>
           </Box>
         </Container>
-      </>
+        <Footer />
+      </Box>
     );
   }
 
   return (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <AppNavBar />
-      <Container component="main" maxWidth="md" sx={{ py: 3, bgcolor: 'background.default' }}>
+      <Container component="main" maxWidth="md" sx={{ flex: '1 0 auto', py: 3, bgcolor: 'background.default' }}>
         <Typography component="h1" variant="h5" gutterBottom fontWeight={600}>
           {t('basket.title')}
         </Typography>
@@ -328,6 +330,7 @@ export const BasketPage: React.FC = () => {
           items={shareItems}
         />
       </Container>
-    </>
+      <Footer />
+    </Box>
   );
 };

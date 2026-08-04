@@ -184,11 +184,17 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
           { label: t('guide.coffee'), query: 'coffee' },
           { label: t('guide.pasta'), query: 'pasta' },
         ]
-      : [
-          { label: t('guide.milk'), query: 'melk' },
-          { label: t('guide.coffee'), query: 'koffie' },
-          { label: t('guide.pasta'), query: 'pasta' },
-        ];
+      : country.code === 'de'
+        ? [
+            { label: t('guide.milk'), query: 'Milch' },
+            { label: 'Brot', query: 'Brot' },
+            { label: t('guide.coffee'), query: 'Kaffee' },
+          ]
+        : [
+            { label: t('guide.milk'), query: 'melk' },
+            { label: t('guide.coffee'), query: 'koffie' },
+            { label: t('guide.pasta'), query: 'pasta' },
+          ];
 
   return (
     <Box>
@@ -304,7 +310,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
           <ProductGroupList
             groups={groups}
             onAddProduct={handleAddProduct}
-            addButtonLabel={t('search.compareButton')}
+            addButtonLabel={t('search.addButton')}
           />
         </Box>
       )}

@@ -293,7 +293,7 @@ const ProductGroupListComponent: React.FC<ProductGroupListProps> = ({
                   aria-label={t('search.compareProduct').replace('{product}', group.displayName)}
                   sx={{ minHeight: 44, flex: { xs: 1, sm: 'initial' }, flexShrink: 0 }}
                 >
-                  {addButtonLabel ?? t('search.compareButton')}
+                  {addButtonLabel ?? t('search.addButton')}
                 </Button>
                 {showExpand && (
                   <IconButton

@@ -19,9 +19,23 @@ import { useComparisonStore } from './store/comparisonStore';
 import { useBasketStore } from './store/basketStore';
 import { fetchProduct, fetchStores, StoreInfo } from './api/client';
 import { getSupermarketsForCountry } from './services/supermarketService';
+import { isEmailJSConfigured, sendWaitlistSignup } from './services/emailService';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import { Link as RouterLink } from 'react-router-dom';
 import { CATEGORIES, categorySlug, getCategoryDisplayName } from './services/categoryService';
+
+const waitlistFlagKey = (countryCode: string) => `compear-waitlist-sent-${countryCode}`;
+
+function readWaitlistStatus(countryCode: string): 'idle' | 'sent' | 'local' {
+  try {
+    const value = localStorage.getItem(waitlistFlagKey(countryCode));
+    if (value === 'email' || value === '1') return 'sent';
+    if (value === 'local') return 'local';
+  } catch {
+    /* ignore */
+  }
+  return 'idle';
+}
 
 const App: React.FC = () => {
   const { country } = useCountry();
@@ -37,9 +51,17 @@ const App: React.FC = () => {
   const clearBasket = useBasketStore((s) => s.clear);
   const [searchResetKey, setSearchResetKey] = useState(0);
   const [waitlistEmail, setWaitlistEmail] = useState('');
-  const [waitlistSent, setWaitlistSent] = useState(false);
+  const [waitlistStatus, setWaitlistStatus] = useState<'idle' | 'sent' | 'local'>(() =>
+    readWaitlistStatus(country.code)
+  );
+  const [waitlistSubmitting, setWaitlistSubmitting] = useState(false);
   const [catalogStores, setCatalogStores] = useState<StoreInfo[]>([]);
   const migratedComparisonRef = useRef(false);
+
+  useEffect(() => {
+    setWaitlistStatus(readWaitlistStatus(country.code));
+    setWaitlistEmail('');
+  }, [country.code]);
 
   useEffect(() => {
     if (!country.available) return;
@@ -106,20 +128,34 @@ const App: React.FC = () => {
     setSearchResetKey((k) => k + 1);
   }, []);
 
-  const handleWaitlist = (e: React.FormEvent) => {
+  const handleWaitlist = async (e: React.FormEvent) => {
     e.preventDefault();
     const email = waitlistEmail.trim();
-    if (!email || !email.includes('@')) return;
+    if (!email || !email.includes('@') || waitlistSubmitting) return;
+    setWaitlistSubmitting(true);
+    const flagKey = waitlistFlagKey(country.code);
     try {
-      const key = `compear-waitlist-${country.code}`;
-      const prev = JSON.parse(localStorage.getItem(key) || '[]') as string[];
-      if (!prev.includes(email)) {
-        localStorage.setItem(key, JSON.stringify([...prev, email]));
+      if (!isEmailJSConfigured) {
+        localStorage.setItem(flagKey, 'local');
+        setWaitlistStatus('local');
+        return;
+      }
+      try {
+        await sendWaitlistSignup({ email, country: country.name });
+        localStorage.setItem(flagKey, 'email');
+        setWaitlistStatus('sent');
+      } catch {
+        // Never persist the raw email; mark local-only so we don't claim it was sent.
+        localStorage.setItem(flagKey, 'local');
+        setWaitlistStatus('local');
       }
     } catch {
       /* ignore storage failures */
+      setWaitlistStatus('local');
+    } finally {
+      setWaitlistEmail('');
+      setWaitlistSubmitting(false);
     }
-    setWaitlistSent(true);
   };
 
   return (
@@ -175,9 +211,9 @@ const App: React.FC = () => {
               ))}
             </Stack>
 
-            {waitlistSent ? (
+            {waitlistStatus !== 'idle' ? (
               <Typography color="primary.main" fontWeight={700}>
-                {t('app.waitlistThanks')}
+                {waitlistStatus === 'sent' ? t('app.waitlistThanks') : t('app.waitlistLocal')}
               </Typography>
             ) : (
               <Box
@@ -193,9 +229,10 @@ const App: React.FC = () => {
                   onChange={(e) => setWaitlistEmail(e.target.value)}
                   placeholder={t('app.waitlistPlaceholder')}
                   inputProps={{ 'aria-label': t('app.waitlistPlaceholder') }}
+                  disabled={waitlistSubmitting}
                   sx={{ minWidth: 220, bgcolor: 'background.paper' }}
                 />
-                <Button type="submit" variant="contained">
+                <Button type="submit" variant="contained" disabled={waitlistSubmitting}>
                   {t('app.waitlistCta')}
                 </Button>
               </Box>

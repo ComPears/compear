@@ -16,6 +16,7 @@ import {
 import MyLocationIcon from '@mui/icons-material/MyLocation';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import AppNavBar from '../components/AppNavBar';
+import Footer from '../components/Footer';
 import { fetchStoreLocations, StoreLocation } from '../api/client';
 import { useLanguage } from '../context/LanguageContext';
 import { useCountry } from '../context/CountryContext';
@@ -43,6 +44,15 @@ const UK_CHAINS: ChainOption[] = [
   { slug: 'lidl-uk', label: 'Lidl' },
 ];
 
+const DE_CHAINS: ChainOption[] = [
+  { slug: '', labelKey: 'search.allStores' },
+  { slug: 'edeka', label: 'Edeka' },
+  { slug: 'rewe', label: 'Rewe' },
+  { slug: 'lidl-de', label: 'Lidl' },
+  { slug: 'aldi-sud', label: 'Aldi Süd' },
+  { slug: 'penny', label: 'Penny' },
+];
+
 const CHAIN_LABELS: Record<string, string> = {
   'albert-heijn': 'Albert Heijn',
   jumbo: 'Jumbo',
@@ -57,6 +67,11 @@ const CHAIN_LABELS: Record<string, string> = {
   morrisons: 'Morrisons',
   'aldi-uk': 'Aldi',
   'lidl-uk': 'Lidl',
+  edeka: 'Edeka',
+  rewe: 'Rewe',
+  'lidl-de': 'Lidl',
+  'aldi-sud': 'Aldi Süd',
+  penny: 'Penny',
 };
 
 function chainLabel(chain: string, fallback: string): string {
@@ -120,7 +135,8 @@ export const StoreLocatorPage: React.FC = () => {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const chains = country.code === 'uk' ? UK_CHAINS : NL_CHAINS;
+  const chains =
+    country.code === 'uk' ? UK_CHAINS : country.code === 'de' ? DE_CHAINS : NL_CHAINS;
 
   const loadLocations = useCallback(
     async (lat?: number, lng?: number) => {
@@ -191,19 +207,20 @@ export const StoreLocatorPage: React.FC = () => {
 
   if (!country.available) {
     return (
-      <>
+      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <AppNavBar />
-        <Container component="main" maxWidth="md" sx={{ py: 4 }}>
+        <Container component="main" maxWidth="md" sx={{ flex: '1 0 auto', py: 4 }}>
           <Alert severity="info">{t('app.comingSoon')}</Alert>
         </Container>
-      </>
+        <Footer />
+      </Box>
     );
   }
 
   return (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <AppNavBar />
-      <Container component="main" maxWidth="md" sx={{ py: 3 }}>
+      <Container component="main" maxWidth="md" sx={{ flex: '1 0 auto', py: 3 }}>
         <Typography
           component="h1"
           variant="h4"
@@ -365,6 +382,7 @@ export const StoreLocatorPage: React.FC = () => {
           </a>
         </Typography>
       </Container>
-    </>
+      <Footer />
+    </Box>
   );
 };

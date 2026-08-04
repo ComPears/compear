@@ -27,6 +27,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import SavingsIcon from '@mui/icons-material/Savings';
 import StoreIcon from '@mui/icons-material/Store';
 import AppNavBar from '../components/AppNavBar';
+import Footer from '../components/Footer';
 import {
   ApiCountry,
   correctReceiptLine,
@@ -39,7 +40,7 @@ import {
   SavedReceipt,
   uploadReceipt,
 } from '../api/client';
-import { getUserId } from '../utils/userId';
+import { ensureReceiptCredentials, getUserId } from '../utils/userId';
 import { useReceiptStore } from '../store/receiptStore';
 import { formatMoney } from '../utils/formatMoney';
 import { useCountry } from '../context/CountryContext';
@@ -356,16 +357,17 @@ export const ReceiptPage: React.FC = () => {
   const refresh = useCallback(async () => {
     setLoadingHistory(true);
     try {
+      const { userId: authUserId } = await ensureReceiptCredentials();
       const [receipts, stats] = await Promise.all([
-        fetchReceipts(userId, apiCountry),
-        fetchReceiptAnalytics(userId, apiCountry),
+        fetchReceipts(authUserId, apiCountry),
+        fetchReceiptAnalytics(authUserId, apiCountry),
       ]);
       const localReceipts = useReceiptStore.getState().receipts;
       const merged =
         receipts.length > 0
           ? receipts
           : localReceipts.filter(
-              (r) => r.userId === userId && (r.country ?? 'nl') === apiCountry
+              (r) => r.userId === authUserId && (r.country ?? 'nl') === apiCountry
             );
       setHistory(merged);
       setLatest((current) => {
@@ -379,7 +381,7 @@ export const ReceiptPage: React.FC = () => {
     } finally {
       setLoadingHistory(false);
     }
-  }, [userId, apiCountry, setAllReceipts, t]);
+  }, [apiCountry, setAllReceipts, t]);
 
   useEffect(() => {
     refresh();
@@ -451,9 +453,9 @@ export const ReceiptPage: React.FC = () => {
   };
 
   return (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <AppNavBar />
-      <Container maxWidth="md" sx={{ py: 3 }}>
+      <Container maxWidth="md" sx={{ flex: '1 0 auto', py: 3 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2 }}>
           <Typography variant="h5" fontWeight={600} gutterBottom>
             {t('receipts.title')}
@@ -559,7 +561,8 @@ export const ReceiptPage: React.FC = () => {
           </>
         )}
       </Container>
-    </>
+      <Footer />
+    </Box>
   );
 };
 

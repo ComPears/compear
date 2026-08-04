@@ -24,8 +24,10 @@ import { fetchProductsByBarcode, isAbortError } from '../utils/barcodeSearch';
 import { useCountry } from '../context/CountryContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useComparisonStore } from '../store/comparisonStore';
+import { useBasketStore } from '../store/basketStore';
 import { productToGrocery } from '../utils/groceryMapper';
 import AppNavBar from '../components/AppNavBar';
+import Footer from '../components/Footer';
 import { ProductSearchBar } from '../components/ProductSearchBar';
 import { ProductSortBar } from '../components/ProductSortBar';
 import { FilterChipBar } from '../components/FilterChipBar';
@@ -52,6 +54,7 @@ export const SearchPage: React.FC = () => {
   const addToComparison = useComparisonStore((s) => s.add);
   const clearComparison = useComparisonStore((s) => s.clear);
   const comparisonCount = useComparisonStore((s) => s.items.length);
+  const addToBasket = useBasketStore((s) => s.add);
   const [query, setQuery] = useState(() => searchParams.get('q') ?? '');
   const [storeFilter, setStoreFilter] = useState('');
   const [dealsOnly, setDealsOnly] = useState(false);
@@ -220,9 +223,10 @@ export const SearchPage: React.FC = () => {
   const handleAddProduct = useCallback(
     (product: Product) => {
       addToComparison(productToGrocery(product));
+      addToBasket(product);
       setAddedSnackbar(true);
     },
-    [addToComparison]
+    [addToComparison, addToBasket]
   );
 
   const loadMore = useCallback(async () => {
@@ -280,7 +284,8 @@ export const SearchPage: React.FC = () => {
     () => stores.reduce((total, store) => total + (store.productCount ?? 0), 0),
     [stores]
   );
-  const numberLocale = country.code === 'nl' ? 'nl-NL' : 'en-GB';
+  const numberLocale =
+    country.code === 'nl' ? 'nl-NL' : country.code === 'de' ? 'de-DE' : 'en-GB';
 
   const exampleQueries =
     country.code === 'uk'
@@ -289,16 +294,22 @@ export const SearchPage: React.FC = () => {
           { label: t('guide.coffee'), query: 'coffee' },
           { label: t('guide.pasta'), query: 'pasta' },
         ]
-      : [
-          { label: t('guide.milk'), query: 'melk' },
-          { label: t('guide.coffee'), query: 'koffie' },
-          { label: t('guide.pasta'), query: 'pasta' },
-        ];
+      : country.code === 'de'
+        ? [
+            { label: t('guide.milk'), query: 'Milch' },
+            { label: 'Brot', query: 'Brot' },
+            { label: t('guide.coffee'), query: 'Kaffee' },
+          ]
+        : [
+            { label: t('guide.milk'), query: 'melk' },
+            { label: t('guide.coffee'), query: 'koffie' },
+            { label: t('guide.pasta'), query: 'pasta' },
+          ];
 
   return (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <AppNavBar />
-      <Container component="main" maxWidth="lg" sx={{ py: { xs: 2, sm: 3 } }}>
+      <Container component="main" maxWidth="lg" sx={{ flex: '1 0 auto', py: { xs: 2, sm: 3 } }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, alignItems: 'flex-start', flexWrap: 'wrap', mb: 2.5 }}>
           <Box>
             <Typography
@@ -495,7 +506,7 @@ export const SearchPage: React.FC = () => {
             <ProductGroupList
               groups={groups}
               onAddProduct={handleAddProduct}
-              addButtonLabel={t('search.compareButton')}
+              addButtonLabel={t('search.addButton')}
               emptyMessage={
                 barcodeQuery
                   ? t('search.barcodeNotFound').replace('{barcode}', barcodeQuery)
@@ -533,6 +544,7 @@ export const SearchPage: React.FC = () => {
           {t('search.addedToList')}
         </Alert>
       </Snackbar>
-    </>
+      <Footer />
+    </Box>
   );
 };

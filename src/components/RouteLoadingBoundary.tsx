@@ -31,7 +31,7 @@ export class RouteLoadingBoundary extends Component<
               </Button>
             }
           >
-            This page could not be loaded.
+            Could not load this page.
           </Alert>
         </Box>
       );
@@ -42,7 +42,7 @@ export class RouteLoadingBoundary extends Component<
         fallback={
           <Box
             role="status"
-            aria-label="Loading page"
+            aria-label="Loading…"
             sx={{ display: 'flex', justifyContent: 'center', py: 6 }}
           >
             <CircularProgress />

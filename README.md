@@ -4,10 +4,10 @@ ComPear is a React application that helps users compare grocery prices across di
 
 ## 🌍 Features
 
-- **Multi-Country Support**: Netherlands (available), UK and Germany (coming soon). App is built for Europe with paths like **compears.shop/nl**, **compears.shop/de**, **compears.shop/uk**.
+- **Multi-Country Support**: Netherlands, UK, and Germany (available/live). App is built for Europe with paths like **compears.shop/nl**, **compears.shop/uk**, **compears.shop/de**.
 - **Dynamic Content**: Headings and descriptions change based on selected country
 - **Multi-Language**: English, Dutch, and German translations
-- **Product Search & Deals**: Compare grocery prices across Dutch supermarkets via the backend API
+- **Product Search & Deals**: Compare grocery prices across Dutch, UK, and German supermarkets via the backend API
 - **Product Categorization**: Automatic product categorization for easy browsing and filtering
 - **Price Comparison**: Compare grocery prices across multiple supermarkets
 - **Optimal Shopping Strategy**: Find the best stores to shop at for maximum savings
@@ -183,9 +183,9 @@ The app is configured for deployment to Netlify via GitHub Actions. The deployme
 
 ## 🌐 Country & Language Support
 
-- **Netherlands** 🇳🇱 - Fully supported (Dutch/English)
-- **United Kingdom** 🇬🇧 - Coming soon (English)
-- **Germany** 🇩🇪 - Coming soon (German/English)
+- **Netherlands** 🇳🇱 - Fully supported / live (Dutch/English)
+- **United Kingdom** 🇬🇧 - Fully supported / live (English)
+- **Germany** 🇩🇪 - Fully supported / live (German/English; sample catalogs for v1)
 
 The app automatically:
 - Updates headings based on selected country
@@ -195,7 +195,11 @@ The app automatically:
 ## 🛡️ Security Notes
 
 - EmailJS credentials are public by design (client-side usage)
-- Secure your EmailJS account with domain restrictions
+- **Operator:** In the EmailJS dashboard → Security, restrict allowed domains to `compears.shop`, `www.compears.shop`, and `localhost` (dev). Keep account rate limits on.
+- Receipt APIs use server-issued HMAC tokens (`POST /receipts/session`); do not treat anonymous IDs alone as auth
+- Shared list edit tokens stay on the creating device; share URLs are read-only for everyone else
+- Waitlist/suggestion emails only leave the browser when EmailJS env vars are set; otherwise the UI says so explicitly
+- See also `/privacy` in the app for user-facing data handling notes
 - Environment variables with `VITE_` prefix are publicly visible in the built bundle
 
 ## 📁 Project Structure

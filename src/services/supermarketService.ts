@@ -22,6 +22,14 @@ export const ukSupermarkets: Supermarket[] = [
   { name: 'LIDL', logo: 'https://www.lidl.co.uk/favicon.ico', id: 'uk-6', hasAPI: true },
 ];
 
+export const deSupermarkets: Supermarket[] = [
+  { name: 'EDEKA', logo: 'https://www.edeka.de/favicon.ico', id: 'de-1', hasAPI: true },
+  { name: 'REWE', logo: 'https://www.rewe.de/favicon.ico', id: 'de-2', hasAPI: true },
+  { name: 'LIDL', logo: 'https://www.lidl.de/favicon.ico', id: 'de-3', hasAPI: true },
+  { name: 'ALDI SÜD', logo: 'https://www.aldi-sued.de/favicon.ico', id: 'de-4', hasAPI: true },
+  { name: 'PENNY', logo: 'https://www.penny.de/favicon.ico', id: 'de-5', hasAPI: true },
+];
+
 /** NL list kept as `supermarkets` for existing imports. */
 export const supermarkets: Supermarket[] = nlSupermarkets;
 
@@ -31,8 +39,11 @@ const LOGO_BY_KEY: Record<string, string> = {
   DIRK: 'https://www.dirk.nl/favicon.ico',
   ALDI: 'https://www.aldi.nl/favicon.ico',
   'ALDI-UK': 'https://www.aldi.co.uk/favicon.ico',
+  'ALDI SÜD': 'https://www.aldi-sued.de/favicon.ico',
+  'ALDI SUD': 'https://www.aldi-sued.de/favicon.ico',
   LIDL: 'https://www.lidl.nl/favicon.ico',
   'LIDL-UK': 'https://www.lidl.co.uk/favicon.ico',
+  'LIDL-DE': 'https://www.lidl.de/favicon.ico',
   JUMBO: 'https://www.jumbo.com/favicon.ico',
   PLUS: 'https://www.plus.nl/favicon.ico',
   COOP: 'https://www.coop.nl/favicon.ico',
@@ -41,10 +52,14 @@ const LOGO_BY_KEY: Record<string, string> = {
   "SAINSBURY'S": 'https://www.sainsburys.co.uk/favicon.ico',
   ASDA: 'https://www.asda.com/favicon.ico',
   MORRISONS: 'https://groceries.morrisons.com/favicon.ico',
+  EDEKA: 'https://www.edeka.de/favicon.ico',
+  REWE: 'https://www.rewe.de/favicon.ico',
+  PENNY: 'https://www.penny.de/favicon.ico',
 };
 
 export function getSupermarketsForCountry(country: CountryCode | ApiCountry): Supermarket[] {
   if (country === 'uk') return ukSupermarkets;
+  if (country === 'de') return deSupermarkets;
   return nlSupermarkets;
 }
 
@@ -52,7 +67,9 @@ export function getSupermarketsForCountry(country: CountryCode | ApiCountry): Su
 export function getSupermarketLogo(name: string): string | undefined {
   const key = name.trim().toUpperCase();
   if (LOGO_BY_KEY[key]) return LOGO_BY_KEY[key];
-  const match = [...nlSupermarkets, ...ukSupermarkets].find((s) => s.name.toUpperCase() === key);
+  const match = [...nlSupermarkets, ...ukSupermarkets, ...deSupermarkets].find(
+    (s) => s.name.toUpperCase() === key
+  );
   return match?.logo;
 }
 

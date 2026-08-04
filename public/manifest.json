@@ -1,7 +1,7 @@
 {
   "short_name": "ComPear",
   "name": "ComPear - Grocery Price Comparison",
-  "description": "Compare grocery prices across Dutch supermarkets. Scan barcodes and share shopping lists.",
+  "description": "Compare grocery prices across European supermarket chains",
   "icons": [
     {
       "src": "favicon.ico",

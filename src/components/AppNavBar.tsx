@@ -19,6 +19,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import PlaceIcon from '@mui/icons-material/Place';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import TranslateIcon from '@mui/icons-material/Translate';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -115,6 +116,15 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
         sx={{ minWidth: 'auto' }}
       >
         {t('nav.receipts')}
+      </Button>
+      <Button
+        component={RouterLink}
+        to={`${base}/how-it-works`}
+        color="inherit"
+        startIcon={<InfoOutlinedIcon />}
+        sx={{ minWidth: 'auto' }}
+      >
+        {t('nav.howItWorks')}
       </Button>
     </>
   );
@@ -256,6 +266,15 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
             >
               <ReceiptLongIcon fontSize="small" sx={{ mr: 1 }} />
               {t('nav.receipts')}
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                setMobileMenuAnchor(null);
+                navigate(`${base}/how-it-works`);
+              }}
+            >
+              <InfoOutlinedIcon fontSize="small" sx={{ mr: 1 }} />
+              {t('nav.howItWorks')}
             </MenuItem>
           </Box>
         )}
