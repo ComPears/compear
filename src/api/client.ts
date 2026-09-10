@@ -378,8 +378,6 @@ export interface SharedList {
   updatedAt: string;
   expiresAt: string;
   editToken?: string;
-  /** Present on public GET when the list has no owner token yet (legacy). */
-  claimable?: boolean;
 }
 
 export async function createSharedList(

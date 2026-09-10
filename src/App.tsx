@@ -205,7 +205,7 @@ const App: React.FC = () => {
                   src={store.logo}
                   alt={store.name}
                   variant="rounded"
-                  sx={{ width: 36, height: 36, bgcolor: 'common.white', border: '1px solid', borderColor: 'divider' }}
+                  sx={{ width: 36, height: 36, bgcolor: 'common.white', color: 'primary.dark', fontWeight: 800, border: '1px solid', borderColor: 'divider' }}
                   imgProps={{ loading: 'lazy' }}
                 />
               ))}
@@ -351,6 +351,8 @@ const App: React.FC = () => {
                         width: 32,
                         height: 32,
                         bgcolor: 'common.white',
+                        color: 'primary.dark',
+                        fontWeight: 800,
                         border: '1px solid',
                         borderColor: 'divider',
                       }}

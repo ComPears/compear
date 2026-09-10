@@ -138,26 +138,6 @@ export const SharedListPage: React.FC = () => {
     }
   };
 
-  const handleEnableEditing = async () => {
-    if (!listId || !list) return;
-    setSaving(true);
-    setSaveError(null);
-    try {
-      // Legacy lists (no token yet) can be claimed; lists that already have a
-      // token require the local edit token and will 403 without it.
-      const updated = await updateSharedList(listId, list.name, list.items);
-      setList(updated);
-      setDraftName(updated.name);
-      setDraftItems(updated.items);
-      setCanEdit(true);
-      setEditing(true);
-    } catch {
-      setSaveError(t('shared.claimError'));
-    } finally {
-      setSaving(false);
-    }
-  };
-
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <AppNavBar />
@@ -304,11 +284,6 @@ export const SharedListPage: React.FC = () => {
                 </Button>
               )}
 
-              {!canEdit && list.claimable && (
-                <Button variant="text" onClick={handleEnableEditing} disabled={saving}>
-                  {saving ? t('shared.saving') : t('shared.enableEditing')}
-                </Button>
-              )}
             </Box>
           </>
         ) : null}
