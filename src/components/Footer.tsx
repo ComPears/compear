@@ -19,7 +19,10 @@ const Footer: React.FC = () => {
     fontWeight: 700,
     textUnderlineOffset: 3,
     px: 0.25,
-    py: 0.25,
+    py: { xs: 1.25, sm: 0.25 },
+    minHeight: { xs: 44, sm: 'auto' },
+    display: 'inline-flex',
+    alignItems: 'center',
     borderRadius: 0.5,
     '&:hover': { textDecoration: 'underline' },
   } as const;
@@ -29,6 +32,8 @@ const Footer: React.FC = () => {
     fontWeight: country.code === code ? 800 : 700,
     color: country.code === code ? 'text.primary' : 'inherit',
     textDecoration: country.code === code ? 'underline' : 'none',
+    minWidth: { xs: 44, sm: 'auto' },
+    justifyContent: 'center',
   });
 
   const liveCountries = countries.filter((c) => c.available);

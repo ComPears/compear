@@ -93,6 +93,8 @@ export const ProductPage: React.FC = () => {
   const tracking = tracked.find((item) => item.key === trackingKey);
   const lowPrice = sortedOffers[0]?.effectivePrice ?? product?.effectivePrice ?? 0;
   const highPrice = sortedOffers[sortedOffers.length - 1]?.effectivePrice ?? lowPrice;
+  const storeCount = new Set(sortedOffers.map((offer) => offer.store)).size;
+  const hasComparison = storeCount > 1;
 
   useEffect(() => {
     if (!product || sortedOffers.length === 0) return;
@@ -107,10 +109,10 @@ export const ProductPage: React.FC = () => {
         recordedAt: new Date().toISOString(),
         lowPrice,
         highPrice,
-        offerCount: sortedOffers.length,
+        offerCount: storeCount,
       }
     );
-  }, [country.code, currentSlug, highPrice, lowPrice, product, recordPrice, sortedOffers.length, trackingKey]);
+    }, [country.code, currentSlug, highPrice, lowPrice, product, recordPrice, storeCount, trackingKey]);
 
   const money = (value: number) => formatMoney(value, country.code);
   const locale = country.code === 'uk' ? 'en-GB' : country.code === 'nl' ? 'nl-NL' : language;
@@ -149,10 +151,12 @@ export const ProductPage: React.FC = () => {
   }
 
   const canonicalPath = productPath(country.code, product);
-  const description = t('product.seoDescription')
-    .replace('{product}', product.productName)
-    .replace('{stores}', String(sortedOffers.length))
-    .replace('{price}', money(lowPrice));
+  const description = (hasComparison
+    ? t('product.seoDescription')
+    : t('product.singleSeoDescription'))
+      .replace('{product}', product.productName)
+      .replace('{stores}', String(storeCount))
+      .replace('{price}', money(lowPrice));
   const structuredData = [
     {
       '@context': 'https://schema.org',
@@ -166,7 +170,7 @@ export const ProductPage: React.FC = () => {
         '@type': 'AggregateOffer',
         lowPrice,
         highPrice,
-        offerCount: sortedOffers.length,
+        offerCount: storeCount,
         priceCurrency: country.code === 'uk' ? 'GBP' : 'EUR',
       },
     },
@@ -193,8 +197,8 @@ export const ProductPage: React.FC = () => {
       <AppNavBar />
       <Container component="main" maxWidth="md" sx={{ py: { xs: 2, sm: 3 }, flex: 1 }}>
         <Breadcrumbs sx={{ mb: 2 }} aria-label={t('product.breadcrumbs')}>
-          <Link component={RouterLink} to={`/${country.code}`} color="inherit">{t('nav.home')}</Link>
-          <Link component={RouterLink} to={`/${country.code}/categories/${categorySlug(product.category ?? 'Other')}`} color="inherit">
+          <Link component={RouterLink} to={`/${country.code}`} color="inherit" sx={{ minHeight: 44, display: 'inline-flex', alignItems: 'center' }}>{t('nav.home')}</Link>
+          <Link component={RouterLink} to={`/${country.code}/categories/${categorySlug(product.category ?? 'Other')}`} color="inherit" sx={{ minHeight: 44, display: 'inline-flex', alignItems: 'center' }}>
             {product.category}
           </Link>
           <Typography color="text.primary" noWrap sx={{ maxWidth: { xs: 180, sm: 360 } }}>{product.productName}</Typography>
@@ -211,17 +215,20 @@ export const ProductPage: React.FC = () => {
               </Typography>
             </Box>
             <Box sx={{ minWidth: 160 }}>
-              <Typography variant="caption" color="text.secondary">{t('product.bestCurrentPrice')}</Typography>
+              <Typography variant="caption" color="text.secondary">
+                {t(hasComparison ? 'product.bestCurrentPrice' : 'product.currentPrice')}
+              </Typography>
               <Typography variant="h4" color="primary.main" fontWeight={800}>{money(lowPrice)}</Typography>
               <Typography variant="caption" color="text.secondary">
-                {t('product.offerCount').replace('{count}', String(sortedOffers.length))}
+                {t(hasComparison ? 'product.offerCount' : 'product.singleOfferCount')
+                  .replace('{count}', String(storeCount))}
               </Typography>
             </Box>
           </Stack>
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mt: 2 }}>
             <Button variant="contained" startIcon={<AddShoppingCartIcon />} onClick={() => addToBasket(sortedOffers[0] ?? product)}>
-              {t('product.addToList')}
+              {t(hasComparison ? 'product.addToList' : 'product.addCurrentToList')}
             </Button>
             {tracking?.targetPrice != null ? (
               <Button variant="outlined" color="secondary" onClick={() => removeTracking(trackingKey)}>
@@ -236,7 +243,11 @@ export const ProductPage: React.FC = () => {
                   onChange={(event) => setTargetInput(event.target.value)}
                   label={t('product.targetPrice')}
                   inputProps={{ min: 0.01, step: 0.01 }}
-                  sx={{ maxWidth: 150 }}
+                  sx={{
+                    maxWidth: 150,
+                    '& .MuiInputBase-root': { minHeight: 44 },
+                    '& .MuiInputBase-input': { minHeight: 44, boxSizing: 'border-box' },
+                  }}
                 />
                 <Button
                   variant="outlined"
@@ -259,8 +270,13 @@ export const ProductPage: React.FC = () => {
         </Paper>
 
         <Typography component="h2" variant="h5" fontWeight={700} sx={{ mb: 1.5 }}>
-          {t('product.compareHeading')}
+          {t(hasComparison ? 'product.compareHeading' : 'product.singleOfferHeading')}
         </Typography>
+        {!hasComparison && (
+          <Alert severity="info" sx={{ mb: 1.5 }}>
+            {t('product.singleOfferNotice')}
+          </Alert>
+        )}
         <Stack spacing={1.25}>
           {sortedOffers.map((offer, index) => {
             const source = sanitizeProductLink(offer.productUrl);
@@ -270,7 +286,7 @@ export const ProductPage: React.FC = () => {
                   <Box sx={{ minWidth: 0 }}>
                     <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
                       <Typography fontWeight={750}>{offer.store}</Typography>
-                      {index === 0 && <Chip size="small" color="primary" label={t('label.cheapest')} />}
+                      {hasComparison && index === 0 && <Chip size="small" color="primary" label={t('label.cheapest')} />}
                       {offer.promoType != null && <Chip size="small" color="secondary" label={t('product.deal')} />}
                       <Chip size="small" variant="outlined" label={t('product.exactMatch')} />
                     </Stack>
@@ -313,7 +329,8 @@ export const ProductPage: React.FC = () => {
               <Box key={snapshot.recordedAt} sx={{ display: 'flex', justifyContent: 'space-between', gap: 2 }}>
                 <Typography variant="body2">{new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(snapshot.recordedAt))}</Typography>
                 <Typography variant="body2" fontWeight={700}>
-                  {money(snapshot.lowPrice)} – {money(snapshot.highPrice)} · {snapshot.offerCount} {t('product.offers')}
+                  {money(snapshot.lowPrice)} – {money(snapshot.highPrice)} · {snapshot.offerCount}{' '}
+                  {t(snapshot.offerCount === 1 ? 'product.offer' : 'product.offers')}
                 </Typography>
               </Box>
             ))}

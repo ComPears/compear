@@ -317,7 +317,7 @@ const ProductGroupListComponent: React.FC<ProductGroupListProps> = ({
                 <StorePriceChip
                   key={`${product.id}-${offerIndex}`}
                   product={product}
-                  isCheapest={product.id === cheapestId}
+                  isCheapest={hasMultipleStores && product.id === cheapestId}
                   showSize={showSizeOnChips}
                   onClick={() => navigate(productPath(country.code, product))}
                 />
