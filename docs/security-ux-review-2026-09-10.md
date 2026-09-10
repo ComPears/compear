@@ -30,6 +30,7 @@ One product-data concern remains operational rather than presentational: the liv
 | Secret scanning disabled | All three public repositories had secret scanning disabled. | Enabled secret scanning, push protection, automated security updates, and private vulnerability reporting in repository settings. |
 | No coordinated disclosure policy | None of the repositories exposed a `SECURITY.md`. | Added a private-reporting policy to all three repositories. |
 | Express 5 request parameter shape | The secure Express upgrade allows an array-shaped parameter type that older controller assumptions did not handle. | Added a shared strict path-parameter parser and tests; ambiguous parameters are rejected. |
+| Filesystem path injection | CodeQL identified user-influenced shared-list paths and a catalog-write path. | Shared lists now resolve only validated filenames already returned by their dedicated storage directory; country and store catalog paths are selected from explicit allowlists. Regression tests reject path-shaped identifiers. |
 
 ## Repository controls requiring a separate migration
 
