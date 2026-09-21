@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { fetchSeoIndex } from './fetch-seo-index.mjs';
 
 const projectDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const distDir = path.join(projectDir, 'dist');
@@ -59,9 +60,7 @@ async function readCountry(country) {
   if (!fs.existsSync(directory)) {
     const apiUrl = (process.env.VITE_API_URL || 'https://compear-backend.onrender.com').replace(/\/$/, '');
     try {
-      const response = await fetch(`${apiUrl}/products/seo-index?country=${country}`);
-      if (!response.ok) throw new Error(`SEO index returned ${response.status}`);
-      return { products: [], groups: await response.json() };
+      return { products: [], groups: await fetchSeoIndex(apiUrl, country) };
     } catch (error) {
       console.warn(`Product SEO index unavailable for ${country}; generating core landing pages only.`, error.message);
       return { products: [], groups: [] };
