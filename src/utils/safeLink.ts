@@ -47,6 +47,7 @@ export function sanitizeProductLink(link: string | null | undefined): string | u
   try {
     const url = new URL(link);
     if (url.protocol !== 'https:') return undefined;
+    if (url.username || url.password || url.port) return undefined;
     if (!ALLOWED_HOSTS.has(url.hostname.toLowerCase())) return undefined;
     return url.toString();
   } catch {
