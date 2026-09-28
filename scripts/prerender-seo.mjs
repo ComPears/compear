@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { fetchSeoIndex } from './fetch-seo-index.mjs';
+import { escapeHtml, isSafeProductSlug, renderProductBody } from './seo-safety.mjs';
 
 const projectDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const distDir = path.join(projectDir, 'dist');
@@ -11,7 +12,6 @@ const absoluteRoute = (route) => `${siteUrl}${route.endsWith('/') ? route : `${r
 const shell = fs.readFileSync(path.join(distDir, 'index.html'), 'utf8');
 const categories = ['Fruits & Vegetables', 'Dairy & Eggs', 'Meat & Seafood', 'Beverages', 'Bakery', 'Snacks', 'Frozen Foods', 'Pantry', 'Personal Care', 'Household', 'Other'];
 
-const escapeHtml = (value = '') => String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
 const slugify = (value) => String(value).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 120);
 const categorySlug = (value) => slugify(value);
 const productSlug = (product) => slugify(`${product.canonicalName || product.productName} ${normalizePackage(product).packageSize}`);
@@ -78,14 +78,14 @@ function pageHead({ title, description, url, locale, type = 'website', schema, a
     `<title>${escapeHtml(title)}</title>`,
     `<meta name="description" content="${escapeHtml(description)}">`,
     '<meta name="robots" content="index,follow,max-image-preview:large">',
-    `<link rel="canonical" href="${url}">`,
+    `<link rel="canonical" href="${escapeHtml(url)}">`,
     `<meta property="og:title" content="${escapeHtml(title)}">`,
     `<meta property="og:description" content="${escapeHtml(description)}">`,
-    `<meta property="og:url" content="${url}">`,
-    `<meta property="og:type" content="${type}">`,
-    `<meta property="og:locale" content="${locale}">`,
+    `<meta property="og:url" content="${escapeHtml(url)}">`,
+    `<meta property="og:type" content="${escapeHtml(type)}">`,
+    `<meta property="og:locale" content="${escapeHtml(locale)}">`,
     '<meta name="twitter:card" content="summary">',
-    ...alternates.map(({ lang, href }) => `<link rel="alternate" hreflang="${lang}" href="${href}">`),
+    ...alternates.map(({ lang, href }) => `<link rel="alternate" hreflang="${escapeHtml(lang)}" href="${escapeHtml(href)}">`),
     schema ? `<script type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script>` : '',
   ].join('\n');
 }
@@ -115,9 +115,11 @@ for (const country of ['uk', 'nl']) {
     list.push(product);
     bySlug.set(slug, list);
   }
-  const comparable = source.groups
+  const candidateGroups = source.groups
     ? source.groups.map((group) => [group.slug, group.offers])
     : [...bySlug.entries()].filter(([, offers]) => new Set(offers.map((offer) => offer.store)).size > 1);
+  const comparable = candidateGroups.filter(([slug, offers]) =>
+    isSafeProductSlug(slug) && Array.isArray(offers) && offers.length > 0);
   const homeRoute = `/${country}`;
   const homeTitle = country === 'uk' ? 'Compare UK supermarket prices | ComPear' : 'Vergelijk supermarktprijzen | ComPear';
   const homeDescription = country === 'uk' ? 'Compare grocery prices across Tesco, Sainsbury’s, Asda, Morrisons, Aldi and Lidl.' : 'Vergelijk actuele boodschappenprijzen bij Nederlandse supermarkten.';
@@ -144,14 +146,13 @@ for (const country of ['uk', 'nl']) {
     const lowPrice = first.effectivePrice;
     const highPrice = sorted[sorted.length - 1].effectivePrice;
     const description = `Compare ${first.productName} across ${new Set(sorted.map((offer) => offer.store)).size} supermarkets. Prices start at ${symbol}${lowPrice.toFixed(2)}.`;
-    const offerRows = sorted.map((offer) => `<li>${escapeHtml(offer.store)}: ${symbol}${offer.effectivePrice.toFixed(2)} (${escapeHtml(offer.packageSize)})</li>`).join('');
     const updated = sorted.map((offer) => offer.scrapedAt).filter(Boolean).sort().pop();
-    writePage(route, { title: `${first.productName} prices | ComPear`, description, url: absoluteRoute(route), locale, type: 'product', schema: { '@context': 'https://schema.org', '@type': 'Product', name: first.productName, brand: first.brand ? { '@type': 'Brand', name: first.brand } : undefined, offers: { '@type': 'AggregateOffer', lowPrice, highPrice, offerCount: sorted.length, priceCurrency: currency }, dateModified: updated } }, `<h1>${escapeHtml(first.productName)}</h1><p>${description}</p><h2>Supermarket prices</h2><ul>${offerRows}</ul>`);
+    writePage(route, { title: `${first.productName} prices | ComPear`, description, url: absoluteRoute(route), locale, type: 'product', schema: { '@context': 'https://schema.org', '@type': 'Product', name: first.productName, brand: first.brand ? { '@type': 'Brand', name: first.brand } : undefined, offers: { '@type': 'AggregateOffer', lowPrice, highPrice, offerCount: sorted.length, priceCurrency: currency }, dateModified: updated } }, renderProductBody(first.productName, description, sorted, symbol));
     sitemap.push(absoluteRoute(route));
   }
 }
 
 const now = new Date().toISOString().slice(0, 10);
-const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${[...new Set(sitemap)].map((url) => `  <url><loc>${url}</loc><lastmod>${now}</lastmod></url>`).join('\n')}\n</urlset>\n`;
+const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${[...new Set(sitemap)].map((url) => `  <url><loc>${escapeHtml(url)}</loc><lastmod>${now}</lastmod></url>`).join('\n')}\n</urlset>\n`;
 fs.writeFileSync(path.join(distDir, 'sitemap.xml'), sitemapXml);
 console.log(`Generated ${new Set(sitemap).size} indexable URLs and sitemap.xml`);

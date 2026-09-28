@@ -49,4 +49,13 @@ describe('sanitizeProductLink', () => {
     expect(sanitizeProductLink('https://evil.example/x')).toBeUndefined();
     expect(sanitizeProductLink('not-a-url')).toBeUndefined();
   });
+
+  it('rejects credentials and nonstandard ports even on allowed retailer hosts', () => {
+    for (const url of ['https://user:password@www.tesco.com/x',
+      'https://user@www.tesco.com/x', 'https://www.tesco.com:8443/x',
+      'https://www.tesco.com.evil.example/x']) {
+      expect(sanitizeProductLink(url)).toBeUndefined();
+    }
+    expect(sanitizeProductLink('https://www.tesco.com:443/x')).toBe('https://www.tesco.com/x');
+  });
 });
