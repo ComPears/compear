@@ -25,6 +25,7 @@ import { useCountry } from '../context/CountryContext';
 import { useLanguage } from '../context/LanguageContext';
 import AppNavBar from '../components/AppNavBar';
 import Footer from '../components/Footer';
+import StoreAvailabilityNotice from '../components/StoreAvailabilityNotice';
 import { Seo, sitePath } from '../components/Seo';
 import { useBasketStore } from '../store/basketStore';
 import { usePriceTrackingStore } from '../store/priceTrackingStore';
@@ -196,6 +197,7 @@ export const ProductPage: React.FC = () => {
       />
       <AppNavBar />
       <Container component="main" maxWidth="md" sx={{ py: { xs: 2, sm: 3 }, flex: 1 }}>
+        <StoreAvailabilityNotice />
         <Breadcrumbs sx={{ mb: 2 }} aria-label={t('product.breadcrumbs')}>
           <Link component={RouterLink} to={`/${country.code}`} color="inherit" sx={{ minHeight: 44, display: 'inline-flex', alignItems: 'center' }}>{t('nav.home')}</Link>
           <Link component={RouterLink} to={`/${country.code}/categories/${categorySlug(product.category ?? 'Other')}`} color="inherit" sx={{ minHeight: 44, display: 'inline-flex', alignItems: 'center' }}>

@@ -17,7 +17,8 @@ import { useCountry } from './context/CountryContext';
 import { useLanguage } from './context/LanguageContext';
 import { useComparisonStore } from './store/comparisonStore';
 import { useBasketStore } from './store/basketStore';
-import { fetchProduct, fetchStores, StoreInfo } from './api/client';
+import { fetchProduct, fetchStores, isStoreAvailable, StoreInfo } from './api/client';
+import StoreAvailabilityNotice from './components/StoreAvailabilityNotice';
 import { getSupermarketsForCountry } from './services/supermarketService';
 import { isEmailJSConfigured, sendWaitlistSignup } from './services/emailService';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
@@ -79,11 +80,12 @@ const App: React.FC = () => {
   }, [country.available, country.code]);
 
   const catalogProductCount = useMemo(
-    () => catalogStores.reduce((total, store) => total + (store.productCount ?? 0), 0),
+    () => catalogStores.filter(isStoreAvailable).reduce((total, store) => total + (store.productCount ?? 0), 0),
     [catalogStores]
   );
   const catalogFreshness = useMemo(() => {
     const timestamps = catalogStores
+      .filter(isStoreAvailable)
       .map((store) => store.latestPriceAt)
       .filter((value): value is string => Boolean(value) && Number.isFinite(Date.parse(value as string)))
       .map((value) => Date.parse(value));
@@ -291,6 +293,7 @@ const App: React.FC = () => {
                 <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 440, mx: 'auto', mb: 2 }}>
                   {t(`app.heroSupport.${country.code}`) || t('app.heroSupport')}
                 </Typography>
+                <StoreAvailabilityNotice stores={catalogStores} />
                 {catalogProductCount > 0 && (
                   <Stack
                     direction="row"
@@ -311,7 +314,7 @@ const App: React.FC = () => {
                     <Chip
                       color="primary"
                       variant="outlined"
-                      label={t('app.catalogStores').replace('{count}', String(catalogStores.length))}
+                      label={t('app.catalogStores').replace('{count}', String(catalogStores.filter(isStoreAvailable).length))}
                       sx={{ bgcolor: 'rgba(255,255,255,0.72)' }}
                     />
                     {catalogFreshness && (

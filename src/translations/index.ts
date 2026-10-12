@@ -2,6 +2,9 @@ import { Translations } from '../context/LanguageContext';
 
 // English translations
 const en: Translations = {
+  'stores.unavailable': 'Price data unavailable',
+  'stores.allPriceDataUnavailable': 'Fresh supermarket prices are temporarily unavailable. Comparisons will return once we have verified new price data.',
+  'stores.priceDataUnavailable': 'Price data is temporarily unavailable for: {stores}. Their offers are excluded while we verify fresh data. You can still compare the other supermarkets.',
   // App Header
   'app.title': 'ComPear',
   'app.compareHeading': 'Your comparison',
@@ -469,6 +472,9 @@ const en: Translations = {
 
 // Dutch translations
 const nl: Translations = {
+  'stores.unavailable': 'Prijsgegevens niet beschikbaar',
+  'stores.allPriceDataUnavailable': 'Actuele supermarktprijzen zijn tijdelijk niet beschikbaar. Vergelijken is weer mogelijk zodra we nieuwe prijsgegevens hebben gecontroleerd.',
+  'stores.priceDataUnavailable': 'Prijsgegevens zijn tijdelijk niet beschikbaar voor: {stores}. Hun aanbiedingen worden niet getoond totdat we actuele gegevens hebben gecontroleerd. Je kunt de andere supermarkten blijven vergelijken.',
   // App Header
   'app.title': 'ComPear',
   'app.compareHeading': 'Jouw vergelijking',
@@ -936,6 +942,9 @@ const nl: Translations = {
 
 // German translations (basic)
 const de: Translations = {
+  'stores.unavailable': 'Preisdaten nicht verfügbar',
+  'stores.allPriceDataUnavailable': 'Aktuelle Supermarktpreise sind vorübergehend nicht verfügbar. Vergleiche sind wieder möglich, sobald neue Preisdaten geprüft wurden.',
+  'stores.priceDataUnavailable': 'Preisdaten sind vorübergehend nicht verfügbar für: {stores}. Ihre Angebote werden erst nach Prüfung aktueller Daten wieder angezeigt. Die anderen Supermärkte können weiterhin verglichen werden.',
   // App Header
   'app.title': 'ComPear',
   'app.compareHeading': 'Ihr Vergleich',

@@ -9,7 +9,8 @@ import { countries } from './context/CountryContext';
 import theme from './theme';
 import App from './App';
 
-vi.mock('./api/client', () => ({
+vi.mock('./api/client', async (importOriginal) => ({
+  ...await importOriginal<typeof import('./api/client')>(),
   fetchProducts: vi.fn().mockResolvedValue([]),
   fetchProduct: vi.fn(),
   fetchStores: vi.fn().mockResolvedValue([]),
