@@ -19,7 +19,8 @@ import {
   Collapse,
   Paper,
 } from '@mui/material';
-import { fetchProducts, fetchStores, Product, StoreInfo, ApiCountry } from '../api/client';
+import { fetchProducts, fetchStores, isStoreAvailable, Product, StoreInfo, ApiCountry } from '../api/client';
+import StoreAvailabilityNotice from '../components/StoreAvailabilityNotice';
 import { fetchProductsByBarcode, isAbortError } from '../utils/barcodeSearch';
 import { useCountry } from '../context/CountryContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -281,7 +282,7 @@ export const SearchPage: React.FC = () => {
 
   const showResults = searched && !loading && filteredProducts.length > 0;
   const catalogProductCount = useMemo(
-    () => stores.reduce((total, store) => total + (store.productCount ?? 0), 0),
+    () => stores.filter(isStoreAvailable).reduce((total, store) => total + (store.productCount ?? 0), 0),
     [stores]
   );
   const numberLocale =
@@ -333,7 +334,7 @@ export const SearchPage: React.FC = () => {
               <Typography variant="body2" fontWeight={750} color="primary.dark">
                 {t('search.catalogCoverage')
                   .replace('{products}', new Intl.NumberFormat(numberLocale).format(catalogProductCount))
-                  .replace('{stores}', String(stores.length))}
+                  .replace('{stores}', String(stores.filter(isStoreAvailable).length))}
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 {t('search.catalogCoverageHint')}
@@ -342,6 +343,7 @@ export const SearchPage: React.FC = () => {
           )}
         </Box>
 
+        <StoreAvailabilityNotice stores={stores} />
         {comparisonCount > 0 && (
           <Alert
             severity="success"
@@ -405,8 +407,8 @@ export const SearchPage: React.FC = () => {
                     >
                       <MenuItem value="">{t('search.allStores')}</MenuItem>
                       {stores.map((s) => (
-                        <MenuItem key={s.id} value={s.slug}>
-                          {s.name}
+                        <MenuItem key={s.id} value={s.slug} disabled={!isStoreAvailable(s)}>
+                          {s.name}{!isStoreAvailable(s) ? ' — ' + t('stores.unavailable') : ''}
                         </MenuItem>
                       ))}
                     </Select>

@@ -75,12 +75,21 @@ export interface Product {
 }
 
 export interface StoreInfo {
+  availability?: 'available' | 'unavailable';
+  availableUntil?: string | null;
+  unavailableReason?: string | null;
   id: string;
   name: string;
   slug: string;
   logo?: string;
   productCount?: number;
   latestPriceAt?: string | null;
+}
+
+export function isStoreAvailable(store: StoreInfo): boolean {
+  return store.availability !== 'unavailable' &&
+    (!store.availableUntil || Date.parse(store.availableUntil) > Date.now()) &&
+    (store.productCount === undefined || store.productCount > 0);
 }
 
 export async function fetchProducts(
