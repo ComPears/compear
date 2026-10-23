@@ -8,6 +8,13 @@ updates:
       time: "06:00"
       timezone: America/Chicago
     open-pull-requests-limit: 3
+    # MUI 9 removes APIs used by the app. Migrate both packages together in a
+    # dedicated UI change; continue receiving all v7 security/patch updates.
+    ignore:
+      - dependency-name: "@mui/material"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@mui/icons-material"
+        update-types: ["version-update:semver-major"]
     groups:
       production-dependencies:
         dependency-type: production
