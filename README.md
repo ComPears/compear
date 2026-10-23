@@ -19,7 +19,7 @@ This project uses [Vite](https://vite.dev/) with React and TypeScript.
 
 ### Prerequisites
 
-- **Node.js 20 LTS or 22 LTS** (recommended). If you use [nvm](https://github.com/nvm-sh/nvm), run `nvm use` in the `compear` folder (`.nvmrc` is set to 20).
+- **Node.js 24.22.1 or a newer 24.x security release**. With [nvm](https://github.com/nvm-sh/nvm), run `nvm install && nvm use` in the `compear` folder. Older runtimes are rejected because of the October 2026 Node security advisories.
 - npm or yarn
 
 ### Installation
