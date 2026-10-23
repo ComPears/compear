@@ -3,7 +3,7 @@
   publish = "dist"
 
 [build.environment]
-  NODE_VERSION = "24"
+  NODE_VERSION = "24.22.1"
   VITE_API_URL = "https://compear-backend.onrender.com"
   VITE_SITE_URL = "https://www.compears.shop"
 
