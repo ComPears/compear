@@ -1,7 +1,9 @@
 import { Translations } from '../context/LanguageContext';
+import { evidenceCopy } from './evidence';
 
 // English translations
 const en: Translations = {
+  ...evidenceCopy.en,
   'stores.unavailable': 'Price data unavailable',
   'stores.allPriceDataUnavailable': 'Fresh supermarket prices are temporarily unavailable. Comparisons will return once we have verified new price data.',
   'stores.priceDataUnavailable': 'Price data is temporarily unavailable for: {stores}. Their offers are excluded while we verify fresh data. You can still compare the other supermarkets.',
@@ -203,7 +205,7 @@ const en: Translations = {
   'search.sort': 'Sort',
   'search.sort.relevance': 'Relevance',
   'search.sort.price': 'Price',
-  'search.sort.unitPrice': 'Price/kg',
+  'search.sort.unitPrice': 'Unit price',
   'search.sort.discount': 'Discount',
   'search.refine': 'Refine',
   
@@ -472,6 +474,7 @@ const en: Translations = {
 
 // Dutch translations
 const nl: Translations = {
+  ...evidenceCopy.nl,
   'stores.unavailable': 'Prijsgegevens niet beschikbaar',
   'stores.allPriceDataUnavailable': 'Actuele supermarktprijzen zijn tijdelijk niet beschikbaar. Vergelijken is weer mogelijk zodra we nieuwe prijsgegevens hebben gecontroleerd.',
   'stores.priceDataUnavailable': 'Prijsgegevens zijn tijdelijk niet beschikbaar voor: {stores}. Hun aanbiedingen worden niet getoond totdat we actuele gegevens hebben gecontroleerd. Je kunt de andere supermarkten blijven vergelijken.',
@@ -673,7 +676,7 @@ const nl: Translations = {
   'search.sort': 'Sorteren',
   'search.sort.relevance': 'Relevantie',
   'search.sort.price': 'Prijs',
-  'search.sort.unitPrice': 'Prijs/kg',
+  'search.sort.unitPrice': 'Eenheidsprijs',
   'search.sort.discount': 'Korting',
   'search.refine': 'Verfijnen',
   
@@ -942,6 +945,7 @@ const nl: Translations = {
 
 // German translations (basic)
 const de: Translations = {
+  ...evidenceCopy.de,
   'stores.unavailable': 'Preisdaten nicht verfügbar',
   'stores.allPriceDataUnavailable': 'Aktuelle Supermarktpreise sind vorübergehend nicht verfügbar. Vergleiche sind wieder möglich, sobald neue Preisdaten geprüft wurden.',
   'stores.priceDataUnavailable': 'Preisdaten sind vorübergehend nicht verfügbar für: {stores}. Ihre Angebote werden erst nach Prüfung aktueller Daten wieder angezeigt. Die anderen Supermärkte können weiterhin verglichen werden.',
@@ -1255,7 +1259,7 @@ const de: Translations = {
   'search.sort': 'Sortieren',
   'search.sort.relevance': 'Relevanz',
   'search.sort.price': 'Preis',
-  'search.sort.unitPrice': 'Preis/kg',
+  'search.sort.unitPrice': 'Grundpreis',
   'search.sort.discount': 'Rabatt',
   'search.refine': 'Verfeinern',
   'error.noProductsFound': 'Keine Produkte für "{searchTerm}" gefunden. Bitte einen anderen Suchbegriff versuchen.',

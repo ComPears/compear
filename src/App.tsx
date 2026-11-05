@@ -19,6 +19,7 @@ import { useComparisonStore } from './store/comparisonStore';
 import { useBasketStore } from './store/basketStore';
 import { fetchProduct, fetchStores, isStoreAvailable, StoreInfo } from './api/client';
 import StoreAvailabilityNotice from './components/StoreAvailabilityNotice';
+import { ShoppingPrinciples } from './components/ShoppingPrinciples';
 import { getSupermarketsForCountry } from './services/supermarketService';
 import { isEmailJSConfigured, sendWaitlistSignup } from './services/emailService';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
@@ -265,34 +266,72 @@ const App: React.FC = () => {
                   pt: { xs: 1, md: 2 },
                 }}
               >
+                <Typography variant="overline" color="primary.main" sx={{ letterSpacing: '0.15em' }}>{t('discovery.eyebrow')}</Typography>
                 <Typography
                   variant="h1"
                   sx={{
-                    fontSize: { xs: '2.75rem', sm: '3.75rem', md: '4.25rem' },
+                    fontSize: { xs: '2.3rem', sm: '3rem', md: '3.5rem' },
                     lineHeight: 1.05,
                     color: 'primary.dark',
-                    mb: 1,
+                    mb: 2,
+                    maxWidth: 1040,
+                    mx: 'auto',
                   }}
                 >
-                  {t('app.title')}
+                  {t('discovery.title')}
                 </Typography>
                 <Typography
                   variant="h5"
                   component="p"
                   sx={{
-                    fontFamily: '"Fraunces", Georgia, serif',
-                    fontWeight: 500,
-                    fontSize: { xs: '1.2rem', sm: '1.45rem' },
-                    maxWidth: 520,
+                    fontFamily: 'inherit',
+                    fontWeight: 400,
+                    fontSize: { xs: '1rem', sm: '1.15rem' },
+                    maxWidth: 720,
                     mx: 'auto',
                     mb: 1,
                   }}
                 >
-                  {t('app.heroHeadline')}
+                  {t('discovery.subtitle')}
                 </Typography>
-                <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 440, mx: 'auto', mb: 2 }}>
-                  {t(`app.heroSupport.${country.code}`) || t('app.heroSupport')}
-                </Typography>
+              </Box>
+            )}
+
+            <Box
+              className="cp-fade-up-delay"
+              sx={{
+                maxWidth: 960,
+                mx: 'auto',
+                mb: 3,
+                ...(groceries.length > 0
+                  ? {
+                      p: { xs: 2, sm: 2.5 },
+                      bgcolor: 'rgba(255,255,255,0.72)',
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      borderRadius: 2,
+                    }
+                  : {}),
+              }}
+            >
+              {groceries.length > 0 && (
+                <>
+                  <Typography variant="h5" component="h1" gutterBottom fontWeight={600}>
+                    {t('app.compareHeading')}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    {t(`app.description.${country.code}`) || t('app.description').replace('{country}', country.name)}
+                  </Typography>
+                </>
+              )}
+              <ProductSearch
+                key={searchResetKey}
+                onAddGrocery={addGrocery}
+                onResetComparison={clearComparison}
+                showEmptyGuide={groceries.length === 0}
+              />
+            </Box>
+            {groceries.length === 0 && <Box sx={{ textAlign: "center", mb: 3 }}>
                 <StoreAvailabilityNotice stores={catalogStores} />
                 {catalogProductCount > 0 && (
                   <Stack
@@ -369,7 +408,7 @@ const App: React.FC = () => {
                   spacing={0.75}
                   justifyContent="center"
                   aria-label={t('filters.category')}
-                  sx={{ flexWrap: 'wrap', rowGap: 0.75, mt: 1.5 }}
+                  sx={{ display: { xs: 'none', sm: 'flex' }, flexWrap: 'wrap', rowGap: 0.75, mt: 1.5 }}
                 >
                   {CATEGORIES.filter((category) => category !== 'Other').slice(0, 8).map((category) => (
                     <Button
@@ -384,43 +423,8 @@ const App: React.FC = () => {
                     </Button>
                   ))}
                 </Stack>
-              </Box>
-            )}
-
-            <Box
-              className="cp-fade-up-delay"
-              sx={{
-                maxWidth: 960,
-                mx: 'auto',
-                mb: 3,
-                ...(groceries.length > 0
-                  ? {
-                      p: { xs: 2, sm: 2.5 },
-                      bgcolor: 'rgba(255,255,255,0.72)',
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      borderRadius: 2,
-                    }
-                  : {}),
-              }}
-            >
-              {groceries.length > 0 && (
-                <>
-                  <Typography variant="h5" component="h1" gutterBottom fontWeight={600}>
-                    {t('app.compareHeading')}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    {t(`app.description.${country.code}`) || t('app.description').replace('{country}', country.name)}
-                  </Typography>
-                </>
-              )}
-              <ProductSearch
-                key={searchResetKey}
-                onAddGrocery={addGrocery}
-                onResetComparison={clearComparison}
-                showEmptyGuide={groceries.length === 0}
-              />
-            </Box>
+            </Box>}
+            {groceries.length === 0 && <ShoppingPrinciples />}
 
             {groceries.length > 0 && (
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>

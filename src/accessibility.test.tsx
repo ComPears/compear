@@ -9,6 +9,8 @@ import { CountryProvider, CountryCode } from './context/CountryContext';
 import { LanguageProvider, LanguageCode } from './context/LanguageContext';
 import { Product } from './api/client';
 import theme from './theme';
+import { OfferEvidence, UnitPrice } from './components/OfferEvidence';
+import { DietaryFilterBar } from './components/DietaryFilterBar';
 
 function renderWithProviders(
   ui: React.ReactNode,
@@ -44,6 +46,16 @@ const milk: Product = {
 };
 
 describe('accessibility and translations', () => {
+  it('displays liquid unit prices and explains unknown observation dates', () => {
+    renderWithProviders(<><UnitPrice product={milk} /><OfferEvidence product={milk} /></>, 'uk', 'en');
+    expect(screen.getByText('£1.25 / l')).toBeInTheDocument();
+    expect(screen.getByText('Observation date unavailable')).toBeInTheDocument();
+    expect(screen.queryByText(/\/kg/)).not.toBeInTheDocument();
+  });
+  it('does not present dietary name filters as ingredient verification', () => {
+    renderWithProviders(<DietaryFilterBar selected={[]} onChange={() => undefined} />, 'uk', 'en');
+    expect(screen.getByText(/not verified ingredient or allergen labels/)).toBeInTheDocument();
+  });
   it('exposes the navigation menu state and localized accessible name', () => {
     renderWithProviders(<AppNavBar />);
 

@@ -36,4 +36,9 @@ describe('product relevance', () => {
       'sweets',
     ]);
   });
+  it('ranks milk above incorrectly categorized shower cream and ice lollies', () => {
+    const products = ['Milk Lollies Ice Creams', 'Milk & Honey Shower Cream', 'Morrisons Fresh Skimmed Milk'].map((name) => product({ id: name, productName: name, canonicalName: name.toLowerCase(), category: 'Dairy & Eggs' }));
+    expect(sortProducts(products, 'relevance', 'milk')[0].productName).toBe('Morrisons Fresh Skimmed Milk');
+    expect(sortProducts(products, 'relevance', 'milk lollies')[0].productName).toBe('Milk Lollies Ice Creams');
+  });
 });
