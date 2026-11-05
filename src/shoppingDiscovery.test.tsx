@@ -5,7 +5,6 @@ import { ThemeProvider } from '@mui/material';
 import { CountryProvider, CountryCode } from './context/CountryContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { DepartmentPage, JournalPage, ShoppingSpacePage, DealsPage } from './pages/ExplorePages';
-import { BriefEntry } from './components/ShoppingEntry';
 import { discoveryLink, discoveryShops } from './services/retailerDiscovery';
 import { exploreCopy } from './translations/explore';
 import theme from './theme';
@@ -53,11 +52,5 @@ describe('honest shopping discovery', () => {
     page(<JournalPage />, '/de/journal', '/:countryCode/journal', 'de');
     expect(screen.getByRole('heading', { name: 'Das Compears-Journal', level: 1 })).toBeInTheDocument();
     expect(screen.getByText(/Die kleine Zahl/)).toBeInTheDocument();
-  });
-  it('opens a home-page brief as a real request', async () => {
-    render(<MemoryRouter initialEntries={['/uk']}><CountryProvider initialCountryCode="uk"><LanguageProvider initialLanguage="en"><Routes><Route path="/uk" element={<BriefEntry />} /><Route path="/uk/brief" element={<p>Brief destination</p>} /></Routes></LanguageProvider></CountryProvider></MemoryRouter>);
-    fireEvent.change(screen.getByRole('textbox', { name: 'What are you looking for?' }), { target: { value: 'milk under £2' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Check my brief' }));
-    expect(await screen.findByText('Brief destination')).toBeInTheDocument();
   });
 });

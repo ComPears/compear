@@ -13,6 +13,7 @@ import { ProductSortBar } from './ProductSortBar';
 import { FilterChipBar } from './FilterChipBar';
 import { ProductGroupList } from './ProductGroupList';
 import { BarcodeScanButton } from './BarcodeScanner';
+import { SearchRequirements } from './SearchRequirements';
 import {
   SortMode,
   buildSuggestions,
@@ -27,12 +28,14 @@ interface ProductSearchProps {
   onAddGrocery: (grocery: Grocery) => void;
   onResetComparison?: () => void;
   showEmptyGuide?: boolean;
+  showRequirements?: boolean;
 }
 
 const ProductSearch: React.FC<ProductSearchProps> = ({
   onAddGrocery,
   onResetComparison,
   showEmptyGuide = false,
+  showRequirements = false,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
@@ -217,6 +220,7 @@ const ProductSearch: React.FC<ProductSearchProps> = ({
         </Box>
         <BarcodeScanButton onDetected={handleBarcodeDetected} disabled={loading} />
       </Box>
+      {showRequirements && !barcodeQuery && <SearchRequirements key={apiCountry} productQuery={searchTerm} />}
 
       {showEmptyGuide && !searched && !loading && !searchTerm.trim() && !barcodeQuery && (
         <Box sx={{ mt: 2 }}>

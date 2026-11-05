@@ -45,6 +45,10 @@ describe('App', () => {
   it('renders the ComPear title in the navigation bar', () => {
     renderApp();
     expect(screen.getByRole('link', { name: 'Naar home' })).toHaveTextContent('ComPear');
+    expect(screen.getAllByRole('combobox')).toHaveLength(1);
+    expect(screen.getByRole('button', { name: 'Scan' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Voeg wensen toe (optioneel)' })).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('textbox', { name: 'Wat zoek je?' })).not.toBeInTheDocument();
     cleanup();
   });
 
