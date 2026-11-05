@@ -21,8 +21,8 @@ export const FilterChipBar: React.FC<FilterChipBarProps> = ({
   if (chips.length === 0) return null;
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-      <Typography variant="body2" color="text.secondary">
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: { xs: 'nowrap', sm: 'wrap' }, overflowX: 'auto', pb: 0.5 }}>
+      <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
         {t('search.refine')}:
       </Typography>
       {chips.map((chip) => {
@@ -36,6 +36,7 @@ export const FilterChipBar: React.FC<FilterChipBarProps> = ({
             variant={selected ? 'filled' : 'outlined'}
             onClick={() => onToggle(chip)}
             aria-pressed={selected}
+            sx={{ minHeight: 44, flexShrink: 0 }}
           />
         );
       })}

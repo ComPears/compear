@@ -47,9 +47,13 @@ export const DietaryFilterBar: React.FC<DietaryFilterBarProps> = ({ selected, on
             variant={selected.includes(label) ? 'filled' : 'outlined'}
             onClick={() => toggle(label)}
             aria-pressed={selected.includes(label)}
+            sx={{ minHeight: 44 }}
           />
         ))}
       </Box>
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, maxWidth: 680 }}>
+        {t('evidence.dietary')}
+      </Typography>
     </Box>
   );
 };

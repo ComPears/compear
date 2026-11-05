@@ -33,6 +33,8 @@ import { formatMoney } from '../utils/formatMoney';
 import { productPath, productSlug } from '../utils/productSlug';
 import { sanitizeProductLink } from '../utils/safeLink';
 import { categorySlug } from '../services/categoryService';
+import { OfferEvidence, UnitPrice } from '../components/OfferEvidence';
+import { barcodeMatched, comparablePacks } from '../utils/offerEvidence';
 
 function newestTimestamp(products: Product[]): string | null {
   const values = products
@@ -288,15 +290,15 @@ export const ProductPage: React.FC = () => {
                   <Box sx={{ minWidth: 0 }}>
                     <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
                       <Typography fontWeight={750}>{offer.store}</Typography>
-                      {hasComparison && index === 0 && <Chip size="small" color="primary" label={t('label.cheapest')} />}
+                      {hasComparison && index === 0 && barcodeMatched(sortedOffers) && comparablePacks(sortedOffers) && <Chip size="small" color="primary" label={t('label.cheapest')} />}
                       {offer.promoType != null && <Chip size="small" color="secondary" label={t('product.deal')} />}
-                      <Chip size="small" variant="outlined" label={t('product.exactMatch')} />
+                      {hasComparison && <Chip size="small" variant="outlined" label={t(barcodeMatched(sortedOffers) ? 'evidence.barcode' : 'evidence.nameMatch')} />}
                     </Stack>
                     <Typography variant="body2" sx={{ mt: 0.5 }}>{offer.productName}</Typography>
                     <Typography variant="caption" color="text.secondary">
                       {offer.packageSize}
-                      {offer.scrapedAt && ` · ${t('product.checked')} ${new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(offer.scrapedAt))}`}
                     </Typography>
+                    <OfferEvidence product={offer} />
                   </Box>
                   <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1.5} sx={{ flexShrink: 0 }}>
                     <Box sx={{ textAlign: 'right' }}>
@@ -306,7 +308,7 @@ export const ProductPage: React.FC = () => {
                         </Typography>
                       )}
                       <Typography variant="h6" fontWeight={800}>{money(offer.effectivePrice)}</Typography>
-                      <Typography variant="caption" color="text.secondary">{money(offer.effectiveUnitPrice)}/{t('product.unit')}</Typography>
+                      <UnitPrice product={offer} />
                     </Box>
                     {source && (
                       <Button component="a" href={source} target="_blank" rel="noopener noreferrer nofollow" endIcon={<OpenInNewIcon />}>
@@ -320,11 +322,13 @@ export const ProductPage: React.FC = () => {
           })}
         </Stack>
 
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>{t('evidence.scope')} {hasComparison && !barcodeMatched(sortedOffers) && t('evidence.matchHint')}</Typography>
         <Paper variant="outlined" sx={{ p: 2.5, mt: 2.5 }}>
           <Typography component="h2" variant="h6" fontWeight={700}>{t('product.priceTracking')}</Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
             {t('product.priceTrackingHint')}
           </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>{t('evidence.localTracking')}</Typography>
           <Divider sx={{ my: 1.5 }} />
           <Stack spacing={0.75}>
             {(tracking?.history ?? []).slice(-6).reverse().map((snapshot) => (

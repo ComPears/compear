@@ -44,6 +44,7 @@ import {
   sortGroups,
 } from '../utils/productGrouping';
 import { extractFilterChips, filterByChip } from '../utils/filterChips';
+import { ShoppingPrinciples } from '../components/ShoppingPrinciples';
 
 const SEARCH_PAGE_SIZE = 30;
 
@@ -311,18 +312,19 @@ export const SearchPage: React.FC = () => {
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <AppNavBar />
       <Container component="main" maxWidth="lg" sx={{ flex: '1 0 auto', py: { xs: 2, sm: 3 } }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, alignItems: 'flex-start', flexWrap: 'wrap', mb: 2.5 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 3, alignItems: 'center', flexWrap: 'wrap', mb: 3, py: { xs: 1, sm: 3 } }}>
           <Box>
+            <Typography variant="overline" color="primary.main" sx={{ letterSpacing: '0.14em' }}>{t('discovery.eyebrow')}</Typography>
             <Typography
               component="h1"
               variant="h4"
               gutterBottom
               sx={{ fontWeight: 650, color: 'primary.dark' }}
             >
-              {t('search.browseTitle')}
+              {t('discovery.title')}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 560 }}>
-              {t('search.browseHint')}
+              {t('discovery.subtitle')}
             </Typography>
           </Box>
           {catalogProductCount > 0 && (
@@ -360,7 +362,7 @@ export const SearchPage: React.FC = () => {
 
         <Paper
           variant="outlined"
-          sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 2.5, p: { xs: 1.5, sm: 2 }, bgcolor: 'rgba(255,255,255,0.82)' }}
+          sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 2.5, p: { xs: 2, sm: 3 }, borderColor: '#bdd0bf', bgcolor: 'background.paper', boxShadow: '0 12px 40px rgba(20,35,28,0.04)' }}
         >
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'stretch' }}>
             <Box sx={{ flex: 1, minWidth: 240 }}>
@@ -391,10 +393,10 @@ export const SearchPage: React.FC = () => {
           )}
 
           <Box>
-            <Button size="small" onClick={() => setFiltersOpen((o) => !o)} sx={{ px: 0 }}>
+            <Button size="small" aria-expanded={filtersOpen} aria-controls="search-filters" onClick={() => setFiltersOpen((o) => !o)} sx={{ px: 0 }}>
               {filtersOpen ? t('search.hideFilters') : t('search.showFilters')}
             </Button>
-            <Collapse in={filtersOpen || searched}>
+            <Collapse id="search-filters" in={filtersOpen}>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1 }}>
                 <DietaryFilterBar selected={dietaryLabels} onChange={setDietaryLabels} />
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
@@ -432,7 +434,7 @@ export const SearchPage: React.FC = () => {
               <Typography
                 role="status"
                 aria-live="polite"
-                sx={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}
+                sx={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clip: 'rect(0 0 0 0)' }}
               >
                 {t('search.resultsStatus').replace('{count}', String(filteredProducts.length))}
               </Typography>
@@ -446,6 +448,7 @@ export const SearchPage: React.FC = () => {
                     .replace('{results}', String(filteredProducts.length))}
                 />
               </Box>
+              {sort === 'unitPrice' && <Typography variant="caption" color="text.secondary">{t('evidence.sortHint')}</Typography>}
               {filterChips.length > 0 && (
                 <FilterChipBar chips={filterChips} active={activeChips} onToggle={toggleChip} />
               )}
@@ -496,6 +499,7 @@ export const SearchPage: React.FC = () => {
             </Box>
           </Box>
         )}
+        {!searched && <ShoppingPrinciples />}
 
         {!loading && searchError && (
           <Alert severity="warning" sx={{ mb: 2 }}>

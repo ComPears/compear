@@ -2,7 +2,7 @@
   --cp-green: #0b6e4f;
   --cp-green-deep: #084c37;
   --cp-leaf: #d7ebe2;
-  --cp-cream: #eef4f0;
+  --cp-cream: #faf9f5;
   --cp-ink: #14231c;
   --cp-accent: #c45c26;
 }
@@ -14,11 +14,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
   color: var(--cp-ink);
   background-color: var(--cp-cream);
-  background-image:
-    radial-gradient(ellipse 90% 55% at 10% -10%, rgba(42, 157, 122, 0.18), transparent 55%),
-    radial-gradient(ellipse 70% 45% at 95% 5%, rgba(196, 92, 38, 0.1), transparent 50%),
-    linear-gradient(180deg, #f4f8f5 0%, var(--cp-cream) 40%, #e8f0eb 100%);
-  background-attachment: fixed;
   min-height: 100vh;
 }
 

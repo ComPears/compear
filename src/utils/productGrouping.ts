@@ -1,4 +1,5 @@
 import { Product } from '../api/client';
+import { sortByUnitPrice } from './offerEvidence';
 
 export type SortMode = 'relevance' | 'price' | 'unitPrice' | 'discount';
 
@@ -57,6 +58,8 @@ export function scoreRelevance(product: Product, query: string): number {
 
   const queryTokens = tokenize(fullQuery);
   let score = 0;
+  const milkAccessory = queryTokens.length === 1 && /^(milk|melk|milch)$/.test(fullQuery) &&
+      /chocolat|chocolad|schokolad|ice cream|ice loll|ijs|eis\b|shower|douche|dusche|soap|seife|biscuit|cookie|sweets|yog[uh]?urt|joghurt/.test(product.productName.toLowerCase());
   if (haystack.includes(fullQuery)) {
     score += 100 + (haystack.startsWith(fullQuery) ? 10 : 0);
   }
@@ -80,7 +83,7 @@ export function scoreRelevance(product: Product, query: string): number {
   if (queryTokens.every((token) => productTokens.has(token))) {
     score += Math.max(8, 40 - Math.max(0, productTokens.size - queryTokens.length) * 4);
   }
-  return score;
+  return milkAccessory ? score * 0.25 : score;
 }
 
 export function filterBySearch(products: Product[], query: string): Product[] {
@@ -94,11 +97,9 @@ export function filterBySearch(products: Product[], query: string): Product[] {
 }
 
 export function groupKey(product: Product): string {
+  if (product.barcode) return `barcode:${product.barcode}`;
   if (product.identityKey) {
     return product.identityKey;
-  }
-  if (product.barcode) {
-    return `barcode:${product.barcode}`;
   }
   const base = product.canonicalName?.trim() || product.productName.trim();
   return base.toLowerCase();
@@ -190,7 +191,7 @@ export function sortProducts(products: Product[], sort: SortMode, query = ''): P
     case 'price':
       return list.sort((a, b) => a.effectivePrice - b.effectivePrice);
     case 'unitPrice':
-      return list.sort((a, b) => a.effectiveUnitPrice - b.effectiveUnitPrice);
+      return sortByUnitPrice(list, (product) => product);
     case 'discount':
       return list.sort(
         (a, b) =>
@@ -213,9 +214,7 @@ export function sortGroups(groups: ProductGroup[], sort: SortMode, query = ''): 
     case 'price':
       return list.sort((a, b) => a.cheapest.effectivePrice - b.cheapest.effectivePrice);
     case 'unitPrice':
-      return list.sort(
-        (a, b) => a.cheapest.effectiveUnitPrice - b.cheapest.effectiveUnitPrice
-      );
+      return sortByUnitPrice(list, (group) => group.cheapest);
     case 'discount': {
       const savings = (g: ProductGroup) =>
         (g.bestDeal?.originalPrice ?? 0) - (g.bestDeal?.effectivePrice ?? 0);

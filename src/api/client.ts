@@ -52,6 +52,12 @@ function setProductCache(key: string, data: Product[]): void {
 }
 
 export interface Product {
+  sourceMethod?: string;
+  priceType?: 'regular' | 'promotion' | 'loyalty';
+  currency?: 'EUR' | 'GBP';
+  unitComparison?: { basis: 'kg' | 'l' | 'item'; quantity: number; price: number } | null;
+  dietaryEvidence?: 'name-only';
+  priceScope?: 'retailer';
   id: string;
   canonicalName: string;
   productName: string;

@@ -22,6 +22,8 @@ import { useBasketStore } from '../store/basketStore';
 import { useLanguage } from '../context/LanguageContext';
 import { formatMoney } from '../utils/formatMoney';
 import { productPath } from '../utils/productSlug';
+import { OfferEvidence, UnitPrice } from './OfferEvidence';
+import { barcodeMatched, comparablePacks } from '../utils/offerEvidence';
 
 interface ProductGroupListProps {
   groups: ProductGroup[];
@@ -89,6 +91,7 @@ function StorePriceChip({
       }
       sx={{
         height: 'auto',
+        minHeight: 44,
         py: 0.65,
         px: 0.25,
         borderWidth: isCheapest ? 0 : 1.5,
@@ -148,8 +151,9 @@ function CompactProductRow({
           {toSupermarketShortName(product.store)} · {product.productName}
         </Typography>
         <Typography variant="caption" color="text.secondary">
-          {product.packageSize} · {formatMoney(product.effectiveUnitPrice, country.code)}/kg
+          {product.packageSize}
         </Typography>
+        <UnitPrice product={product} />
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 0.75, flexShrink: 0 }}>
         {showDeal && onSale && (
@@ -220,7 +224,7 @@ const ProductGroupListComponent: React.FC<ProductGroupListProps> = ({
         const showSizeOnChips = hasMultipleSizes;
         const nextOffer = offers[1];
         const spread =
-          hasMultipleStores && nextOffer
+          hasMultipleStores && nextOffer && comparablePacks(offers) && barcodeMatched(offers)
             ? nextOffer.effectivePrice - group.cheapest.effectivePrice
             : 0;
 
@@ -235,7 +239,7 @@ const ProductGroupListComponent: React.FC<ProductGroupListProps> = ({
               borderRadius: 2,
               p: { xs: 1.5, sm: 2 },
               bgcolor: 'background.paper',
-              boxShadow: '0 10px 30px rgba(20, 35, 28, 0.05)',
+              boxShadow: '0 4px 18px rgba(20, 35, 28, 0.035)',
               transition: 'transform 160ms ease, box-shadow 160ms ease',
               '&:hover': {
                 transform: 'translateY(-2px)',
@@ -243,6 +247,10 @@ const ProductGroupListComponent: React.FC<ProductGroupListProps> = ({
               },
             }}
           >
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, mb: 1.5, flexWrap: 'wrap' }}>
+              <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: '0.08em', lineHeight: 1.8 }}>{group.cheapest.category}</Typography>
+              {hasMultipleStores && <Chip size="small" variant="outlined" label={t(barcodeMatched(offers) ? 'evidence.barcode' : 'evidence.nameMatch')} />}
+            </Box>
             <Box sx={{ display: 'flex', alignItems: 'flex-start', flexDirection: { xs: 'column', sm: 'row' }, gap: 1 }}>
               <Box
                 component={RouterLink}
@@ -266,7 +274,6 @@ const ProductGroupListComponent: React.FC<ProductGroupListProps> = ({
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
                   {group.packageSize && `${group.packageSize} · `}
-                  {t('search.fromPrice').replace('{price}', formatMoney(group.cheapest.effectivePrice, country.code))}
                   {hasMultipleStores
                     ? ` · ${t('search.storeCount').replace('{count}', String(offers.length))}`
                     : ` · ${toSupermarketShortName(group.cheapest.store)}`}
@@ -312,12 +319,19 @@ const ProductGroupListComponent: React.FC<ProductGroupListProps> = ({
               </Box>
             </Box>
 
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 1.1 }}>
+            <Box sx={{ mt: 2, pt: 1.5, borderTop: '1px solid', borderColor: 'divider' }}>
+              <Typography variant="h5" component="p" color="primary.dark" sx={{ fontFamily: 'inherit', fontWeight: 800, mb: 0.25 }}>
+                {t('search.fromPrice').replace('{price}', formatMoney(group.cheapest.effectivePrice, country.code))}
+              </Typography>
+              <UnitPrice product={group.cheapest} />
+              <OfferEvidence product={group.cheapest} />
+            </Box>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 1.5 }}>
               {offers.map((product, offerIndex) => (
                 <StorePriceChip
                   key={`${product.id}-${offerIndex}`}
                   product={product}
-                  isCheapest={hasMultipleStores && product.id === cheapestId}
+                  isCheapest={hasMultipleStores && comparablePacks(offers) && barcodeMatched(offers) && product.id === cheapestId}
                   showSize={showSizeOnChips}
                   onClick={() => navigate(productPath(country.code, product))}
                 />
