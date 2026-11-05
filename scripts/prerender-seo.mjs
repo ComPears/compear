@@ -12,6 +12,8 @@ const absoluteRoute = (route) => `${siteUrl}${route.endsWith('/') ? route : `${r
 const shell = fs.readFileSync(path.join(distDir, 'index.html'), 'utf8');
 const categories = ['Fruits & Vegetables', 'Dairy & Eggs', 'Meat & Seafood', 'Beverages', 'Bakery', 'Snacks', 'Frozen Foods', 'Pantry', 'Personal Care', 'Household', 'Other'];
 const guideTopics = JSON.parse(fs.readFileSync(path.join(projectDir, 'src/config/shopping-guides.json'), 'utf8'));
+const departments = JSON.parse(fs.readFileSync(path.join(projectDir, 'src/config/shopping-departments.json'), 'utf8'));
+const journal = JSON.parse(fs.readFileSync(path.join(projectDir, 'src/config/journal.json'), 'utf8'));
 const localCategories = {
   nl: ['Groente en fruit', 'Zuivel en eieren', 'Vlees en vis', 'Dranken', 'Brood en bakkerij', 'Snacks', 'Diepvries', 'Voorraadkast', 'Persoonlijke verzorging', 'Huishouden', 'Overig'],
   de: ['Obst und Gemüse', 'Milchprodukte und Eier', 'Fleisch und Fisch', 'Getränke', 'Brot und Backwaren', 'Snacks', 'Tiefkühlprodukte', 'Vorräte', 'Körperpflege', 'Haushalt', 'Sonstiges'],
@@ -132,10 +134,36 @@ for (const country of ['uk', 'nl', 'de']) {
   const homeTitle = country === 'uk' ? 'Compare UK supermarket prices | ComPear' : country === 'de' ? 'Supermarktpreise vergleichen | ComPear' : 'Vergelijk supermarktprijzen | ComPear';
   const homeDescription = country === 'uk' ? 'Compare grocery prices across Tesco, Sainsbury’s, Asda, Morrisons, Aldi and Lidl.' : country === 'de' ? 'Aktuelle Lebensmittelpreise deutscher Supermärkte vergleichen und Packungsgrößen prüfen.' : 'Vergelijk actuele boodschappenprijzen bij Nederlandse supermarkten.';
   const categoryLabel = category => localCategories[country]?.[categories.indexOf(category)] ?? category;
-  const homeLinks = categories.filter((category) => category !== 'Other').map((category) => `<li><a href="/${country}/categories/${categorySlug(category)}">${escapeHtml(categoryLabel(category))}</a></li>`).join('');
+  const discoveryLabels = country === 'uk' ? ['Food & drink', 'Household', 'Family care', 'Electronics', 'Offers', 'The Compears journal'] : country === 'nl' ? ['Eten & drinken', 'Huishouden', 'Gezinsverzorging', 'Elektronica', 'Aanbiedingen', 'Het Compears-journal'] : ['Essen & Trinken', 'Haushalt', 'Familienpflege', 'Elektronik', 'Angebote', 'Das Compears-Journal'];
+  const homeLinks = categories.filter((category) => category !== 'Other').map((category) => `<li><a href="/${country}/categories/${categorySlug(category)}">${escapeHtml(categoryLabel(category))}</a></li>`).join('')
+    + departments.map((department, index) => `<li><a href="/${country}/departments/${department.slug}/">${escapeHtml(discoveryLabels[index])}</a></li>`).join('')
+    + `<li><a href="/${country}/deals/">${discoveryLabels[4]}</a></li><li><a href="/${country}/journal/">${discoveryLabels[5]}</a></li>`;
   const homeAlternates = [{ lang: 'en-GB', href: absoluteRoute('/uk') }, { lang: 'nl-NL', href: absoluteRoute('/nl') }, { lang: 'de-DE', href: absoluteRoute('/de') }, { lang: 'x-default', href: absoluteRoute('/uk') }];
   writePage(homeRoute, { title: homeTitle, description: homeDescription, url: absoluteRoute(homeRoute), locale, alternates: homeAlternates, schema: { '@context': 'https://schema.org', '@type': 'WebSite', name: 'ComPear', url: absoluteRoute(`/${country}`), potentialAction: { '@type': 'SearchAction', target: `${siteUrl}/${country}/search?q={search_term_string}`, 'query-input': 'required name=search_term_string' } } }, `<h1>${homeTitle.replace(' | ComPear', '')}</h1><p>${homeDescription}</p><nav><ul>${homeLinks}</ul></nav>`);
   sitemap.push(absoluteRoute(homeRoute), absoluteRoute(`/${country}/how-it-works`));
+
+  const language = country === 'uk' ? 'en' : country;
+  const alternatesFor = tail => ['uk', 'nl', 'de'].map(code => ({ lang: code === 'uk' ? 'en-GB' : code === 'nl' ? 'nl-NL' : 'de-DE', href: absoluteRoute(`/${code}/${tail}`) }));
+  const departmentHint = country === 'uk' ? 'Explore shopping guides and our current supermarket catalog. External-shop links are discovery only, not verified prices. Check delivery, pack sizes and retailer conditions.' : country === 'nl' ? 'Ontdek gidsen en onze actuele supermarktcatalogus. Externe winkellinks zijn geen gecontroleerde prijzen. Controleer bezorging, verpakkingen en winkelvoorwaarden.' : 'Ratgeber und aktuellen Supermarktkatalog entdecken. Externe Shoplinks sind keine geprüften Preise. Lieferung, Packungsgrößen und Händlerbedingungen prüfen.';
+  for (const [index, department] of departments.entries()) {
+    const route = `/${country}/departments/${department.slug}`;
+    const electronics = department.slug === 'electronics';
+    const links = department.categories.map(category => `<li><a href="/${country}/categories/${categorySlug(category)}/">${escapeHtml(categoryLabel(category))}</a></li>`).join('');
+    writePage(route, { title: `${discoveryLabels[index]} | ComPear`, description: departmentHint, url: absoluteRoute(route), locale, alternates: alternatesFor(`departments/${department.slug}`), noIndex: electronics }, `<h1>${escapeHtml(discoveryLabels[index])}</h1><p>${escapeHtml(departmentHint)}</p><ul>${links}</ul><a href="/${country}/guides/">${country === 'uk' ? 'Shopping guides' : country === 'nl' ? 'Boodschappengidsen' : 'Einkaufsratgeber'}</a>`);
+    if (!electronics) sitemap.push(absoluteRoute(route));
+  }
+  const dealRoute = `/${country}/deals`;
+  const dealDescription = country === 'uk' ? 'Observed supermarket promotions. Check standard pack prices, required quantities, membership conditions and offer end dates with the retailer.' : country === 'nl' ? 'Waargenomen supermarktacties. Controleer normale verpakkingsprijzen, benodigde aantallen, lidmaatschap en de einddatum bij de winkel.' : 'Erfasste Supermarktaktionen. Standard-Packungspreise, Mindestmengen, Mitgliedschaft und Aktionsende beim Händler prüfen.';
+  writePage(dealRoute, { title: `${discoveryLabels[4]} | ComPear`, description: dealDescription, url: absoluteRoute(dealRoute), locale, alternates: alternatesFor('deals') }, `<h1>${discoveryLabels[4]}</h1><p>${escapeHtml(dealDescription)}</p><a href="/${country}/search/">${country === 'uk' ? 'Browse current prices' : country === 'nl' ? 'Bekijk actuele prijzen' : 'Aktuelle Preise ansehen'}</a>`);
+  sitemap.push(absoluteRoute(dealRoute));
+  const journalRoute = `/${country}/journal`;
+  writePage(journalRoute, { title: `${discoveryLabels[5]} | ComPear`, description: departmentHint, url: absoluteRoute(journalRoute), locale, alternates: alternatesFor('journal') }, `<h1>${discoveryLabels[5]}</h1><ul>${journal.map(article => `<li><a href="/${country}/journal/${article.slug}/">${escapeHtml(article[language].title)}</a><p>${escapeHtml(article[language].intro)}</p></li>`).join('')}</ul>`);
+  sitemap.push(absoluteRoute(journalRoute));
+  for (const article of journal) {
+    const copy = article[language], route = `/${country}/journal/${article.slug}`;
+    writePage(route, { title: `${copy.title} | ComPear`, description: copy.intro, url: absoluteRoute(route), locale, alternates: alternatesFor(`journal/${article.slug}`), schema: { '@context': 'https://schema.org', '@type': 'Article', headline: copy.title, description: copy.intro, inLanguage: language, mainEntityOfPage: absoluteRoute(route), author: { '@type': 'Organization', name: 'Compears', url: siteUrl } } }, `<article><h1>${escapeHtml(copy.title)}</h1><p>${escapeHtml(copy.intro)}</p>${copy.sections.map(([heading, body]) => `<section><h2>${escapeHtml(heading)}</h2><p>${escapeHtml(body)}</p></section>`).join('')}</article>`);
+    sitemap.push(absoluteRoute(route));
+  }
 
   const guideTitle = country === 'uk' ? 'Shopping guides' : country === 'de' ? 'Einkaufsratgeber' : 'Boodschappengidsen';
   const guideDescription = country === 'uk' ? 'Practical supermarket comparisons: pack sizes, unit prices and the details to check before choosing.' : country === 'de' ? 'Praktische Supermarktvergleiche: Packungsgrößen, Grundpreise und wichtige Produktunterschiede.' : 'Praktische supermarktvergelijkingen: verpakkingen, eenheidsprijzen en verschillen om op te letten.';
@@ -155,7 +183,7 @@ for (const country of ['uk', 'nl', 'de']) {
 
   // A crawler sees noindex even before JavaScript. No private content is rendered
   // or added to the sitemap, and action tokens remain client-side fragments.
-  for (const tail of ['brief', 'alerts', 'alerts/confirm', 'alerts/unsubscribe']) {
+  for (const tail of ['brief', 'alerts', 'alerts/confirm', 'alerts/unsubscribe', 'space']) {
     const route = `/${country}/${tail}`;
     const title = tail === 'brief' ? (country === 'uk' ? 'Shopping brief' : country === 'de' ? 'Einkaufswünsche' : 'Boodschappenwensen') : (country === 'uk' ? 'Price watch' : country === 'de' ? 'Preiswache' : 'Prijswacht');
     writePage(route, { title: `${title} | ComPear`, description: title, url: absoluteRoute(route), locale, noIndex: true }, `<h1>${title}</h1>`);

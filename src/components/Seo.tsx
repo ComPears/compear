@@ -72,10 +72,11 @@ export function Seo({
     setLink('canonical', canonical);
 
     document.head.querySelectorAll('link[rel="alternate"][hreflang]').forEach((element) => element.remove());
-    const hasEquivalentCountryPage = /^\/(uk|nl|de)(?:\/(?:categories|how-it-works)(?:\/|$)|\/?$)/.test(canonicalPath);
+    const hasEquivalentCountryPage = /^\/(uk|nl|de)(?:\/(?:categories|how-it-works|guides|departments|journal|deals)(?:\/|$)|\/?$)/.test(canonicalPath);
     if (hasEquivalentCountryPage) {
       setLink('alternate', sitePath(`/uk${alternatePath}`), 'en-GB');
       setLink('alternate', sitePath(`/nl${alternatePath}`), 'nl-NL');
+      setLink('alternate', sitePath(`/de${alternatePath}`), 'de-DE');
       setLink('alternate', sitePath(`/uk${alternatePath}`), 'x-default');
     } else {
       setLink('alternate', canonical, country === 'uk' ? 'en-GB' : country === 'nl' ? 'nl-NL' : 'de-DE');

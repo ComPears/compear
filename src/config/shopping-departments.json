@@ -1,0 +1,6 @@
+[
+  {"slug":"grocery","categories":["Fruits & Vegetables","Dairy & Eggs","Meat & Seafood","Beverages","Bakery","Snacks","Frozen Foods","Pantry"],"sections":["breakfast","pantry"]},
+  {"slug":"household","categories":["Household"],"sections":["household"]},
+  {"slug":"family","categories":["Personal Care"],"sections":["family"]},
+  {"slug":"electronics","categories":[],"sections":[]}
+]

@@ -43,7 +43,7 @@ const CountryScopedState: React.FC<{ countryCode: CountryCode }> = ({ countryCod
 const DefaultRouteSeo: React.FC<{ countryCode: CountryCode }> = ({ countryCode }) => {
   const location = useLocation();
   const routeTail = location.pathname.replace(/^\/(uk|nl|de)/, '');
-  if (/^\/(products|product|categories|guides)(\/|$)/.test(routeTail)) return null;
+  if (/^\/(products|product|categories|guides|departments|deals|journal|space)(\/|$)/.test(routeTail)) return null;
 
   const privateRoute = /^\/(basket|receipts|shared|search|brief|alerts)(\/|$)/.test(routeTail);
   const isUk = countryCode === 'uk';

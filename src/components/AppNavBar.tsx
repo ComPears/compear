@@ -19,11 +19,14 @@ import SearchIcon from '@mui/icons-material/Search';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import PlaceIcon from '@mui/icons-material/Place';
+import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import TranslateIcon from '@mui/icons-material/Translate';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import MenuIcon from '@mui/icons-material/Menu';
+import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
+import { DepartmentNav } from './ShoppingEntry';
 import { useTheme, useMediaQuery } from '@mui/material';
 import { useCountry, CountryCode, countries } from '../context/CountryContext';
 import { useLanguage, LanguageCode } from '../context/LanguageContext';
@@ -101,33 +104,16 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
       </Button>
       <Button
         component={RouterLink}
-        to={`${base}/stores`}
+        to={`${base}/deals`}
         color="inherit"
-        startIcon={<PlaceIcon />}
+        startIcon={<LocalOfferOutlinedIcon />}
         sx={{ minWidth: 'auto' }}
       >
-        {t('nav.stores')}
+        {t('explore.deals')}
       </Button>
       <Button component={RouterLink} to={`${base}/brief`} color="inherit" sx={{ minWidth: 'auto' }}>{t('brief.nav')}</Button>
       <Button component={RouterLink} to={`${base}/guides`} color="inherit" sx={{ minWidth: 'auto' }}>{t('guides.nav')}</Button>
-      <Button
-        component={RouterLink}
-        to={`${base}/receipts`}
-        color="inherit"
-        startIcon={<ReceiptLongIcon />}
-        sx={{ minWidth: 'auto' }}
-      >
-        {t('nav.receipts')}
-      </Button>
-      <Button
-        component={RouterLink}
-        to={`${base}/how-it-works`}
-        color="inherit"
-        startIcon={<InfoOutlinedIcon />}
-        sx={{ minWidth: 'auto' }}
-      >
-        {t('nav.howItWorks')}
-      </Button>
+      <Button component={RouterLink} to={`${base}/journal`} color="inherit" sx={{ minWidth: 'auto' }}>{t('explore.journal')}</Button>
     </>
   );
 
@@ -211,6 +197,7 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
                 </Tooltip>
               )}
 
+              {country.available && <IconButton component={RouterLink} to={`${base}/space`} aria-label={t('explore.space')} color="inherit" sx={{ minWidth: 44, minHeight: 44 }}><PersonOutlineIcon /></IconButton>}
               {country.available && (
                 <IconButton
                   component={RouterLink}
@@ -241,6 +228,7 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
             </Box>
           </Box>
         </Toolbar>
+        {country.available && <DepartmentNav />}
       </AppBar>
 
       <Menu
@@ -249,10 +237,12 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
         open={Boolean(mobileMenuAnchor)}
         onClose={() => setMobileMenuAnchor(null)}
       >
-        {country.available && isMobile && (
+        {country.available && (
           <Box>
             <MenuItem onClick={() => { setMobileMenuAnchor(null); navigate(`${base}/brief`); }}>{t('brief.nav')}</MenuItem>
             <MenuItem onClick={() => { setMobileMenuAnchor(null); navigate(`${base}/guides`); }}>{t('guides.nav')}</MenuItem>
+            <MenuItem onClick={() => { setMobileMenuAnchor(null); navigate(`${base}/deals`); }}>{t('explore.deals')}</MenuItem>
+            <MenuItem onClick={() => { setMobileMenuAnchor(null); navigate(`${base}/journal`); }}>{t('explore.journal')}</MenuItem>
             <MenuItem
               onClick={() => {
                 setMobileMenuAnchor(null);
