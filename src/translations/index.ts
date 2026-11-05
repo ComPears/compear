@@ -1,11 +1,13 @@
 import { Translations } from '../context/LanguageContext';
 import { evidenceCopy } from './evidence';
 import { shoppingCopy } from './shopping';
+import { exploreCopy } from './explore';
 
 // English translations
 const en: Translations = {
   ...evidenceCopy.en,
   ...shoppingCopy.en,
+  ...exploreCopy.en,
   'stores.unavailable': 'Price data unavailable',
   'stores.allPriceDataUnavailable': 'Fresh supermarket prices are temporarily unavailable. Comparisons will return once we have verified new price data.',
   'stores.priceDataUnavailable': 'Price data is temporarily unavailable for: {stores}. Their offers are excluded while we verify fresh data. You can still compare the other supermarkets.',
@@ -45,10 +47,10 @@ const en: Translations = {
   'app.totalItems': 'Total for {count} items across all {country} supermarkets',
   
   // Main Content
-  'app.description': 'Add grocery items to compare prices across {country} supermarkets. Prices from supermarkets without APIs are estimated using advanced algorithms.',
+  'app.description': 'Compare observed supermarket prices, check the source and pack size, then build your shopping list.',
   'app.description.nl': 'Search or scan a product, add it to your list, and compare the same item across Dutch supermarkets.',
   'app.description.uk': 'Search or scan a product, add it to your list, and compare the same item across Tesco, Sainsbury’s, Asda, Morrisons, Aldi and Lidl.',
-  'app.description.de': 'Add grocery items to compare prices across German supermarkets. Prices from supermarkets without APIs are estimated using advanced algorithms.',
+  'app.description.de': 'Compare observed German supermarket prices and check the source, pack size and purchase conditions.',
 
   'footer.liveIn': 'Live in',
   'footer.nl': 'NL',
@@ -106,7 +108,7 @@ const en: Translations = {
   'label.items': 'items',
   
   // Tooltips and Info
-  'info.estimatedPrices': 'Estimated prices are calculated using advanced algorithms when actual prices are not available.',
+  'info.estimatedPrices': 'Missing retailer prices stay unavailable. Check the observation date and confirm the price at the retailer.',
   'info.clickToView': 'Click to view products',
   'info.shareList': 'Share this list',
   
@@ -236,7 +238,7 @@ const en: Translations = {
   'optimal.savesVs': 'Save {amount} compared with buying everything at {store}',
   
   // Individual Items section
-  'individual.estimatedText': 'Some prices are estimated using advanced algorithms when official data isn\'t available.',
+  'individual.estimatedText': 'Prices are retailer observations, not checkout guarantees. Missing prices are not estimated.',
   'individual.addItemsPrompt': 'Add grocery items to compare prices',
   
   // Clipboard messages
@@ -478,6 +480,7 @@ const en: Translations = {
 const nl: Translations = {
   ...evidenceCopy.nl,
   ...shoppingCopy.nl,
+  ...exploreCopy.nl,
   'stores.unavailable': 'Prijsgegevens niet beschikbaar',
   'stores.allPriceDataUnavailable': 'Actuele supermarktprijzen zijn tijdelijk niet beschikbaar. Vergelijken is weer mogelijk zodra we nieuwe prijsgegevens hebben gecontroleerd.',
   'stores.priceDataUnavailable': 'Prijsgegevens zijn tijdelijk niet beschikbaar voor: {stores}. Hun aanbiedingen worden niet getoond totdat we actuele gegevens hebben gecontroleerd. Je kunt de andere supermarkten blijven vergelijken.',
@@ -517,10 +520,10 @@ const nl: Translations = {
   'app.totalItems': 'Totaal voor {count} artikelen in alle {country} supermarkten',
   
   // Main Content
-  'app.description': 'Voeg boodschappen toe om prijzen te vergelijken tussen verschillende {country} supermarkten. Prijzen van supermarkten zonder API\'s worden geschat met geavanceerde algoritmen.',
+  'app.description': 'Vergelijk waargenomen supermarktprijzen, controleer bron en verpakking en maak je boodschappenlijst.',
   'app.description.nl': 'Zoek of scan een product, voeg het toe aan je lijst en vergelijk hetzelfde artikel bij alle supermarkten.',
-  'app.description.uk': 'Voeg boodschappen toe om prijzen te vergelijken tussen verschillende Britse supermarkten. Prijzen van supermarkten zonder API\'s worden geschat met geavanceerde algoritmen.',
-  'app.description.de': 'Voeg boodschappen toe om prijzen te vergelijken tussen verschillende Duitse supermarkten. Prijzen van supermarkten zonder API\'s worden geschat met geavanceerde algoritmen.',
+  'app.description.uk': 'Vergelijk waargenomen Britse supermarktprijzen en controleer bron, verpakking en aankoopvoorwaarden.',
+  'app.description.de': 'Vergelijk waargenomen Duitse supermarktprijzen en controleer bron, verpakking en aankoopvoorwaarden.',
 
   'footer.liveIn': 'Live in',
   'footer.nl': 'NL',
@@ -578,7 +581,7 @@ const nl: Translations = {
   'label.items': 'artikelen',
   
   // Tooltips and Info
-  'info.estimatedPrices': 'Geschatte prijzen worden berekend met geavanceerde algoritmen wanneer werkelijke prijzen niet beschikbaar zijn.',
+  'info.estimatedPrices': 'Ontbrekende winkelprijzen blijven niet beschikbaar. Controleer waarnemingsdatum en de prijs bij de winkel.',
   'info.clickToView': 'Klik om producten te bekijken',
   'info.shareList': 'Deel deze lijst',
   
@@ -708,7 +711,7 @@ const nl: Translations = {
   'optimal.savesVs': 'Bespaar {amount} vergeleken met alles kopen bij {store}',
   
   // Individual Items section
-  'individual.estimatedText': 'Sommige prijzen worden geschat met geavanceerde algoritmen wanneer officiële gegevens niet beschikbaar zijn.',
+  'individual.estimatedText': 'Prijzen zijn winkelwaarnemingen, geen afrekengarantie. Ontbrekende prijzen worden niet geschat.',
   'individual.addItemsPrompt': 'Voeg boodschappen toe om prijzen te vergelijken',
   
   // Clipboard messages
@@ -950,6 +953,7 @@ const nl: Translations = {
 const de: Translations = {
   ...evidenceCopy.de,
   ...shoppingCopy.de,
+  ...exploreCopy.de,
   'stores.unavailable': 'Preisdaten nicht verfügbar',
   'stores.allPriceDataUnavailable': 'Aktuelle Supermarktpreise sind vorübergehend nicht verfügbar. Vergleiche sind wieder möglich, sobald neue Preisdaten geprüft wurden.',
   'stores.priceDataUnavailable': 'Preisdaten sind vorübergehend nicht verfügbar für: {stores}. Ihre Angebote werden erst nach Prüfung aktueller Daten wieder angezeigt. Die anderen Supermärkte können weiterhin verglichen werden.',
@@ -1012,10 +1016,10 @@ const de: Translations = {
   'stores.mapTitle': 'Karte der Supermärkte',
   
   // Main Content
-  'app.description': 'Fügen Sie Lebensmittel hinzu, um Preise in verschiedenen {country} Supermärkten zu vergleichen. Preise von Supermärkten ohne APIs werden mit fortschrittlichen Algorithmen geschätzt.',
-  'app.description.nl': 'Fügen Sie Lebensmittel hinzu, um Preise in verschiedenen niederländischen Supermärkten zu vergleichen. Preise von Supermärkten ohne APIs werden mit fortschrittlichen Algorithmen geschätzt.',
-  'app.description.uk': 'Fügen Sie Lebensmittel hinzu, um Preise in verschiedenen britischen Supermärkten zu vergleichen. Preise von Supermärkten ohne APIs werden mit fortschrittlichen Algorithmen geschätzt.',
-  'app.description.de': 'Fügen Sie Lebensmittel hinzu, um Preise in verschiedenen deutschen Supermärkten zu vergleichen. Preise von Supermärkten ohne APIs werden mit fortschrittlichen Algorithmen geschätzt.',
+  'app.description': 'Erfasste Supermarktpreise vergleichen, Quellen und Packungsgrößen prüfen und eine Einkaufsliste erstellen.',
+  'app.description.nl': 'Erfasste niederländische Supermarktpreise vergleichen und Quellen, Packungen sowie Kaufbedingungen prüfen.',
+  'app.description.uk': 'Erfasste britische Supermarktpreise vergleichen und Quellen, Packungen sowie Kaufbedingungen prüfen.',
+  'app.description.de': 'Erfasste deutsche Supermarktpreise vergleichen und Quellen, Packungen sowie Kaufbedingungen prüfen.',
 
   // Navigation
   'nav.home': 'Zur Startseite',
@@ -1281,7 +1285,7 @@ const de: Translations = {
   'optimal.itemsTotal': 'Artikelsumme: {amount}',
   'optimal.extraVisits': 'Zusätzliche Filialbesuche ({count} Filialen): {amount}',
   'optimal.savesVs': 'Sparen Sie {amount} im Vergleich zum Einkauf von allem bei {store}',
-  'individual.estimatedText': 'Einige Preise werden mit fortschrittlichen Algorithmen geschätzt, wenn keine offiziellen Daten verfügbar sind.',
+  'individual.estimatedText': 'Preise sind Händlerbeobachtungen, keine Kassengarantie. Fehlende Preise werden nicht geschätzt.',
   'individual.addItemsPrompt': 'Lebensmittel hinzufügen, um Preise zu vergleichen',
   'clipboard.copied': 'Einkaufsliste in die Zwischenablage kopiert!',
   'clipboard.failed': 'Konnte nicht in die Zwischenablage kopieren. Bitte manuell teilen.',

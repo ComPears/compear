@@ -16,6 +16,7 @@ import { formatMoney } from '../utils/formatMoney';
 import { productPath } from '../utils/productSlug';
 import { sanitizeProductLink } from '../utils/safeLink';
 import { UnitPrice, OfferEvidence } from '../components/OfferEvidence';
+import { OnlineShops } from '../components/OnlineShops';
 
 type Section = 'matches' | 'unknown' | 'excluded';
 
@@ -108,6 +109,7 @@ export function ShoppingBriefPage() {
             </Box>
           </Paper>;
         })}</Stack>
+        <Box component="details" sx={{ mt: 4, '& summary': { minHeight: 44, cursor: 'pointer', fontWeight: 700 } }}><summary>{t('explore.shops')}</summary><OnlineShops department="grocery" initialQuery={response.brief.query} /></Box>
       </>}
     </Container><Footer />
   </>;

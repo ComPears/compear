@@ -21,6 +21,7 @@ import { fetchProduct, fetchStores, isStoreAvailable, StoreInfo } from './api/cl
 import StoreAvailabilityNotice from './components/StoreAvailabilityNotice';
 import { ShoppingPrinciples } from './components/ShoppingPrinciples';
 import { GuideShelf } from './components/GuideShelf';
+import { BriefEntry } from './components/ShoppingEntry';
 import { getSupermarketsForCountry } from './services/supermarketService';
 import { isEmailJSConfigured, sendWaitlistSignup } from './services/emailService';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
@@ -167,6 +168,7 @@ const App: React.FC = () => {
       <AppNavBar onHomeReset={handleHomeReset} />
 
       <Container
+        component="main"
         maxWidth="lg"
         sx={{
           flex: '1 0 auto',
@@ -298,6 +300,7 @@ const App: React.FC = () => {
               </Box>
             )}
 
+            {groceries.length === 0 && <BriefEntry />}
             <Box
               className="cp-fade-up-delay"
               sx={{

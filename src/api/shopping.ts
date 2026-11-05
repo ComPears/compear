@@ -14,7 +14,7 @@ export type Constraint =
 export interface Assessment { status: 'pass' | 'fail' | 'unknown'; code: string; constraint: Constraint; actual?: string | number; sourceUrl?: string }
 export interface BriefResult { product: Product; status: 'pass' | 'fail' | 'unknown'; assessments: Assessment[] }
 export interface BriefResponse { brief: { query: string; constraints: Constraint[]; warnings: string[] }; evaluated: number; candidateLimit: number; counts: { matches: number; unknown: number; excluded: number }; offsets?: { matches: number; unknown: number; excluded: number }; pageSize?: number; matches: BriefResult[]; unknown: BriefResult[]; excluded: BriefResult[]; unitLeaders: { basis: string; productId: string; price: number }[] }
-export interface GuideSummary { slug: string; section: 'breakfast' | 'pantry' | 'household'; title: string; query: string; basis: 'kg' | 'l'; offerCount: number; storeCount: number; lowPackPrice: number | null; knownUnitCount: number }
+export interface GuideSummary { slug: string; section: 'breakfast' | 'pantry' | 'household' | 'family'; title: string; query: string; basis: 'kg' | 'l' | 'item'; offerCount: number; storeCount: number; lowPackPrice: number | null; knownUnitCount: number }
 export interface ShoppingGuide extends GuideSummary { products: Product[]; recommendation: { product: Product; reason: string; basis: string; unitPrice: number } | null }
 export interface InsightsFeatures { history: boolean; alerts: boolean; email: boolean; retentionDays: number }
 export interface SavedAlert { id: string; productId: string; productName?: string | null; country: ApiCountry; targetPrice: number; channel: 'inapp' | 'email'; confirmed: boolean; enabled: boolean }

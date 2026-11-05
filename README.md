@@ -225,6 +225,36 @@ src/
 
 ## 📝 Learn More
 
+### Shopping discovery and coverage
+
+The home-page brief, department navigation, observed-offers page, journal and
+browser-linked shopping space are localized for NL, UK and DE. Family-care
+guides compare only known pack/count units; they do not establish medical,
+infant or allergy suitability. Offers expose purchase conditions and observation
+dates. The backend excludes expired, stale and malformed promotions.
+
+`src/services/retailerDiscovery.ts` is a separate external-link directory, not a
+price feed. Amazon UK/NL/DE, bol, Picnic, Crisp, Ocado, Waitrose, Iceland, dm,
+ROSSMANN, Argos, Currys, Coolblue and Saturn are discovery options only where
+listed. Amazon and bol can receive a user-entered query in an encoded search
+link; other entries currently open their storefront. No remote prices are
+fetched, no affiliate tracking is added, and these shops do not increase the
+verified catalog/store count. Electronics remains noindex until a feed is live.
+
+Live Amazon prices require approved Amazon Associates/Creators API access and
+a valid partner tag for each target marketplace. Other product feeds require
+merchant/network approval (for example Awin), plus country/currency, delivery,
+GTIN/pack identity, freshness, license and promotion-condition validation before
+publication. Do not add credentials to `VITE_` variables, scrape gated pages,
+invent prices, or store licensed feed history without permission.
+
+Official onboarding: [Amazon marketplace access](https://affiliate-program.amazon.co.uk/creatorsapi/docs/en-us/onboarding/sign-up-as-an-amazon-associate)
+and [Awin product feeds](https://success.awin.com/s/article/How-can-I-access-a-Product-Feed?language=en_US).
+
+The journal is original Compears editorial content, not scraped reviews or a
+popularity ranking. Private shopping-space routes are prerendered noindex;
+guide and journal pages have localized static HTML and reciprocal hreflang.
+
 - [Vite documentation](https://vite.dev/)
 - [React documentation](https://react.dev/)
 - [EmailJS documentation](https://www.emailjs.com/docs/)

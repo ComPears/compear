@@ -38,6 +38,10 @@ const ShoppingBriefPage = lazy(() => import('../pages/ShoppingBriefPage').then(m
 const GuidesPage = lazy(() => import('../pages/GuidesPage').then(module => ({ default: module.GuidesPage })));
 const GuidePage = lazy(() => import('../pages/GuidePage').then(module => ({ default: module.GuidePage })));
 const AlertsPage = lazy(() => import('../pages/AlertsPage').then(module => ({ default: module.AlertsPage })));
+const DepartmentPage = lazy(() => import('../pages/ExplorePages').then(module => ({ default: module.DepartmentPage })));
+const DealsPage = lazy(() => import('../pages/ExplorePages').then(module => ({ default: module.DealsPage })));
+const JournalPage = lazy(() => import('../pages/ExplorePages').then(module => ({ default: module.JournalPage })));
+const ShoppingSpacePage = lazy(() => import('../pages/ExplorePages').then(module => ({ default: module.ShoppingSpacePage })));
 
 const AppRouter: React.FC = () => {
   return (
@@ -51,6 +55,11 @@ const AppRouter: React.FC = () => {
             <Route path="brief" element={<ShoppingBriefPage />} />
             <Route path="guides" element={<GuidesPage />} />
             <Route path="guides/:guideSlug" element={<GuidePage />} />
+            <Route path="departments/:departmentSlug" element={<DepartmentPage />} />
+            <Route path="deals" element={<DealsPage />} />
+            <Route path="journal" element={<JournalPage />} />
+            <Route path="journal/:articleSlug" element={<JournalPage />} />
+            <Route path="space" element={<ShoppingSpacePage />} />
             <Route path="alerts" element={<AlertsPage />} />
             <Route path="alerts/:action" element={<AlertsPage />} />
             <Route path="product/:id" element={<ProductPage />} />
