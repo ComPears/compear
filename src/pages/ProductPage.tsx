@@ -35,6 +35,8 @@ import { sanitizeProductLink } from '../utils/safeLink';
 import { categorySlug } from '../services/categoryService';
 import { OfferEvidence, UnitPrice } from '../components/OfferEvidence';
 import { barcodeMatched, comparablePacks } from '../utils/offerEvidence';
+import { ProductLabelPanel } from '../components/ProductLabelPanel';
+import { ProductInsights } from '../components/ProductInsights';
 
 function newestTimestamp(products: Product[]): string | null {
   const values = products
@@ -323,6 +325,8 @@ export const ProductPage: React.FC = () => {
         </Stack>
 
         <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>{t('evidence.scope')} {hasComparison && !barcodeMatched(sortedOffers) && t('evidence.matchHint')}</Typography>
+        <ProductLabelPanel product={product} />
+        <ProductInsights product={product} />
         <Paper variant="outlined" sx={{ p: 2.5, mt: 2.5 }}>
           <Typography component="h2" variant="h6" fontWeight={700}>{t('product.priceTracking')}</Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>

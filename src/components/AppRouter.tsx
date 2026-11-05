@@ -34,6 +34,10 @@ const StoreLocatorPage = lazy(() =>
 const SharedListPage = lazy(() =>
   import('../pages/SharedListPage').then(({ SharedListPage }) => ({ default: SharedListPage }))
 );
+const ShoppingBriefPage = lazy(() => import('../pages/ShoppingBriefPage').then(module => ({ default: module.ShoppingBriefPage })));
+const GuidesPage = lazy(() => import('../pages/GuidesPage').then(module => ({ default: module.GuidesPage })));
+const GuidePage = lazy(() => import('../pages/GuidePage').then(module => ({ default: module.GuidePage })));
+const AlertsPage = lazy(() => import('../pages/AlertsPage').then(module => ({ default: module.AlertsPage })));
 
 const AppRouter: React.FC = () => {
   return (
@@ -44,6 +48,11 @@ const AppRouter: React.FC = () => {
           <Route path="/:countryCode" element={<CountryLayout />}>
             <Route index element={<App />} />
             <Route path="search" element={<SearchPage />} />
+            <Route path="brief" element={<ShoppingBriefPage />} />
+            <Route path="guides" element={<GuidesPage />} />
+            <Route path="guides/:guideSlug" element={<GuidePage />} />
+            <Route path="alerts" element={<AlertsPage />} />
+            <Route path="alerts/:action" element={<AlertsPage />} />
             <Route path="product/:id" element={<ProductPage />} />
             <Route path="products/:slug" element={<ProductPage />} />
             <Route path="categories/:categorySlug" element={<CategoryLandingPage />} />

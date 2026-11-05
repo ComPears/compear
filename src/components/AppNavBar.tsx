@@ -42,7 +42,7 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
   const { country, setCountry } = useCountry();
   const { language, setLanguage, t } = useLanguage();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
   const basketCount = useBasketStore((s) => s.items.length);
   const [suggestionDialogOpen, setSuggestionDialogOpen] = useState(false);
   const [mobileMenuAnchor, setMobileMenuAnchor] = useState<null | HTMLElement>(null);
@@ -108,6 +108,8 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
       >
         {t('nav.stores')}
       </Button>
+      <Button component={RouterLink} to={`${base}/brief`} color="inherit" sx={{ minWidth: 'auto' }}>{t('brief.nav')}</Button>
+      <Button component={RouterLink} to={`${base}/guides`} color="inherit" sx={{ minWidth: 'auto' }}>{t('guides.nav')}</Button>
       <Button
         component={RouterLink}
         to={`${base}/receipts`}
@@ -249,6 +251,8 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
       >
         {country.available && isMobile && (
           <Box>
+            <MenuItem onClick={() => { setMobileMenuAnchor(null); navigate(`${base}/brief`); }}>{t('brief.nav')}</MenuItem>
+            <MenuItem onClick={() => { setMobileMenuAnchor(null); navigate(`${base}/guides`); }}>{t('guides.nav')}</MenuItem>
             <MenuItem
               onClick={() => {
                 setMobileMenuAnchor(null);
@@ -278,6 +282,7 @@ export const AppNavBar: React.FC<AppNavBarProps> = ({
             </MenuItem>
           </Box>
         )}
+        {country.available && <MenuItem onClick={() => { setMobileMenuAnchor(null); navigate(`${base}/alerts`); }}>{t('alerts.nav')}</MenuItem>}
         <Box sx={{ px: 2, py: 1, minWidth: 200 }}>
           <FormControl fullWidth size="small">
             <Select

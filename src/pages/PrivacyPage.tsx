@@ -30,6 +30,7 @@ export const PrivacyPage: React.FC = () => {
         <Typography paragraph>{t('privacy.basket')}</Typography>
         <Typography paragraph>{t('privacy.ocr')}</Typography>
         <Typography paragraph>{t('privacy.email')}</Typography>
+        <Typography paragraph>{t('privacy.watches')}</Typography>
         <Typography paragraph>{t('privacy.retention')}</Typography>
       </Container>
       <Footer />
