@@ -20,6 +20,7 @@ import { useBasketStore } from './store/basketStore';
 import { fetchProduct, fetchStores, isStoreAvailable, StoreInfo } from './api/client';
 import StoreAvailabilityNotice from './components/StoreAvailabilityNotice';
 import { ShoppingPrinciples } from './components/ShoppingPrinciples';
+import { GuideShelf } from './components/GuideShelf';
 import { getSupermarketsForCountry } from './services/supermarketService';
 import { isEmailJSConfigured, sendWaitlistSignup } from './services/emailService';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
@@ -425,6 +426,13 @@ const App: React.FC = () => {
                 </Stack>
             </Box>}
             {groceries.length === 0 && <ShoppingPrinciples />}
+            {groceries.length === 0 && <>
+              <Box sx={{ p: { xs: 2, md: 3 }, bgcolor: '#eaf0dd', borderRadius: 3, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3, alignItems: { md: 'center' }, justifyContent: 'space-between' }}>
+                <Box><Typography variant="overline" color="primary.dark" sx={{ letterSpacing: '.12em' }}>{t('brief.eyebrow')}</Typography><Typography component="h2" variant="h5">{t('brief.title')}</Typography><Typography variant="body2" color="text.secondary" sx={{ mt: 1, maxWidth: 650 }}>{t('brief.subtitle')}</Typography></Box>
+                <Button component={RouterLink} to={`/${country.code}/brief`} variant="contained" sx={{ flexShrink: 0 }}>{t('brief.nav')} →</Button>
+              </Box>
+              <GuideShelf />
+            </>}
 
             {groceries.length > 0 && (
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>

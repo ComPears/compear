@@ -1,9 +1,11 @@
 import { Translations } from '../context/LanguageContext';
 import { evidenceCopy } from './evidence';
+import { shoppingCopy } from './shopping';
 
 // English translations
 const en: Translations = {
   ...evidenceCopy.en,
+  ...shoppingCopy.en,
   'stores.unavailable': 'Price data unavailable',
   'stores.allPriceDataUnavailable': 'Fresh supermarket prices are temporarily unavailable. Comparisons will return once we have verified new price data.',
   'stores.priceDataUnavailable': 'Price data is temporarily unavailable for: {stores}. Their offers are excluded while we verify fresh data. You can still compare the other supermarkets.',
@@ -437,11 +439,11 @@ const en: Translations = {
   'trust.independenceTitle': 'Independence',
   'trust.independenceBody': 'Results are ordered by price or your selected sort—not by retailer payment. Store links take you to the original source.',
   'trust.privacyTitle': 'Privacy',
-  'trust.privacyBody': 'Your basket, budget and price-alert preferences stay in your browser unless you explicitly create a share link.',
+  'trust.privacyBody': 'Your basket and budget stay in your browser unless you share them. Optional background price watches are saved on the server only when you request them; see Privacy for details.',
   'privacy.title': 'Privacy',
   'privacy.intro': 'A short overview of how ComPear handles data on this device and when talking to third-party services.',
   'privacy.receipts': 'Receipt history uses an anonymous ID and token stored on this device. They identify your receipts to the API without an account.',
-  'privacy.basket': 'Your basket, comparison list, budget and price targets stay on this device unless you create a share link.',
+  'privacy.basket': 'Your basket, comparison list, budget and device-local price targets stay on this device unless you create a share link. Background watches are separate and require an explicit request.',
   'privacy.ocr': 'Receipt images you upload are sent to our backend and to OpenAI for OCR so we can read line items.',
   'privacy.email': 'Suggestions and waitlist signups are sent via EmailJS to the ComPear admin inbox when EmailJS is configured.',
   'privacy.retention': 'We keep shared lists and receipt analyses only as long as needed for the feature. Clear local data in your browser to remove device-stored preferences.',
@@ -475,6 +477,7 @@ const en: Translations = {
 // Dutch translations
 const nl: Translations = {
   ...evidenceCopy.nl,
+  ...shoppingCopy.nl,
   'stores.unavailable': 'Prijsgegevens niet beschikbaar',
   'stores.allPriceDataUnavailable': 'Actuele supermarktprijzen zijn tijdelijk niet beschikbaar. Vergelijken is weer mogelijk zodra we nieuwe prijsgegevens hebben gecontroleerd.',
   'stores.priceDataUnavailable': 'Prijsgegevens zijn tijdelijk niet beschikbaar voor: {stores}. Hun aanbiedingen worden niet getoond totdat we actuele gegevens hebben gecontroleerd. Je kunt de andere supermarkten blijven vergelijken.',
@@ -908,11 +911,11 @@ const nl: Translations = {
   'trust.independenceTitle': 'Onafhankelijkheid',
   'trust.independenceBody': 'Resultaten staan op prijs of jouw sortering, niet op betaling door winkels. Winkellinks gaan naar de originele bron.',
   'trust.privacyTitle': 'Privacy',
-  'trust.privacyBody': 'Je mandje, budget en prijsalarmen blijven in je browser, tenzij je zelf een deellink maakt.',
+  'trust.privacyBody': 'Je mandje en budget blijven in je browser, tenzij je ze deelt. Optionele achtergrondmeldingen worden alleen op verzoek op de server opgeslagen; zie Privacy.',
   'privacy.title': 'Privacy',
   'privacy.intro': 'Kort overzicht van hoe ComPear gegevens op dit apparaat en bij externe diensten verwerkt.',
   'privacy.receipts': 'Bonnenhistorie gebruikt een anonieme ID en token op dit apparaat. Daarmee herkent de API jouw bonnen zonder account.',
-  'privacy.basket': 'Je mandje, vergelijkingslijst, budget en prijsdoelen blijven op dit apparaat, tenzij je een deellink maakt.',
+  'privacy.basket': 'Je mandje, vergelijkingslijst, budget en lokale prijsdoelen blijven op dit apparaat, tenzij je een deellink maakt. Achtergrondmeldingen zijn apart en vereisen een bewuste aanvraag.',
   'privacy.ocr': 'Geüploade bonfoto’s gaan naar onze backend en naar OpenAI voor OCR om regels te lezen.',
   'privacy.email': 'Suggesties en wachtlijstaanmeldingen gaan via EmailJS naar de ComPear-beheerder wanneer EmailJS is geconfigureerd.',
   'privacy.retention': 'Gedeelde lijsten en bonanalyses bewaren we alleen zolang nodig voor de functie. Wis lokale gegevens in je browser om voorkeuren op dit apparaat te verwijderen.',
@@ -946,6 +949,7 @@ const nl: Translations = {
 // German translations (basic)
 const de: Translations = {
   ...evidenceCopy.de,
+  ...shoppingCopy.de,
   'stores.unavailable': 'Preisdaten nicht verfügbar',
   'stores.allPriceDataUnavailable': 'Aktuelle Supermarktpreise sind vorübergehend nicht verfügbar. Vergleiche sind wieder möglich, sobald neue Preisdaten geprüft wurden.',
   'stores.priceDataUnavailable': 'Preisdaten sind vorübergehend nicht verfügbar für: {stores}. Ihre Angebote werden erst nach Prüfung aktueller Daten wieder angezeigt. Die anderen Supermärkte können weiterhin verglichen werden.',
@@ -1197,11 +1201,11 @@ const de: Translations = {
   'trust.independenceTitle': 'Unabhängigkeit',
   'trust.independenceBody': 'Ergebnisse folgen Preis oder Sortierung, nicht Händlerzahlungen.',
   'trust.privacyTitle': 'Datenschutz',
-  'trust.privacyBody': 'Warenkorb, Budget und Preisalarme bleiben im Browser, sofern Sie keinen Link teilen.',
+  'trust.privacyBody': 'Warenkorb und Budget bleiben im Browser, sofern Sie diese nicht teilen. Optionale Hintergrundmeldungen werden nur auf ausdrücklichen Wunsch auf dem Server gespeichert; siehe Datenschutz.',
   'privacy.title': 'Datenschutz',
   'privacy.intro': 'Kurzer Überblick, wie ComPear Daten auf diesem Gerät und bei Drittanbietern verarbeitet.',
   'privacy.receipts': 'Die Beleghistorie nutzt eine anonyme ID und ein Token auf diesem Gerät. Damit erkennt die API Ihre Belege ohne Konto.',
-  'privacy.basket': 'Warenkorb, Vergleichsliste, Budget und Preisziele bleiben auf diesem Gerät, sofern Sie keinen Share-Link erstellen.',
+  'privacy.basket': 'Warenkorb, Vergleichsliste, Budget und lokale Preisziele bleiben auf diesem Gerät, sofern Sie keinen Link teilen. Hintergrundmeldungen sind separat und erfordern eine ausdrückliche Anfrage.',
   'privacy.ocr': 'Hochgeladene Belegfotos gehen an unser Backend und an OpenAI für OCR, um Positionen zu lesen.',
   'privacy.email': 'Vorschläge und Wartelisten-Anmeldungen gehen über EmailJS an den ComPear-Admin, wenn EmailJS konfiguriert ist.',
   'privacy.retention': 'Geteilte Listen und Beleganalysen speichern wir nur so lange wie für die Funktion nötig. Löschen Sie lokale Browserdaten, um Geräte-Einstellungen zu entfernen.',

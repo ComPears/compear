@@ -52,6 +52,7 @@ function setProductCache(key: string, data: Product[]): void {
 }
 
 export interface Product {
+  labelEvidence?: import('./shopping').LabelEvidence;
   sourceMethod?: string;
   priceType?: 'regular' | 'promotion' | 'loyalty';
   currency?: 'EUR' | 'GBP';

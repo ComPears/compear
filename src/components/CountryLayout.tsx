@@ -43,9 +43,9 @@ const CountryScopedState: React.FC<{ countryCode: CountryCode }> = ({ countryCod
 const DefaultRouteSeo: React.FC<{ countryCode: CountryCode }> = ({ countryCode }) => {
   const location = useLocation();
   const routeTail = location.pathname.replace(/^\/(uk|nl|de)/, '');
-  if (/^\/(products|product|categories)\//.test(routeTail)) return null;
+  if (/^\/(products|product|categories|guides)(\/|$)/.test(routeTail)) return null;
 
-  const privateRoute = /^\/(basket|receipts|shared|search)(\/|$)/.test(routeTail);
+  const privateRoute = /^\/(basket|receipts|shared|search|brief|alerts)(\/|$)/.test(routeTail);
   const isUk = countryCode === 'uk';
   const isDe = countryCode === 'de';
   const title = isUk
@@ -56,7 +56,7 @@ const DefaultRouteSeo: React.FC<{ countryCode: CountryCode }> = ({ countryCode }
   const description = isUk
     ? 'Compare current grocery prices across Tesco, Sainsbury’s, Asda, Morrisons, Aldi and Lidl, then build the cheapest shopping plan.'
     : isDe
-      ? 'ComPear kommt bald nach Deutschland. Tragen Sie sich in die Warteliste ein.'
+      ? 'Aktuelle Lebensmittelpreise deutscher Supermärkte vergleichen, Packungsgrößen prüfen und eine passende Einkaufsliste erstellen.'
       : 'Vergelijk actuele boodschappenprijzen van Nederlandse supermarkten en maak de voordeligste boodschappenplanning.';
   const structuredData = routeTail === '' || routeTail === '/'
     ? [
