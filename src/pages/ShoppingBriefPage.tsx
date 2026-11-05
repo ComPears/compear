@@ -17,6 +17,7 @@ import { productPath } from '../utils/productSlug';
 import { sanitizeProductLink } from '../utils/safeLink';
 import { UnitPrice, OfferEvidence } from '../components/OfferEvidence';
 import { OnlineShops } from '../components/OnlineShops';
+import { briefSearchParams, readBriefChecks } from '../utils/briefNavigation';
 
 type Section = 'matches' | 'unknown' | 'excluded';
 
@@ -25,6 +26,7 @@ export function ShoppingBriefPage() {
   const [params, setParams] = useSearchParams();
   const [request, setRequest] = useState(params.get('q') ?? '');
   const [response, setResponse] = useState<BriefResponse | null>(null);
+  const [explicitChecks, setExplicitChecks] = useState<Constraint[] | undefined>();
   const [queryEdit, setQueryEdit] = useState('');
   const [section, setSection] = useState<Section>('matches');
   const [stores, setStores] = useState<StoreInfo[]>([]), [retailerSelections, setRetailerSelections] = useState<Record<string, string[]>>({});
@@ -40,7 +42,7 @@ export function ShoppingBriefPage() {
   const submit = async (text = request, constraints?: Constraint[], offsets?: BriefResponse['offsets']) => {
     if (text.trim().length < 2) return;
     abort.current?.abort(); const controller = new AbortController(); abort.current = controller;
-    setLoading(true); setError(false); setRequest(text); setParams({ q: text }, { replace: true });
+    setLoading(true); setError(false); setRequest(text); setExplicitChecks(constraints); setParams(briefSearchParams(text, constraints), { replace: true });
     try {
       const result = await searchBrief(text, country.code, constraints, selected, controller.signal, offsets);
       if (controller.signal.aborted) return;
@@ -48,7 +50,15 @@ export function ShoppingBriefPage() {
     } catch { if (!controller.signal.aborted) setError(true); }
     finally { if (!controller.signal.aborted) setLoading(false); }
   };
-  useEffect(() => { setResponse(null); const q = params.get('q'); if (q) void submit(q); /* Run a shared brief once on route/country entry. */ }, [country.code]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    setResponse(null); setError(false); setLoading(false); setExplicitChecks(undefined);
+    try {
+      const q = params.get('q'), checks = readBriefChecks(params.get('checks'));
+      if (q) void submit(q, checks);
+      else if (checks !== undefined) setError(true);
+    } catch { setError(true); }
+    /* Run a shared brief once on route/country entry. */
+  }, [country.code]); // eslint-disable-line react-hooks/exhaustive-deps
   const results = response?.[section] ?? [];
   return <>
     <AppNavBar />
@@ -58,7 +68,7 @@ export function ShoppingBriefPage() {
         <Typography component="h1" variant="h2" color="primary.dark" sx={{ fontSize: { xs: '2.4rem', md: '3.6rem' }, lineHeight: 1.08, mb: 2 }}>{t('brief.title')}</Typography>
         <Typography color="text.secondary" sx={{ maxWidth: 670 }}>{t('brief.subtitle')}</Typography>
       </Box>
-      <Paper component="form" onSubmit={event => { event.preventDefault(); void submit(); }} variant="outlined" sx={{ p: { xs: 2, md: 3 }, borderColor: '#b6cbb8', borderRadius: 3, mb: 2 }}>
+      <Paper component="form" onSubmit={event => { event.preventDefault(); void submit(request, explicitChecks); }} variant="outlined" sx={{ p: { xs: 2, md: 3 }, borderColor: '#b6cbb8', borderRadius: 3, mb: 2 }}>
         <TextField fullWidth multiline minRows={2} maxRows={4} label={t('brief.input')} placeholder={t('brief.placeholder')} value={request} onChange={event => setRequest(event.target.value)} slotProps={{ htmlInput: { maxLength: 400 } }} />
         <Stack direction={{ xs: 'column', sm: 'row' }} gap={2} justifyContent="space-between" alignItems={{ sm: 'center' }} sx={{ mt: 2 }}>
           <Typography variant="caption" color="text.secondary" sx={{ maxWidth: 640 }}>{t('brief.disclaimer')}</Typography>
@@ -71,7 +81,7 @@ export function ShoppingBriefPage() {
       <Stack direction="row" flexWrap="wrap" gap={1} sx={{ mb: 3 }}>{stores.map(store => <Chip key={store.id} label={store.name} disabled={!isStoreAvailable(store)} variant={selected.includes(store.name) ? 'filled' : 'outlined'} color={selected.includes(store.name) ? 'primary' : 'default'} aria-pressed={selected.includes(store.name)} onClick={() => setSelected(current => current.includes(store.name) ? current.filter(s => s !== store.name) : [...current, store.name])} sx={{ minHeight: 44 }} />)}</Stack>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{t('brief.error')}</Alert>}
       {loading && <Typography role="status" sx={{ my: 2 }}>{t('search.searching')}</Typography>}
-      {response && !loading && <>
+      {response && !loading && !error && <>
         <Paper variant="outlined" sx={{ bgcolor: '#f0f3e8', p: 2.5, mb: 3 }}>
           <Typography component="h2" variant="h6" sx={{ mb: 2 }}>{t('brief.interpreted')}</Typography>
           <Stack direction={{ xs: 'column', sm: 'row' }} gap={1} sx={{ mb: 2 }}>
