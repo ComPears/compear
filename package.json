@@ -20,7 +20,7 @@
     "react-i18next": "^17.1.13",
     "react-router-dom": "^7.18.5",
     "web-vitals": "^6.2.3",
-    "zustand": "^5.0.16"
+    "zustand": "^5.1.0"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.2",
